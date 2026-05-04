@@ -1,0 +1,176 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.example.salesrecord'
+    compileSdk 35
+
+    packaging {
+        resources {
+            it.excludes.add("META-INF/INDEX.LIST")
+            it.excludes.add("META-INF/DEPENDENCIES")
+
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.example.salesrecord"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+
+        // =============================================
+        // Versión automática basada en fecha
+        // =============================================
+        def date = new Date()
+
+        // versionName: Formato visible (año.mes.día)
+        versionName = date.format('yyyy.MM.dd')
+
+        // Esta línea crea el recurso @string/version automáticamente
+        resValue "string", "version", versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Define el esquema de redirección
+        manifestPlaceholders = [
+                appAuthRedirectScheme: "com.example.salesrecord"
+        ]
+
+    }
+
+    // =============================================
+    // NOMBRE PERSONALIZADO DEL APK (AQUÍ VA)
+    // =============================================
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def date = new Date()
+            def version = date.format('yyyy.MM.dd')
+
+            // Nombre final del APK
+            output.outputFileName = "Registro_Ventas-V${version}.apk"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.constraintlayout
+    implementation libs.lifecycle.livedata.ktx
+    implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+    //Animations libs for apps
+    implementation 'com.airbnb.android:lottie:6.6.6'
+    implementation libs.activity
+    implementation libs.recyclerview
+    implementation libs.googleid
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+    def room_version = '2.7.0'
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // optional - RxJava2 support for Room
+    implementation "androidx.room:room-rxjava2:$room_version"
+
+    // optional - RxJava3 support for Room
+    implementation "androidx.room:room-rxjava3:$room_version"
+
+    // optional - Guava support for Room, including Optional and ListenableFuture
+    implementation "androidx.room:room-guava:$room_version"
+
+    // optional - Test helpers
+    testImplementation "androidx.room:room-testing:$room_version"
+
+    // optional - Paging 3 Integration
+    implementation "androidx.room:room-paging:$room_version"
+
+    runtimeOnly 'androidx.coordinatorlayout:coordinatorlayout:1.3.0'
+
+    def activity_version = '1.10.1'
+    def fragment_version = '1.8.6'
+
+    // https://mvnrepository.com/artifact/androidx.activity/activity-ktx
+    runtimeOnly "androidx.activity:activity-ktx:$activity_version"
+
+    //For PickVisualMedia contract
+    runtimeOnly "androidx.fragment:fragment-ktx:$fragment_version"
+
+    //For rememberLauncherForActivityResult()
+    runtimeOnly 'androidx.activity:activity-compose:1.10.1'
+
+    // https://mvnrepository.com/artifact/androidx.appcompat/appcompat
+    runtimeOnly 'androidx.appcompat:appcompat:1.7.0'
+
+    // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation 'com.opencsv:opencsv:5.10'
+
+
+    implementation libs.androidx.credentials.v122
+    implementation libs.androidx.credentials.play.services.auth.v122
+
+    //implementation libs.play.services.auth // Para Google Sign-In
+
+    implementation libs.google.api.client
+
+    // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-credentials
+    implementation libs.google.auth.library.credentials
+    implementation libs.google.auth.library.oauth2.http.v1371
+
+    implementation libs.google.api.services.drive
+
+    //implementation libs.google.http.client.jackson2 // Añadir para JacksonFactory
+
+    implementation libs.play.services.auth.v2100  // Para Google Sign-In
+
+    implementation(libs.google.api.client.android.v260) {
+        exclude group: 'org.apache.httpcomponents' // Evita conflictos
+    }
+
+    implementation(libs.google.api.services.drive.vv3rev20240815200)
+
+    implementation "androidx.preference:preference:1.2.1"
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'com.github.tony19:logback-android:3.0.0'
+
+    //Android's WorkManager
+    implementation 'androidx.work:work-runtime:2.10.1'
+
+    //Google Drive Oauth
+    implementation 'net.openid:appauth:0.9.1'
+
+
+    //OKHTTP client
+    //implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    //implementation('com.squareup.okhttp3:okhttp:5.1.0')   Da problemas de compatibilidad
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
+
+    //Event bus
+    implementation 'de.greenrobot:eventbus:2.4.0'
+
+    implementation 'com.github.eltos:SimpleDialogFragments:v3.9'
+
+    implementation "androidx.lifecycle:lifecycle-process:2.9.3"
+
+    implementation 'io.github.classgraph:classgraph:4.8.181'
+}
