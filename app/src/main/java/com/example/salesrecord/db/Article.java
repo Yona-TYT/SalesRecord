@@ -24,8 +24,8 @@ public class Article {
     public Double margen;
 
     // Cantidades y Estados (Integer)
-    public Integer totalcount;
-    public Integer currcount;
+    public Float totalcount;
+    public Float currcount;
     public Integer isopen;    // 0 = cerrado, 1 = abierto
     public Integer artipo;    // unidad, paquete o caja
     public Integer metrica;   // Kg, L, etc.
@@ -40,7 +40,7 @@ public class Article {
     public Article(@NonNull String article, String nombre, String descr, String iddesde, String image,
                    Double precund, Double precpq, Double preccj, Double margen,
 
-                   Integer totalcount, Integer currcount, Integer isopen, Integer artipo,
+                   Float totalcount, Float currcount, Integer isopen, Integer artipo,
                    Integer metrica, Integer caduca, Integer staus,
 
                    Long ultfec, Long fecha) {

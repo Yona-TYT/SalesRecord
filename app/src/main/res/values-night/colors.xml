@@ -5,15 +5,20 @@
     <color name="purple_700">#FF000000</color>
     <color name="teal_200">#74a4fa</color>
     <color name="teal_700">#FF018786</color>
-    <color name="black">#FFFFFFFF</color>
-    <color name="white">#FF000000</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
 
     <color name="text_color1">#FFFFFF</color>
-    <color name="text_background">#5c5c5c</color>
-    <color name="text_background2">#5c5c5c</color>
-    <color name="alert_background">#ff2d06</color>
+    <color name="text_background">#1A1A1A</color>
+    <color name="text_background2">#2A2A2A</color>
+    <color name="text_top_image">#808C949B</color>
+    <color name="text_color_counter">#FFFFFF</color>
+
+
+    <color name="alert_background">#9B0000</color>
     <color name="alert_text">#FFFFFF</color>
-    <color name="button">#5c5c5c</color>
-    <color name="float_button">#5c5c5c</color>
+    <color name="button">#2A2A2A</color>
+    <color name="float_button">#2A2A2A</color>
     <color name="inner_button">#FFFFFF</color>
 </resources>

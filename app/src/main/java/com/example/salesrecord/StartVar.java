@@ -12,7 +12,7 @@ import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Deuda;
 import com.example.salesrecord.db.Fecha;
-import com.example.salesrecord.db.Pagos;
+import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.utls.Basic;
@@ -45,7 +45,7 @@ public class StartVar {
     public static List<Article> listacc =  new ArrayList<>();
     public static List<Cliente> listclt =  new ArrayList<>();
     public static List<Fecha> listfec =  new ArrayList<>();
-    public static List<Pagos> listpay = new ArrayList<>();
+    public static List<Sale> listpay = new ArrayList<>();
     public static List<Deuda> listdeb = new ArrayList<>();
     // DB
     public static AllDao appDBall;
@@ -64,7 +64,7 @@ public class StartVar {
     public static int mCurrency = 0;        //Moneda seleccionada
     public static int mCurrMes = 0;        //Mes seleccionado
 
-    public static Double mDollar = 0d;       //Precio del dolar
+    public static Double mDollar = 600d;       //Precio del dolar
 
     public static ArrayList<String> textList;
     public static ArrayList<String> dirList;
@@ -114,7 +114,7 @@ public class StartVar {
         StartVar.listclt = StartVar.appDBall.daoClt().getUsers();
         StartVar.listdeb = StartVar.appDBall.daoDeb().getUsers();
         StartVar.listfec = StartVar.appDBall.daoDat().getUsers();
-        StartVar.listpay = StartVar.appDBall.daoPay().getUsers();
+        StartVar.listpay = StartVar.appDBall.daoSal().getUsers();
 
         //Instancia de la base de datos para Config
         StartVar.mConfigDB = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
@@ -209,8 +209,8 @@ public class StartVar {
 
     public static List<String> getImgList(){
         ArrayList<String> list = new ArrayList<>();
-        List<Pagos> payList =  StartVar.appDBall.daoPay().getUsers();
-        for (Pagos mU : payList) {
+        List<Sale> payList =  StartVar.appDBall.daoSal().getUsers();
+        for (Sale mU : payList) {
             list.add(mU.imagen);
         }
         return list;

@@ -5,8 +5,10 @@
     <string name="title_addacc">Cuenta</string>
     <string name="title_addclt">Cliente</string>
     <string name="title_activity_details">DetailsActivity</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_dashboard">Agregar</string>
+    <string name="title_edit">Inventario</string>
+    <string name="title_reg">Registro</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_image">ImageActivity</string>

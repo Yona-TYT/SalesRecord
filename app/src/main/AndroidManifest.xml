@@ -61,6 +61,7 @@
         <activity
             android:name=".activitys.MainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:label="@string/app_name">
 
         </activity>

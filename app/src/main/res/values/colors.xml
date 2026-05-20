@@ -11,6 +11,9 @@
     <color name="text_color1">#000000</color>
     <color name="text_background">#30518C4D</color>
     <color name="text_background2">#DDE6FF</color>
+    <color name="text_top_image">#808C949B</color>
+    <color name="text_color_counter">#FFFFFF</color>
+
     <color name="alert_background">#ff2d06</color>
     <color name="alert_text">#FFFFFF</color>
     <color name="button">#05a6f1</color>

@@ -79,22 +79,23 @@
                 android:layout_marginBottom="24dp" />
 
 
-            <!-- artipo -->
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tipo de Artículo (0 = Unidad, 1 = Paquete, 2 = Caja)"
+                android:text="Tipo de Artículo (Unidad, Paquete, Caja)"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_artipo"
+            <Spinner
+                android:id="@+id/select1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="number"
                 android:hint="0"
                 android:text="0"
                 android:layout_marginBottom="16dp" />
+
 
             <!-- ========================================= -->
             <!-- PRECIOS (Double → inputType="numberDecimal") -->
@@ -104,52 +105,21 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Precio por Unidad"
+                android:text="Precio Producto"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
             <EditText
-                android:id="@+id/et_precund"
+                android:id="@+id/et_precio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
                 android:hint="0.00"
                 android:text="0.00"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:tag="Este valor debe ser mayor a 0"
+                />
 
-            <!-- precpq -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Precio por Paquete"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_precpq"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0.00"
-                android:text="0.00"
-                android:layout_marginBottom="16dp" />
-
-            <!-- preccj -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Precio por Caja"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_preccj"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0.00"
-                android:text="0.00"
-                android:layout_marginBottom="16dp" />
 
             <!-- margen -->
             <TextView
@@ -172,7 +142,25 @@
             <!-- SELECTORES / ENTEROS (inputType="number") -->
             <!-- ========================================= -->
 
-            <!-- isopen -->
+            <!-- totalcount -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cantidad Total de Unidades"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/et_totalcount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:hint="0.00"
+                android:layout_marginBottom="16dp"
+                android:tag="Este valor debe ser mayor a 0"
+                />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -180,6 +168,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
+
             <EditText
                 android:id="@+id/et_isopen"
                 android:layout_width="match_parent"
@@ -189,27 +178,7 @@
                 android:text="0"
                 android:layout_marginBottom="16dp" />
 
-            <!-- ========================================= -->
-            <!-- VALORES FIJOS                            -->
-            <!-- ========================================= -->
 
-            <!-- totalcount -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cantidad Total de Unidades"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_totalcount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="0"
-                android:layout_marginBottom="16dp"
-                android:tag="Este valor debe ser mayor a 0"
-                />
 
             <!-- metrica -->
             <TextView
@@ -219,14 +188,11 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_metrica"
+
+            <Spinner
+                android:id="@+id/select2"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="0"
-                android:text="0"
-                android:layout_marginBottom="16dp" />
+                android:layout_height="wrap_content" />
 
             <!-- caduca -->
             <TextView

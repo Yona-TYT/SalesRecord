@@ -110,7 +110,7 @@ public class Basic {
     }
 
     @SuppressLint("DefaultLocale")
-    public static String getConverteValue(String value) {
+    public static String getConv(String value) {
         value = value.replaceAll("([^\\d.,])","");
         value = value.replaceAll(",",".");
 
@@ -118,10 +118,10 @@ public class Basic {
             value = "0";
         }
         Double number = Double.parseDouble(value);
-        return String.valueOf(getConverteValue(number));
+        return String.valueOf(getConv(number));
     }
 
-    public static Double getConverteValue(Double value) {
+    public static Double getConv(Double value) {
 
         Double precDoll = StartVar.mDollar;
         if (StartVar.mCurrency == 1) {    //Selector en Bs
@@ -130,12 +130,54 @@ public class Basic {
         return value;
     }
 
+    public static Double getConv(Double value, int symb) {
+
+        Double precDoll = StartVar.mDollar;
+        if(symb == 1) {   //Selector en Bs
+            value = value * precDoll;
+        }
+        return value;
+    }
+
+    public static String getMaskConv(Double value, int symb) {
+
+        return getMask(getConv(value, symb), symb);
+    }
+
+    public static String getMask(String value, int symb) {
+        value = setFormatter(value);
+
+        if(symb == 0){   //Selector en $
+            value = value + " $";
+        }
+        if(symb == 1){   //Selector en Bs
+            value = value + " Bs";
+
+        }
+
+        return value;
+    }
+
+    public static String getMask(Double nr, int sing) {
+        String value = setFormatter(nr);
+
+        if(sing == 0){
+            value = value + " $";
+        }
+        if(sing == 1){
+            value = value + " Bs";
+
+        }
+
+        return value;
+    }
+
     @SuppressLint("DefaultLocale")
     public static String getValueFormatter(String value) {
-        return setFormatter(getConverteValue(value));
+        return setFormatter(getConv(value));
     }
     public static String getValueFormatter(Double value) {
-        return setFormatter(getConverteValue(value).toString());
+        return setFormatter(getConv(value).toString());
     }
 
     public static Float floatFormat(String value) {
@@ -158,12 +200,6 @@ public class Basic {
 
         return result;
 
-    }
-
-    public static String setMask(String value, String sing) {
-        value = setFormatter(value);
-
-        return value;
     }
 
     public static String nameProcessor(String value){

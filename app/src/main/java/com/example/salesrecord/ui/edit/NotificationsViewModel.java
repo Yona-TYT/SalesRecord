@@ -1,4 +1,4 @@
-package com.example.salesrecord.ui.notifications;
+package com.example.salesrecord.ui.edit;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

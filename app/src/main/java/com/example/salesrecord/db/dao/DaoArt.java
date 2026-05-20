@@ -19,6 +19,8 @@ public interface DaoArt extends GenericDao<Article>{
 
     //-------------------------------------------------------------------------------------
 
+    @Query("SELECT * FROM Article WHERE uid = :uid LIMIT 1")
+    Article getUsers(long uid);
 
     @Query("SELECT * FROM Article")
     List<Article> getUsers();
@@ -30,6 +32,13 @@ public interface DaoArt extends GenericDao<Article>{
 
     @Insert
     void insertUser(Article... articles);
+
+    @Insert
+    void insertUser(List<Article> articles);
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void updateUser(List<Article> articles);
 
     @Update
     void update(Article article);

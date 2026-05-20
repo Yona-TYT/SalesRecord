@@ -4,36 +4,93 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
     tools:context=".ui.home.HomeFragment">
 
+    <android.widget.SearchView
+        android:id="@+id/searchBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/text_background"
+        android:iconifiedByDefault="false"
+        android:queryHint="Buscar Lista"
 
+        android:translationZ="5dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
     <GridView
         android:id="@+id/gcImg"
-        android:layout_width="299dp"
-        android:layout_height="488dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:columnWidth="90dp"
         android:gravity="center"
         android:horizontalSpacing="10dp"
         android:numColumns="1"
+        android:padding="8dp"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toTopOf="parent"
+        android:verticalSpacing="12dp"
+
+        app:layout_constraintTop_toBottomOf="@id/searchBar"
+        app:layout_constraintBottom_toTopOf="@id/lineVertical1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <TextView
+        android:id="@+id/homeText1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="2dp"
+        android:text="Total:"
+        android:textSize="20sp"
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@id/lineVertical1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
         tools:ignore="MissingConstraints" />
+
+    <!-- 1. MODIFICA LA LISTVIEW -->
+    <ListView
+        android:id="@+id/viewList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/homeText1"
+        app:layout_constraintBottom_toTopOf="@id/butt1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- 2. MODIFICA EL BOTÓN -->
+    <Button
+        android:id="@+id/butt1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Procesar"
+        android:layout_marginBottom="5dp"
+        android:enabled="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:orientation="vertical"
-        app:layout_constraintGuide_begin="41dp" />
+        app:layout_constraintGuide_begin="10dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_end="46dp" />
+        app:layout_constraintGuide_end="10dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/lineVertical1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

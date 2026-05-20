@@ -12,14 +12,14 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.Fecha;
-import com.example.salesrecord.db.Pagos;
+import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.Deuda;
 import com.example.salesrecord.db.dao.DaoDat;
 import com.example.salesrecord.db.dao.DaoDeb;
-import com.example.salesrecord.db.dao.DaoPay;
+import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 
@@ -43,7 +43,7 @@ public class DBListCreator extends AppCompatActivity {
     private static DaoClt daoCliente = StartVar.appDBall.daoClt();
     private static DaoDeb daoDeuda = StartVar.appDBall.daoDeb();
     private static DaoDat daoFecha = StartVar.appDBall.daoDat();
-    private static DaoPay daoPagos = StartVar.appDBall.daoPay();
+    private static DaoSal daoPagos = StartVar.appDBall.daoSal();
 
 
     public DBListCreator(){}
@@ -312,74 +312,72 @@ public class DBListCreator extends AppCompatActivity {
 
         mList.add(new String[]{"<5>"});// Etiqueta para cliente
 
-        HashMap<String, ArrayList<Object>> mapPay = new HashMap<>();
-        mapPay.put("mA", new ArrayList<>());
-        mapPay.put("mB", new ArrayList<>());
-        mapPay.put("mC", new ArrayList<>());
-        mapPay.put("mD", new ArrayList<>());
-        mapPay.put("mE", new ArrayList<>());
-        mapPay.put("mF", new ArrayList<>());
-        mapPay.put("mG", new ArrayList<>());
-        mapPay.put("mH", new ArrayList<>());
-        mapPay.put("mI", new ArrayList<>());
-        mapPay.put("mJ", new ArrayList<>());
-        mapPay.put("mK", new ArrayList<>());
-        mapPay.put("mL", new ArrayList<>());
-        mapPay.put("mM", new ArrayList<>());
+        HashMap<String, ArrayList<Object>> mapSal = new HashMap<>();
+        mapSal.put("mA", new ArrayList<>());
+        mapSal.put("mB", new ArrayList<>());
+        mapSal.put("mC", new ArrayList<>());
+        mapSal.put("mD", new ArrayList<>());
+        mapSal.put("mE", new ArrayList<>());
+        mapSal.put("mF", new ArrayList<>());
+        mapSal.put("mG", new ArrayList<>());
+        mapSal.put("mH", new ArrayList<>());
+        mapSal.put("mI", new ArrayList<>());
+        mapSal.put("mJ", new ArrayList<>());
+        mapSal.put("mK", new ArrayList<>());
+        mapSal.put("mL", new ArrayList<>());
+        mapSal.put("mM", new ArrayList<>());
 
-        ArrayList<Object> payLmA = mapPay.get("mA");
-        ArrayList<Object> payLmB = mapPay.get("mB");
-        ArrayList<Object> payLmC = mapPay.get("mC");
-        ArrayList<Object> payLmD = mapPay.get("mD");
-        ArrayList<Object> payLmE = mapPay.get("mE");
-        ArrayList<Object> payLmF = mapPay.get("mF");
-        ArrayList<Object> payLmG = mapPay.get("mG");
-        ArrayList<Object> payLmH = mapPay.get("mH");
-        ArrayList<Object> payLmI = mapPay.get("mI");
-        ArrayList<Object> payLmJ = mapPay.get("mJ");
-        ArrayList<Object> payLmK = mapPay.get("mK");
-        ArrayList<Object> payLmL = mapPay.get("mL");
-        ArrayList<Object> payLmM = mapPay.get("mM");
+        ArrayList<Object> salLmA = mapSal.get("mA");
+        ArrayList<Object> salLmB = mapSal.get("mB");
+        ArrayList<Object> salLmC = mapSal.get("mC");
+        ArrayList<Object> salLmD = mapSal.get("mD");
+        ArrayList<Object> salLmE = mapSal.get("mE");
+        ArrayList<Object> salLmF = mapSal.get("mF");
+        ArrayList<Object> salLmG = mapSal.get("mG");
+        ArrayList<Object> salLmH = mapSal.get("mH");
+        ArrayList<Object> salLmI = mapSal.get("mI");
+        ArrayList<Object> salLmJ = mapSal.get("mJ");
+        ArrayList<Object> salLmK = mapSal.get("mK");
+        ArrayList<Object> salLmL = mapSal.get("mL");
+        ArrayList<Object> salLmM = mapSal.get("mM");
 
         //Instancia de la base de datos
-        List<Pagos> listPay = daoPagos.getUsers();
+        List<Sale> listSal = daoPagos.getUsers();
 
-        for (Pagos myPay : listPay) {
+        for (Sale mySal : listSal) {
 
             //------------------------------------------------------
             // Se crea la lista para esportar a csv  ---------------
-            String[] txList = new String[13];
+            String[] txList = new String[12];
 
-            txList[0] = myPay.pago;
-            txList[1] = myPay.nombre;
-            txList[2] = myPay.concep;
-            txList[3] = myPay.monto.toString();
-            txList[4] = myPay.oper.toString();
-            txList[5] = myPay.porc.toString();
-            txList[6] = myPay.imagen;
-            txList[7] = myPay.fecha;
-            txList[8] = myPay.time;
-            txList[9] = myPay.cltid;
-            txList[10] = myPay.accid;
-            txList[11] = myPay.more4.toString();
-            txList[12] = myPay.more5;
+            txList[0] = mySal.sale;
+            txList[1] = mySal.cliente;
+            txList[2] = mySal.artclist;
+            txList[3] = String.valueOf(mySal.monto);
+            txList[4] = String.valueOf(mySal.tasa);
+            txList[5] = String.valueOf(mySal.status);
+            txList[6] = mySal.imagen;
+            txList[7] = mySal.time;
+            txList[8] = mySal.cltid;
+            txList[9] = String.valueOf(mySal.more4);
+            txList[10] = mySal.more5;
+            txList[11] = String.valueOf(mySal.fecha);
 
             mList.add(txList);
 
             //--------------------------------------------------------
-            payLmA.add(myPay.pago);
-            payLmB.add(myPay.nombre);
-            payLmC.add(myPay.concep);
-            payLmD.add(myPay.monto);
-            payLmE.add(myPay.oper);
-            payLmF.add(myPay.porc);
-            payLmG.add(myPay.imagen);
-            payLmH.add(myPay.fecha);
-            payLmI.add(myPay.time);
-            payLmJ.add(myPay.cltid);
-            payLmK.add(myPay.accid);
-            payLmL.add(myPay.more4);
-            payLmM.add(myPay.more5);
+            salLmA.add(mySal.sale);
+            salLmB.add(mySal.cliente);
+            salLmC.add(mySal.artclist);
+            salLmD.add(mySal.monto);
+            salLmE.add(mySal.tasa);
+            salLmF.add(mySal.status);
+            salLmG.add(mySal.imagen);
+            salLmH.add(mySal.fecha);
+            salLmI.add(mySal.time);
+            salLmJ.add(mySal.cltid);
+            salLmL.add(mySal.more4);
+            salLmM.add(mySal.more5);
             //------------------------------------------
         }
 
@@ -390,7 +388,7 @@ public class DBListCreator extends AppCompatActivity {
         allMaps.put("clt", mapClt);
         allMaps.put("deb", mapDeb);
         allMaps.put("dat", mapDat);
-        allMaps.put("pay", mapPay);
+        allMaps.put("pay", mapSal);
 
         return allMaps;
     }
@@ -420,8 +418,8 @@ public class DBListCreator extends AppCompatActivity {
             for (Fecha obj : daoFecha.getUsers()){
                 daoFecha.removerUser(obj.fecha);
             }
-            for (Pagos obj : daoPagos.getUsers()){
-                daoPagos.removerUser(obj.pago);
+            for (Sale obj : daoPagos.getUsers()){
+                daoPagos.removerUser(obj.sale);
             }
 
             InputStream inputStream = AppContextProvider.getContext().getContentResolver().openInputStream(uri);
@@ -483,7 +481,7 @@ public class DBListCreator extends AppCompatActivity {
                     Article obj = new Article(
                             spl[0], spl[1], spl[2], spl[3], spl[4],
                             Double.parseDouble(spl[5]), Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
-                            Double.parseDouble(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]), Integer.parseInt(spl[11]),
+                            Double.parseDouble(spl[8]), Float.parseFloat(spl[9]), Float.parseFloat(spl[10]), Integer.parseInt(spl[11]),
                             Integer.parseInt(spl[12]),  Integer.parseInt(spl[13]), Integer.parseInt(spl[14]), Integer.parseInt(spl[15]),
                             Long.parseLong(spl[16]), Long.parseLong(spl[17])
                     );
@@ -511,15 +509,13 @@ public class DBListCreator extends AppCompatActivity {
                     daoFecha.insertUser(obj);
                 }
                 else {
-                    Pagos obj = new Pagos(
-                            spl[0], spl[1], spl[2], Double.parseDouble(spl[3]), Integer.parseInt(spl[4]), Integer.parseInt(spl[5]),
-                            spl[6], spl[7], spl[8], spl[9], spl[10], Integer.parseInt(spl[11]), spl[12]
+                    Sale obj = new Sale(
+                            spl[0], spl[1], spl[2], Double.parseDouble(spl[3]), Double.parseDouble(spl[4]), Integer.parseInt(spl[5]),
+                            spl[6], spl[7], spl[8], Integer.parseInt(spl[9]), spl[10], Long.parseLong(spl[11])
                     );
                     daoPagos.insertUser(obj);
                 }
-
                 stringBuilder.append(line);
-
             }
         }
         catch (FileNotFoundException e) {
@@ -532,7 +528,6 @@ public class DBListCreator extends AppCompatActivity {
         }
 
         if(finish) {
-
             if( StartVar.reloadActivity != null){
                 mActivity = StartVar.reloadActivity;
             }

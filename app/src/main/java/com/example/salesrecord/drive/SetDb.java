@@ -76,7 +76,7 @@ public class SetDb {
                 return;
             }
             else {
-                Basic.msg("Error: Los IDs de las DB no coinciden: "+hexID+" , "+mConf.hexid,true);
+                Basic.msg("Error: Los IDs de las DB no coinciden: "+hexID+" , "+mConf.hexid, true);
 
                 //Si es desde el preloder se reinicia la actividad
                 SetWorkResult.resetPreloader(preloader);

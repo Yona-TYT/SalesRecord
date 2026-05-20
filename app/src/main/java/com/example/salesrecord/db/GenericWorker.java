@@ -17,7 +17,7 @@ import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoDat;
 import com.example.salesrecord.db.dao.DaoDeb;
-import com.example.salesrecord.db.dao.DaoPay;
+import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.PreferenceHelper;
 import com.google.gson.Gson;
@@ -79,8 +79,8 @@ public class GenericWorker extends Worker {
                     else if (objeto instanceof Deuda) {
                         isOk = processDeuda((Deuda) objeto);
                     }
-                    else if (objeto instanceof Pagos) {
-                        isOk = processPago((Pagos) objeto);
+                    else if (objeto instanceof Sale) {
+                        isOk = processPago((Sale) objeto);
                     }
                     else if (objeto instanceof Fecha) {
                         isOk = processFecha((Fecha) objeto);
@@ -176,14 +176,14 @@ public class GenericWorker extends Worker {
         return true;
     }
 
-    private boolean processPago(Pagos mUser) {
-        DaoPay mDao = StartVar.appDBall.daoPay();
+    private boolean processPago(Sale mUser) {
+        DaoSal mDao = StartVar.appDBall.daoSal();
         if (mUser == null){
             Basic.msg("Error Objeto NULL");
             return false;
         }
-        if (mUser.pago.equals("@null")) {
-            mDao.removerUser(mUser.pago);
+        if (mUser.sale.equals("@null")) {
+            mDao.removerUser(mUser.sale);
             mDao.removerUser(mUser.uid);
         }
         else {

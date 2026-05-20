@@ -1,4 +1,4 @@
-package com.example.salesrecord.ui.notifications;
+package com.example.salesrecord.ui.edit;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.databinding.FragmentNotificationsBinding;
 
-public class NotificationsFragment extends Fragment {
+public class EditAtrFragment extends Fragment {
 
     private FragmentNotificationsBinding binding;
 
