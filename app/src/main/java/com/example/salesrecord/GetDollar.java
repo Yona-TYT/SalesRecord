@@ -49,6 +49,13 @@ public class GetDollar {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                mActivity.runOnUiThread(new Runnable() {
+                    @SuppressLint("SetTextI18n")
+                    @Override
+                    public void run() {
+                        Basic.msg("Error de CONEXION!");
+                    }
+                });
                 call.cancel();
             }
 
@@ -77,7 +84,7 @@ public class GetDollar {
 
                                     if(mValue > 0) {
                                         startVar.setDollar(mValue);
-                                        mInput1.setText(Basic.setFormatter(price));
+                                        mInput1.setText(Basic.setFormatterEs(price));
                                     }
                                     //Basic.msg("Precio del dolar Actualizado: " + price);
 

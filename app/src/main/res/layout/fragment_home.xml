@@ -7,18 +7,68 @@
     android:fitsSystemWindows="false"
     tools:context=".ui.home.HomeFragment">
 
-    <android.widget.SearchView
-        android:id="@+id/searchBar"
+    <TextView
+        android:id="@+id/homeText1"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/text_background"
-        android:iconifiedByDefault="false"
-        android:queryHint="Buscar Lista"
-
-        android:translationZ="5dp"
+        android:layout_height="@dimen/txview_h1"
+        android:padding="5dp"
+        android:text="Precio Dolar BCV"
+        android:textSize="@dimen/inner_text_1"
+        android:textStyle="bold"
+        android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- CORREGIDO: Se eliminó el constraintEnd duplicado hacia guideline2 -->
+    <com.example.salesrecord.CurrencyEditText
+        android:id="@+id/input_home1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_h1"
+        android:ems="10"
+        android:hint="Precio Dolar Vacio"
+        android:imeOptions="actionDone"
+        android:maxLength="20"
+        android:padding="10dp"
+        android:textSize="@dimen/inner_text_2"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:cursorVisible="false"
+        android:clickable="true"
+        app:localeTag="ES"
+        app:currencySymbol="Bs"
+        app:maxNumberOfDecimalDigits="2"
+        app:keepFocusOnKeyboardClose="false"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@+id/homeText1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/butt_home1" />
+
+    <!-- CORREGIDO: Top y Bottom ahora se amarran simétricamente a input_home1 -->
+    <Button
+        android:id="@+id/butt_home1"
+        android:layout_width="@dimen/button_ws"
+        android:layout_height="@dimen/button_h1"
+        android:padding="2dp"
+        android:text="Recargar"
+        android:textSize="@dimen/inner_text_2"
+        app:layout_constraintTop_toTopOf="@id/input_home1"
+        app:layout_constraintBottom_toBottomOf="@id/input_home1"
+        app:layout_constraintStart_toEndOf="@id/input_home1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <android.widget.SearchView
+        android:id="@+id/searchBar"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_h1"
+        android:background="@color/text_background"
+        android:iconifiedByDefault="false"
+        android:queryHint="Buscar Lista"
+        android:translationZ="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/input_home1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
     <GridView
         android:id="@+id/gcImg"
         android:layout_width="0dp"
@@ -37,7 +87,7 @@
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
     <TextView
-        android:id="@+id/homeText1"
+        android:id="@+id/homeText2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
@@ -55,14 +105,14 @@
         android:id="@+id/viewList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/homeText1"
-        app:layout_constraintBottom_toTopOf="@id/butt1"
+        app:layout_constraintTop_toBottomOf="@id/homeText2"
+        app:layout_constraintBottom_toTopOf="@id/butt_home2"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
     <!-- 2. MODIFICA EL BOTÓN -->
     <Button
-        android:id="@+id/butt1"
+        android:id="@+id/butt_home2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Procesar"

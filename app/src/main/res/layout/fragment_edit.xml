@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
+    tools:context=".ui.edit.EditAtrFragment">
+
+    <android.widget.SearchView
+        android:id="@+id/searchBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/text_background"
+        android:iconifiedByDefault="false"
+        android:queryHint="Buscar Lista"
+        android:translationZ="5dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- LISTVIEW (Ocupa la mitad superior) -->
+    <ListView
+        android:id="@+id/edit_viewList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/searchBar"
+        app:layout_constraintBottom_toTopOf="@id/lineVertical1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        android:layout_marginBottom="8dp" />
+
+    <!-- INPUT: NOMBRE -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilNombre"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Nombre"
+        app:layout_constraintTop_toBottomOf="@id/lineVertical1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- INPUT: MONTO (Decimal) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMonto"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Monto"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/tilNombre"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2">
+        <com.example.salesrecord.CurrencyEditText
+            android:id="@+id/etMonto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:imeOptions="actionDone"
+            android:maxLines="1"
+
+            app:localeTag="ES"
+            app:maxNumberOfDecimalDigits="2"
+            app:currencySymbol="$"
+            app:currencySymbolSuffix="true"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- INPUT: REPONER (Decimal) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilReponer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Reponer"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        app:layout_constraintTop_toBottomOf="@id/tilMonto"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/tilMargen">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etReponer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- INPUT: MARGEN -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMargen"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Margen Ganancia"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/tilMonto"
+        app:layout_constraintStart_toEndOf="@+id/tilReponer"
+        app:layout_constraintEnd_toEndOf="@id/guideline2">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etMargen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- SWITCH: DISPONIBLE / NO DISPONIBLE -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/swDisponible"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Disponible"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/tilMargen"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- BOTÓN PROCESAR -->
+    <Button
+        android:id="@+id/butt_home2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Guardar"
+        android:layout_marginBottom="10dp"
+        android:enabled="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- GUÍAS -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="10dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="10dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/lineVertical1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.4" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;
@@ -38,6 +39,8 @@ public class AddAtrFragment extends Fragment {
     private DaoArt daoArt;
 
     private List<EditText> mInpList =  new ArrayList<>();
+
+    CurrencyEditText mInput1;
 
     private List<String> spinL1 = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
     private Spinner mSpin1;
@@ -71,7 +74,10 @@ public class AddAtrFragment extends Fragment {
         mInpList.add(binding.etNombre);
         mInpList.add(binding.etDescr);
 
-        mInpList.add(binding.etPrecio);
+        //mInpList.add(binding.etPrecio);
+
+        mInput1 = binding.etPrecio;
+
         mInpList.add(binding.etMargen);
 
         mInpList.add(binding.etTotalcount);
@@ -152,14 +158,14 @@ public class AddAtrFragment extends Fragment {
 
 
                 objA = new Article(atrId, mTxList.get(0), mTxList.get(1),"@null", "",
-                        (currSel1 == 0 ? Double.parseDouble(mTxList.get(2)) : 0.0),
-                        (currSel1 == 1 ? Double.parseDouble(mTxList.get(2)) : 0.0),
-                        (currSel1 == 2 ? Double.parseDouble(mTxList.get(2)) : 0.0),
+                        (currSel1 == 0 ? (mInput1.getNumericValue()) : 0.0),
+                        (currSel1 == 1 ? (mInput1.getNumericValue()) : 0.0),
+                        (currSel1 == 2 ? (mInput1.getNumericValue()) : 0.0),
 
-                        Double.parseDouble(mTxList.get(3)),
-                        Float.parseFloat(mTxList.get(4)), Float.parseFloat(mTxList.get(4)),
-                        Integer.parseInt(mTxList.get(5)), currSel1,
-                        currSel2, Integer.parseInt(mTxList.get(6)),
+                        Double.parseDouble(mTxList.get(2)),
+                        Float.parseFloat(mTxList.get(3)), Float.parseFloat(mTxList.get(3)),
+                        Integer.parseInt(mTxList.get(4)), currSel1,
+                        currSel2, Integer.parseInt(mTxList.get(5)),
 
                         0, currDate, currDate
                 );
@@ -184,7 +190,7 @@ public class AddAtrFragment extends Fragment {
                     input.setError(msg);
                     return false;
                 }
-                else if (getInputType(input) == 0 && Double.parseDouble(s) <= 0){
+                else if (getInputType(input) == 0 && Double.parseDouble(s.replaceAll("\\D","")) <= 0){
                     String msg = tag.toString();
                     input.setError(msg);
                     return false;

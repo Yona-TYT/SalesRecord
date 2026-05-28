@@ -109,15 +109,22 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
-            <EditText
+            <com.example.salesrecord.CurrencyEditText
                 android:id="@+id/et_precio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0.00"
-                android:text="0.00"
+                android:focusable="true"
+                android:imeOptions="actionDone"
+                android:maxLines="1"
                 android:layout_marginBottom="16dp"
+                android:hint="0,00"
                 android:tag="Este valor debe ser mayor a 0"
+
+                app:localeTag="ES"
+                app:maxNumberOfDecimalDigits="2"
+                app:currencySymbol="$"
+                app:currencySymbolSuffix="true"
+
                 />
 
 

@@ -3,6 +3,8 @@ package com.example.salesrecord.ui.home;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.CurrencyEditText;
+import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SelListAdapter;
@@ -32,6 +36,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.R;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,8 +46,11 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
 
     // DB
+    private DaoSal daoSal;
     private DaoArt daoArt;
     private List<Article> mArtList =  new ArrayList<>();
+
+    private CurrencyEditText mInput1;
 
     private SearchView searchBar;
     private GridView gridView;
@@ -53,6 +61,7 @@ public class HomeFragment extends Fragment {
     private ListView mListView;
 
     private Button mButt1;
+    private Button mButt2;
 
     private Long currGrid = 0L;
 
@@ -65,7 +74,6 @@ public class HomeFragment extends Fragment {
 
     private Sale crrSale;
 
-    private DaoSal daoSal;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -77,16 +85,23 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-//        final TextView textView = binding.textHome;
+        mInput1 = binding.inputHome1;
         gridView = binding.gcImg;
         mListView = binding.viewList;
-        viewTotal = binding.homeText1;
+        viewTotal = binding.homeText2;
 
         searchBar = binding.searchBar;
 
-        mButt1 = binding.butt1;
+        mButt1 = binding.buttHome1;
+        mButt2 = binding.buttHome2;
 
-        daoSal = StartVar.appDBall.daoSal();
+        GetDollar mGet = new GetDollar(contex, getActivity(), 0, mInput1);
+        try {
+            GetDollar.urlRun();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 //        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         setViwes();
 
@@ -117,8 +132,45 @@ public class HomeFragment extends Fragment {
         objListAll.clear();
         objListSal.clear();
 
+        daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
         mArtList = daoArt.getUsers();
+
+        // Boton Recargar
+        mButt1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GetDollar mGet = new GetDollar(contex, getActivity(), 0, mInput1);
+                try {
+                    GetDollar.urlRun();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        mInput1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(s != null && !s.toString().isEmpty() && StartVar.mDollar > 0){
+                    refreshSaleListUI();
+                    if (mAdapter1 != null) {
+                        mAdapter1.notifyDataSetChanged();
+                    }
+
+                }
+            }
+        });
+
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -146,6 +198,8 @@ public class HomeFragment extends Fragment {
         for (Article obj : mArtList) {
             objListAll.add(setGalleryArray(obj));
         }
+
+        Basic.msg(mArtList.get(0).descr);
 
         //Basic.msg(""+mArtList.get(0).totalcount);
 
@@ -229,7 +283,10 @@ public class HomeFragment extends Fragment {
                         objListSal.removeIf(obj -> obj.saleCount == 0);
 
                         if (mAdapter1 != null) {
-                            viewTotal.setText("Total: "+setTotal(objListSal));
+
+                            Double total = setTotal(objListSal);
+                            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+
                             mAdapter1.notifyDataSetChanged();
                         }
                     }
@@ -238,10 +295,8 @@ public class HomeFragment extends Fragment {
         });
 
         // Para el Boton de Precesar PAgos
-        mButt1.setOnClickListener(v -> {
+        mButt2.setOnClickListener(v -> {
             if(!objListSal.isEmpty()){
-                Basic.msg("Aqui Hay!");
-
                 //Procesa la venta y guarda el registro
                 if(saveSale()){
                     //Si sale bien se limpian los valores
@@ -257,7 +312,10 @@ public class HomeFragment extends Fragment {
                     }
 
                     if (mAdapter1 != null && mAdapter2 != null) {
-                        viewTotal.setText("Total: "+setTotal(objListSal));
+
+                        Double total = setTotal(objListSal);
+                        viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+
                         mAdapter1.notifyDataSetChanged();
                         mAdapter2.notifyDataSetChanged();
                     }
@@ -276,11 +334,11 @@ public class HomeFragment extends Fragment {
     private double setTotal(List<Obj> list){
         if (list.isEmpty()){
             viewTotal.setVisibility(View.INVISIBLE);
-            mButt1.setEnabled(false);
+            mButt2.setEnabled(false);
         }
         else {
             viewTotal.setVisibility(View.VISIBLE);
-            mButt1.setEnabled(true);
+            mButt2.setEnabled(true);
         }
 
         double total = 0.0;

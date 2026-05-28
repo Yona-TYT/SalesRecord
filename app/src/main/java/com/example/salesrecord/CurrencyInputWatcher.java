@@ -53,7 +53,7 @@ public class CurrencyInputWatcher implements TextWatcher {
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
         this.hasDecimalPoint = s.toString().contains(String.valueOf(this.decimalFormatSymbols.getDecimalSeparator()));
-        String newInputString = s.toString().replaceAll(this.currencySymbol, "");
+        String newInputString = s.toString().replace(this.currencySymbol, "");
         if(newInputString.length() > this.currencySymbol.length()) {
             Pattern patt = Pattern.compile("(\\D$)");
             Matcher m = patt.matcher(newInputString);
