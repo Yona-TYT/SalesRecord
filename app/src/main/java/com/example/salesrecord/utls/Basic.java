@@ -34,17 +34,23 @@ import java.util.IllformedLocaleException;
 import java.util.Locale;
 import java.util.Objects;
 
+
 public class Basic {
-    @SuppressLint("StaticFieldLeak")
     private static Context mContex;
+    public static boolean isDow = true;
+    public static boolean isUp = false;
+
+    private static final String ACTION_APP_EVENT = "com.example.cow_data.EVENT";
+    private static final String EXTRA_EVENT_TYPE = "cow_data_event";
+    private static final String EXTRA_FILE_PATHS = "file_paths";
+    private static final String EXTRA_SENDER_TYPE = "sender_type";
+    private static final String EVENT_FILE_UPLOADED = "file_uploaded";
+
     private static String oldMsg = "";
     private static long lastShowTime = 0;
 
     public Basic(Context mContex) {
-        Basic.mContex = mContex;
-        if (mContex == null){
-            Basic.mContex = AppContextProvider.getContext();
-        }
+        this.mContex = mContex;
     }
 
     public int getPixelSiz(int id) {
@@ -57,6 +63,82 @@ public class Basic {
         return getPixelSiz(id) / scaledDensity;
     }
 
+    public static Float parseFloat(String value){
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setDecimalSeparator('.');
+        DecimalFormat format = new DecimalFormat("0.##");
+        format.setDecimalFormatSymbols(symbols);
+
+        try {
+            return format.parse(value).floatValue();
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return (float)0.00;
+    }
+
+    public static String setFormatter(String value){
+        value = value.replaceAll("([^\\d.,-])","");
+        if (value.isEmpty()){
+            value = "0";
+        }
+        return setFormatter(Double.parseDouble(value));
+    }
+    public static String setFormatter(Double value){
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("ES"));
+        DecimalFormat formatter = (DecimalFormat) nf;
+        formatter.applyPattern("###,##0.00");
+        return formatter.format(value);
+    }
+
+    @SuppressLint("DefaultLocale")
+    public static String setValue(String value) {
+        value = value.replaceAll("([^\\d.,])","");
+        if (value.isEmpty()){
+            value = "0";
+        }
+        Double precDoll = StartVar.mDollar;
+        Double number = Double.parseDouble(value);
+        if (StartVar.mCurrency == 1) {    //Selector en Bs
+            number = number / precDoll;
+        }
+        return String.valueOf(number);
+    }
+
+    public static Double setValue(double value) {
+        Double precDoll = StartVar.mDollar;
+        if (StartVar.mCurrency == 1) {    //Selector en Bs
+            value = value / precDoll;
+        }
+        return value;
+    }
+
+    @SuppressLint("DefaultLocale")
+    public static String getConverteValue(String value) {
+        value = value.replaceAll("([^\\d.,])","");
+        value = value.replaceAll(",",".");
+
+        if (value.isEmpty()){
+            value = "0";
+        }
+        Double number = Double.parseDouble(value);
+        return String.valueOf(getConverteValue(number));
+    }
+
+    public static Double getConverteValue(Double value) {
+
+        Double precDoll = StartVar.mDollar;
+        if (StartVar.mCurrency == 1) {    //Selector en Bs
+            value = value * precDoll;
+        }
+        return value;
+    }
+
+    public static String getMaskConv(Double value, int symb) {
+
+        return getMask(getConv(value, symb), symb);
+    }
 
     @SuppressLint("DefaultLocale")
     public static String getConv(String value) {
@@ -88,11 +170,6 @@ public class Basic {
         return value;
     }
 
-    public static String getMaskConv(Double value, int symb) {
-
-        return getMask(getConv(value, symb), symb);
-    }
-
     public static String getMask(String value, int symb) {
         value = setFormatterEs(value);
 
@@ -117,26 +194,19 @@ public class Basic {
         return value;
     }
 
-    public static String setFormatAlternate(String value, boolean langEs){
-        value = value.replaceAll("([^\\d.,-])","");
-        if (value.isEmpty()){
-            value = "0";
-        }
-        if(langEs) {
-            return setFormatterInternal(Double.parseDouble(value), new Locale("es", "VE"));
-        }
-        else{
-            return setFormatterInternal(Double.parseDouble(value), Locale.US);
-        }
+    @SuppressLint("DefaultLocale")
+    public static String getValueFormatter(String value) {
+        return setFormatter(getConverteValue(value));
+    }
+    public static String getValueFormatter(Double value) {
+        return setFormatter(getConverteValue(value).toString());
     }
 
-    public static String setFormatAlternate(Double value, boolean langEs) {
-        if (langEs) {
-            return setFormatterEs(value);
-        }
-        else {
-            return setFormatterEn(value);
-        }
+    public static Float floatFormat(String value) {
+        String mValue = value.replaceAll("([^.\\d])", "");
+        mValue = mValue.replaceAll("^.$", "0.00");
+
+        return mValue.isEmpty() ? (float)0 : Float.parseFloat(mValue);
     }
 
     public static String setFormatterEs(String value){
@@ -154,6 +224,7 @@ public class Basic {
     public static String setFormatterEs(Double value) {
         return setFormatterInternal(value, new Locale("es", "VE"));
     }
+
     public static String setFormatterInternal(Double value, Locale locale){
         if (value == null) return "";
         DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -161,27 +232,47 @@ public class Basic {
         return df.format(value);
     }
 
-    public static Double getDouble(String value, boolean isEs) throws ParseException {
-        Locale locale = isEs ? new Locale("es", "VE") : Locale.US;
-        return getDouble(value, locale);
+    public static Double getDebt(int mult, Double mont, Double debt) {
+//        mont = mont.replaceAll("([^.0-9]+)", "");
+//        debt = debt.replaceAll("([^.0-9]+)", "");
+
+        double numA = mont;
+        double numB = debt;
+
+        double result = numA*mult;
+
+        result -= numB;
+
+        return result;
+
     }
 
-    public static Double getDouble(String value, Locale locale) throws ParseException {
+    public static String setMask(String value, String sing) {
+        value = setFormatter(value);
 
-        DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(locale);
-        df.applyPattern("###,##0.00");
-        return Objects.requireNonNull(df.parse(value)).doubleValue();
+        return value;
     }
 
-    public static Double notFormatter(String value) throws ParseException {
-        value = value.replaceAll("([^\\d.,-])","");
-        if (value.isEmpty()){
-            value = "0,00";
-        }
-        NumberFormat nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("ES"));
-        DecimalFormat formatter = (DecimalFormat) nf;
-        formatter.applyPattern("###,##0.00");
-        return Objects.requireNonNull(formatter.parse(value)).doubleValue();
+    public static String formatDecimal(Double value) {
+        if (value == null) return "";
+
+        return getFormatDecimal().format(value);
+    }
+
+    public static String formatDecimal(Float value) {
+        if (value == null) return "";
+        return getFormatDecimal().format(value);
+    }
+
+    public static DecimalFormat getFormatDecimal() {
+        // Forzamos el locale de España para asegurar punto en miles y coma en decimales
+        Locale spanishLocale = Locale.forLanguageTag("es-ES");
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(spanishLocale);
+
+        // El '#' oculta los ceros innecesarios
+        DecimalFormat df = new DecimalFormat("###,###.##", symbols);
+
+        return df;
     }
 
     public static String nameProcessor(String value){
@@ -246,48 +337,48 @@ public class Basic {
         });
     }
 
+
     public static String parseMoneyValue(String value, String groupingSeparator, String currencySymbol) {
         return value.replace(groupingSeparator, "").replace(currencySymbol, "");
     }
 
-    public static boolean isLollipopAndAbove() {
-        return true;
+    public static Number parseMoneyValueWithLocale(Locale locale, String value, String groupingSeparator, String currencySymbol) {
+        String valueWithoutSeparator = parseMoneyValue(value, groupingSeparator, currencySymbol);
+        try {
+            return NumberFormat.getInstance(locale).parse(valueWithoutSeparator);
+        } catch (ParseException exception) {
+            return 0;
+        }
     }
 
-    /**
-     * Configura un EditText (o CurrencyEditText) en modo solo lectura
-     * @param editText El EditText a configurar
-     * @param readOnly true = solo lectura, false = editable
-     */
-    public static void setReadOnly(EditText editText, boolean readOnly) {
-        if (editText == null) return;
-
-        // Configuración de interactividad
-        editText.setFocusable(!readOnly);
-        editText.setFocusableInTouchMode(!readOnly);
-        editText.setCursorVisible(!readOnly);
-        editText.setClickable(!readOnly);
-        editText.setEnabled(!readOnly);
-
-        if (readOnly) {
-            // Guardamos el fondo original solo la primera vez
-            if (editText.getTag() == null) {
-                editText.setTag(editText.getBackground());   // Guardamos en el Tag
-            }
-            editText.setBackground(null);                    // Modo solo lectura limpio
-        } else {
-            // Restauramos el fondo original
-            Drawable originalBackground = (Drawable) editText.getTag();
-
-            if (originalBackground != null) {
-                editText.setBackground(originalBackground);
-            } else {
-                // Fallback seguro: restaurar fondo del tema
-                editText.setBackgroundTintList(null);
-                if (editText.getBackground() != null) {
-                    editText.getBackground().clearColorFilter();
-                }
-            }
+    public static Locale getLocaleFromTag(String localeTag) {
+        try {
+            return new Locale.Builder().setLanguageTag(localeTag).build();
+        } catch (IllformedLocaleException e) {
+            return Locale.getDefault();
         }
+    }
+
+    public static boolean isLollipopAndAbove() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+    }
+
+    public static void sendFileUploadedBroadcast(Context context, String[] filePaths, String senderType) {
+        //LOG.debug("Sending file uploaded broadcast para: " + senderType);
+        Intent intent = new Intent(ACTION_APP_EVENT);
+        intent.putExtra(EXTRA_EVENT_TYPE, EVENT_FILE_UPLOADED);
+        intent.putExtra(EXTRA_FILE_PATHS, filePaths);
+        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
+        context.sendBroadcast(intent);
+    }
+
+    // También para errores
+    public static void sendUploadErrorBroadcast(Context context, String errorMessage, String senderType) {
+        //LOG.debug("Sending upload error broadcast: " + errorMessage);
+        Intent intent = new Intent(ACTION_APP_EVENT);
+        intent.putExtra(EXTRA_EVENT_TYPE, "upload_error");
+        intent.putExtra("error_message", errorMessage);
+        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
+        context.sendBroadcast(intent);
     }
 }

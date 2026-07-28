@@ -238,11 +238,17 @@ public class HomeFragment extends Fragment {
                 }
 
                 // ==================== CLICK NORMAL (fuera del botón X) ====================
-                if (view.getId() != R.id.buttDel1) {
+                if (view.getId() != R.id.buttDel1 && view.getId() != R.id.inputCount ) {
 
                     if (item.currCount > 0 && item.maxCount > 0 && item.saleCount < item.maxCount) {
+                        if((item.saleCount +1) > item.maxCount) {
+                            Basic.msg("Remanente no alcanza");
+                            return;
+                        }
+
                         item.saleCount++;
                         item.currCount--;
+
                         objListAll.set(position, item);
 
 
@@ -414,7 +420,8 @@ public class HomeFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.currcount, art.totalcount, 0, mPrice, art.uid);
+                art.currcount, art.totalcount, 0, mPrice, art.margen
+,                art.uid);
 
         return mObj;
 

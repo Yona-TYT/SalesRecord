@@ -12,7 +12,7 @@ public class GlobalData {
 
     // Variables globales
 
-    public List<String> unitList = Arrays.asList("N/A", "kg", "L", "m", "cm", "?", "?", "?");
+    public List<String> unitList = Arrays.asList("", "kg", "L", "m", "cm", "?", "?", "?");
 
     public List<String> spinTasa = Arrays.asList("BCV", "Promedio", "Paralelo", "Valor Personalizado");
     public int optTasa = 0;

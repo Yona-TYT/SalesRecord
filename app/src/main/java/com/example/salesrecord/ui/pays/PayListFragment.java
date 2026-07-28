@@ -1,4 +1,4 @@
-package com.example.salesrecord.ui.addAtr;
+package com.example.salesrecord.ui.pays;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,6 +22,7 @@ import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentAddBinding;
+import com.example.salesrecord.databinding.FragmentPaysBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
@@ -31,9 +32,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AddAtrFragment extends Fragment {
+public class PayListFragment extends Fragment {
 
-    private FragmentAddBinding binding;
+    private FragmentPaysBinding binding;
 
     // DB
     private DaoArt daoArt;
@@ -56,10 +57,8 @@ public class AddAtrFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        DashboardViewModel dashboardViewModel =
-                new ViewModelProvider(this).get(DashboardViewModel.class);
 
-        binding = FragmentAddBinding.inflate(inflater, container, false);
+        binding = FragmentPaysBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         spinL2 = glData.getUnitList();

@@ -7,7 +7,7 @@
     <string name="title_activity_details">DetailsActivity</string>
     <string name="title_dashboard">Agregar</string>
     <string name="title_edit">Inventario</string>
-    <string name="title_reg">Registro</string>
+    <string name="title_pays">Lista Pagos</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

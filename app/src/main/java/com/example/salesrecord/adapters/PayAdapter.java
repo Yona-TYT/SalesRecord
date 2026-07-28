@@ -97,6 +97,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             // Se ajustan los parametros del Texto ----------------------------------
             Integer opt = (Integer) textList.get(idx)[4];
             String txName = (String) textList.get(idx)[1];
+
             String txMont = (opt == 0 ? "+" : "-") + Basic.setFormatterEs((double) textList.get(idx)[2]) + " " + mCurrencyList.get(mCindex);
             String txFech = (String) textList.get(idx)[3];
             text1.setText(" " + txMont + " " + txName);

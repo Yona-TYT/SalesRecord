@@ -43,7 +43,9 @@
             android:id="@+id/etNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:enabled="false"
+            />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- INPUT: MONTO (Decimal) -->
@@ -63,6 +65,7 @@
             android:focusable="true"
             android:imeOptions="actionDone"
             android:maxLines="1"
+            android:enabled="false"
 
             app:localeTag="ES"
             app:maxNumberOfDecimalDigits="2"
@@ -71,8 +74,11 @@
             />
     </com.google.android.material.textfield.TextInputLayout>
 
+
     <!-- INPUT: REPONER (Decimal) -->
     <com.google.android.material.textfield.TextInputLayout
+
+
         android:id="@+id/tilReponer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -82,11 +88,24 @@
         app:layout_constraintTop_toBottomOf="@id/tilMonto"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toStartOf="@id/tilMargen">
-        <com.google.android.material.textfield.TextInputEditText
+
+
+        <com.example.salesrecord.CurrencyEditText
             android:id="@+id/etReponer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal" />
+            android:focusable="true"
+            android:imeOptions="actionDone"
+            android:maxLines="1"
+            android:enabled="false"
+
+            app:localeTag="EN"
+            app:maxNumberOfDecimalDigits="2"
+            app:currencySymbolSuffix="true"
+            app:currencySymbol="Uds"            />
+
+
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- INPUT: MARGEN -->
@@ -94,17 +113,28 @@
         android:id="@+id/tilMargen"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Margen Ganancia"
+        android:hint="Ganancia"
         android:layout_marginTop="4dp"
         android:layout_marginStart="4dp"
         app:layout_constraintTop_toBottomOf="@+id/tilMonto"
         app:layout_constraintStart_toEndOf="@+id/tilReponer"
         app:layout_constraintEnd_toEndOf="@id/guideline2">
-        <com.google.android.material.textfield.TextInputEditText
+
+        <com.example.salesrecord.CurrencyEditText
             android:id="@+id/etMargen"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal" />
+            android:focusable="true"
+            android:imeOptions="actionDone"
+            android:maxLines="1"
+            android:enabled="false"
+
+            app:localeTag="EN"
+            app:maxNumberOfDecimalDigits="2"
+            app:currencySymbolSuffix="true"
+            app:currencySymbol="%"
+            />
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- SWITCH: DISPONIBLE / NO DISPONIBLE -->
@@ -125,7 +155,7 @@
         android:layout_height="wrap_content"
         android:text="Guardar"
         android:layout_marginBottom="10dp"
-        android:enabled="false"
+        android:enabled="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />

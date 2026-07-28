@@ -20,16 +20,17 @@ public class Obj implements Serializable, Parcelable {
     public int click = 0;
     public int unit = 0;
 
-    public float currCount = 0;
-    public float maxCount = 0;
-    public float minCount = 0;
-    public float saleCount = 0;
+    public double currCount = 0;
+    public double maxCount = 0;
+    public double minCount = 0;
+    public double saleCount = 0;
 
     public double price = 0.0;
+    public double margen = 0.0;
 
     public long id;
 
-    public Obj(String strId, String name, String desc, String img, int click, int unit, float currCount, float maxCount, float saleCount, double price, Long id) {
+    public Obj(String strId, String name, String desc, String img, int click, int unit, double currCount, double maxCount, double saleCount, double price, double margen, Long id) {
         this.strId = strId;
         this.name = name;
         this.desc = desc;
@@ -43,6 +44,7 @@ public class Obj implements Serializable, Parcelable {
         this.saleCount = saleCount;
 
         this.price = price;
+        this.margen = margen;
 
         this.id = id;
     }
@@ -56,11 +58,12 @@ public class Obj implements Serializable, Parcelable {
         startDate = in.readInt();
         endDate = in.readInt();
         currDate = in.readInt();
-        currCount = in.readFloat();
-        maxCount = in.readFloat();
-        minCount = in.readFloat();
-        saleCount = in.readFloat();
+        currCount = in.readDouble();
+        maxCount = in.readDouble();
+        minCount = in.readDouble();
+        saleCount = in.readDouble();
         price = in.readDouble();
+        margen = in.readDouble();
         id = in.readLong();
     }
 
@@ -91,11 +94,12 @@ public class Obj implements Serializable, Parcelable {
         dest.writeInt(startDate);
         dest.writeInt(endDate);
         dest.writeInt(currDate);
-        dest.writeFloat(currCount);
-        dest.writeFloat(maxCount);
-        dest.writeFloat(minCount);
-        dest.writeFloat(saleCount);
+        dest.writeDouble(currCount);
+        dest.writeDouble(maxCount);
+        dest.writeDouble(minCount);
+        dest.writeDouble(saleCount);
         dest.writeDouble(price);
+        dest.writeDouble(margen);
         dest.writeLong(id);
     }
 }

@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,6 +17,7 @@ import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.Obj;
 
 import java.util.ArrayList;
@@ -85,7 +85,7 @@ public class SaleAdapter extends BaseAdapter  {
         // Contador y Boton X
         TextView button = holder.mButt;
 
-        float count = item.saleCount;
+        double count = item.saleCount;
         if (count > 0) {
 
             button.setVisibility(View.VISIBLE);
@@ -99,7 +99,7 @@ public class SaleAdapter extends BaseAdapter  {
                 int idx = (int) tag;
 
                 Obj mitem = objList.get(idx);
-                float num = mitem.saleCount;
+                double num = mitem.saleCount;
 
                 mitem.saleCount = ( num > 0 ? num-1 : 0 ); //Decrementa si es el Button X
 
@@ -151,8 +151,10 @@ public class SaleAdapter extends BaseAdapter  {
 
         // Textos
         holder.view1.setText(item.name);
-        Double total = (item.price*item.saleCount);
-        holder.view2.setText("Cantidad: " +item.saleCount+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1)+")");
+        double clcPrice = MathUtls.addPercentage(item.price, item.margen);
+
+        Double total = (clcPrice*item.saleCount);
+        holder.view2.setText("Cantidad: " +Basic.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1)+")");
 
 
         holder.view1.setTextColor(

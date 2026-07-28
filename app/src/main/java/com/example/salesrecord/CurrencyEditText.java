@@ -447,6 +447,39 @@ public class CurrencyEditText extends AppCompatEditText {
         }
     }
 
+    public void showAndSelectAll() {
+        // 1. Forzamos la visibilidad inmediatamente
+        this.setVisibility(View.VISIBLE);
+
+        // 2. Pedimos el foco en el siguiente ciclo de renderizado
+        this.post(() -> {
+            this.requestFocus();
+
+            // 3. Forzamos la apertura del teclado usando SHOW_FORCED
+            // Esto evita que el sistema operativo limpie la selección al inicializar el teclado
+            InputMethodManager imm = (InputMethodManager) mContex.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+            }
+
+            // 4. Forzamos la selección del bloque numérico respetando tu prefijo/sufijo
+            String text = getText().toString();
+            int textLength = text.length();
+            int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
+
+            if (textLength > symbolLength) {
+                if (currencySymbolSuffix) {
+                    int end = textLength - symbolLength;
+                    setSelection(0, end); // Selecciona solo el número antes del sufijo
+                } else {
+                    int start = symbolLength;
+                    setSelection(start, textLength); // Selecciona solo el número después del prefijo
+                }
+            }
+        });
+    }
+
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -479,7 +512,41 @@ public class CurrencyEditText extends AppCompatEditText {
         }
     }
 
-    // Método para detectar visibilidad del teclado
+//    // Método para detectar visibilidad del teclado
+//    private void setupKeyboardListener() {
+//        if (keyboardListener == null) {
+//            keyboardListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+//                @Override
+//                public void onGlobalLayout() {
+//                    Rect r = new Rect();
+//                    getRootView().getWindowVisibleDisplayFrame(r);
+//                    int screenHeight = getRootView().getHeight();
+//                    int keypadHeight = screenHeight - r.bottom;
+//
+//                    boolean keyboardShown = keypadHeight > screenHeight * 0.15;  // Umbral ~15% para detectar teclado
+//                    if (keyboardShown != isKeyboardVisible) {
+//                        isKeyboardVisible = keyboardShown;
+//                        toggleViewsVisibility(keyboardShown);  // Oculta si visible, muestra si no
+//
+//                        if (!keyboardShown) {  // FIXED: Al cerrar teclado
+//                            if (keepFocusOnKeyboardClose) {
+//                                // Mantén foco si attr=true
+//                                post(() -> requestFocus());
+//                            } else {
+//                                // FIXED: Fuerza pérdida de foco si attr=false (oculta cursor)
+//                                post(() -> {
+//                                    clearFocus();
+//                                    setSelection(getSelectionStart());
+//                                });
+//                            }
+//                        }
+//                    }
+//                }
+//            };
+//            getViewTreeObserver().addOnGlobalLayoutListener(keyboardListener);
+//        }
+//    }
+
     private void setupKeyboardListener() {
         if (keyboardListener == null) {
             keyboardListener = new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -490,17 +557,37 @@ public class CurrencyEditText extends AppCompatEditText {
                     int screenHeight = getRootView().getHeight();
                     int keypadHeight = screenHeight - r.bottom;
 
-                    boolean keyboardShown = keypadHeight > screenHeight * 0.15;  // Umbral ~15% para detectar teclado
+                    boolean keyboardShown = keypadHeight > screenHeight * 0.15;
                     if (keyboardShown != isKeyboardVisible) {
                         isKeyboardVisible = keyboardShown;
-                        toggleViewsVisibility(keyboardShown);  // Oculta si visible, muestra si no
 
-                        if (!keyboardShown) {  // FIXED: Al cerrar teclado
+                        // 1. Ejecuta tu lógica original de intercambio visual
+                        toggleViewsVisibility(keyboardShown);
+
+                        // 2. SOLUCIÓN: Si el teclado acaba de subir, remachamos la selección numérica
+                        if (keyboardShown) {
+                            post(() -> {
+                                String text = getText().toString();
+                                int textLength = text.length();
+                                int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
+
+                                if (textLength > symbolLength) {
+                                    if (currencySymbolSuffix) {
+                                        int end = textLength - symbolLength;
+                                        setSelection(0, end); // Resalta solo el número antes del sufijo
+                                    } else {
+                                        int start = symbolLength;
+                                        setSelection(start, textLength); // Resalta solo el número después del prefijo
+                                    }
+                                }
+                            });
+                        }
+
+                        // 3. Tu lógica original para cuando el teclado se cierra (Permanece intacta)
+                        if (!keyboardShown) {
                             if (keepFocusOnKeyboardClose) {
-                                // Mantén foco si attr=true
                                 post(() -> requestFocus());
                             } else {
-                                // FIXED: Fuerza pérdida de foco si attr=false (oculta cursor)
                                 post(() -> {
                                     clearFocus();
                                     setSelection(getSelectionStart());

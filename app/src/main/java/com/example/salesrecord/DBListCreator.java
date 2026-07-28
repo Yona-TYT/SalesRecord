@@ -481,7 +481,7 @@ public class DBListCreator extends AppCompatActivity {
                     Article obj = new Article(
                             spl[0], spl[1], spl[2], spl[3], spl[4],
                             Double.parseDouble(spl[5]), Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
-                            Double.parseDouble(spl[8]), Float.parseFloat(spl[9]), Float.parseFloat(spl[10]), Integer.parseInt(spl[11]),
+                            Double.parseDouble(spl[8]), Double.parseDouble(spl[9]), Double.parseDouble(spl[10]), Integer.parseInt(spl[11]),
                             Integer.parseInt(spl[12]),  Integer.parseInt(spl[13]), Integer.parseInt(spl[14]), Integer.parseInt(spl[15]),
                             Long.parseLong(spl[16]), Long.parseLong(spl[17])
                     );
