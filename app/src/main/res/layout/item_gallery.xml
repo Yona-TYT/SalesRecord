@@ -37,8 +37,8 @@
             android:gravity="center"
 
             android:maxLines="1"
-            android:minWidth="25dp"
-            android:minHeight="25dp"
+            android:minWidth="35dp"
+            android:minHeight="35dp"
             android:paddingHorizontal="2dp"
             android:paddingVertical="2dp"
 

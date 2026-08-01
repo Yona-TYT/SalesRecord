@@ -24,8 +24,8 @@ public interface DaoCfg extends GenericDao<Conf>{
     @Update
     void update(Conf config);
 
-    @Query("UPDATE Conf SET version = :version, hexid= :hexid, date= :date, time= :time, curr= :curr, dolar= :dolar, moneda= :moneda, mes= :mes, show= :show WHERE config= :user")
-    void updateUser(String user, String version, String hexid, String date, String time, Integer curr, Double dolar, Integer moneda, Integer mes, Integer show);
+    @Query("UPDATE Conf SET version = :version, hexid= :hexid, datetasa= :datetasa, dolar= :dolar, date= :date, time= :time, curr= :curr, moneda= :moneda, mes= :mes, show= :show WHERE config= :user")
+    void updateUser(String user, String version, String hexid, String datetasa, Double dolar, Long date, Long time, Integer curr, Integer moneda, Integer mes, Integer show);
 
     @Query("UPDATE Conf SET date= :date, time= :time WHERE config= :user")
     void updateDateTime(String user, String date, String time);

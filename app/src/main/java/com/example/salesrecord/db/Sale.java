@@ -18,7 +18,7 @@ public class Sale {
     
     public Integer status;      // Pendiente, en proceso, completada
     public String imagen;
-    public String time;
+    public Long time;
 
 
     public String cltid;
@@ -29,7 +29,7 @@ public class Sale {
     public Long fecha;
 
     public Sale(@NonNull String sale, String cliente, String artclist, Double monto, Double tasa,
-                Integer status, String imagen, String time, String cltid, Integer more4, String more5,
+                Integer status, String imagen, Long time, String cltid, Integer more4, String more5,
                 Long fecha
                 )
     {

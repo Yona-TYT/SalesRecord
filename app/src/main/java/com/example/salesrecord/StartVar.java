@@ -64,7 +64,8 @@ public class StartVar {
     public static int mCurrency = 0;        //Moneda seleccionada
     public static int mCurrMes = 0;        //Mes seleccionado
 
-    public static Double mDollar = 600d;       //Precio del dolar
+    public static Double mDollar = 0d;       //Precio del dolar
+    public static String mShortDate = "";
 
     public static ArrayList<String> textList;
     public static ArrayList<String> dirList;
@@ -119,13 +120,12 @@ public class StartVar {
         //Instancia de la base de datos para Config
         StartVar.mConfigDB = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
 
-        Basic.msg(""+StartVar.mConfigDB);
         if(StartVar.mConfigDB == null){
-            String date = "";
-            String time= "";
+            long currDate = 0;
+            long currTime = 0;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                date = LocalDate.now().toString();
-                time = LocalTime.now().toString();
+                currDate = java.time.Instant.now().toEpochMilli();
+                currTime = System.currentTimeMillis();
             }
 
             // Generar UUID
@@ -142,7 +142,7 @@ public class StartVar {
             }
 
             //configDatabase.daoConf().insertUser();
-            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, date, time, 0, 0d, 0, 0, 0);
+            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, "",0d, currDate, currTime, 0, 0, 0, 0);
             StartVar.appDBall.daoCfg().insertUser(obj);
         }
     }
@@ -180,6 +180,11 @@ public class StartVar {
     public void setDollar(Double value){
         StartVar.mDollar = value;
     }
+
+    public void setShortDate(String value){
+        StartVar.mShortDate = value;
+    }
+
     public void setRootView(View view){mRootView = view;}
 
     public void setArrayList(ArrayList<String> listA, ArrayList<String> listB, ArrayList<String> listC){

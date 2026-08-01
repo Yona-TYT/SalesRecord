@@ -23,6 +23,8 @@
     <dimen name="button_h1">38dp</dimen>
     <dimen name="spinner_w1">150dp</dimen>
     <dimen name="spinner_h1">35dp</dimen>
+    <dimen name="spinner_hs">28dp</dimen>
+
     <dimen name="sw_ws">115dp</dimen>
     <dimen name="sw_h1">38dp</dimen>
 

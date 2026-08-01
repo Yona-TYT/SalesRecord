@@ -3,6 +3,7 @@ package com.example.salesrecord.activitys;
 
 import static com.example.salesrecord.StartVar.appDBall;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,15 +20,20 @@ import androidx.core.view.WindowInsetsCompat;
 import net.openid.appauth.AuthState;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GetDollar;
+import com.example.salesrecord.db.Conf;
+import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
@@ -38,6 +44,7 @@ import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.Msg;
 
 public class Preloader extends AppCompatActivity {
 
@@ -69,17 +76,15 @@ public class Preloader extends AppCompatActivity {
             Fecha obj;
             //Inicia la fecha actual
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                LocalDate currdate = LocalDate.now();
-                LocalTime currtime = LocalTime.now();
-                obj = new Fecha("dateID0", ""+currdate.getYear(), currdate.getMonth().toString(), ""+currdate.getDayOfMonth(), CalendUtls.getTime(currtime.toString()), currdate.toString());
+                long   currDate = java.time.Instant.now().toEpochMilli();
+                obj = new Fecha("dateID0", CalendUtls.getShortDateYear(currDate), currDate, System.currentTimeMillis());
             }
             else {
-                obj = new Fecha("dateID0", "0", "0", "0", "0", "0");
+                obj = new Fecha("dateID0","", (long)0, (long)0);
             }
             appDBall.daoDat().insertUser(obj);
             //-------------------------------------------------------
         }
-
 
         StartVar.mLifecycle = ProcessLifecycleOwner.get();
 
@@ -101,6 +106,20 @@ public class Preloader extends AppCompatActivity {
 
         AuthState authState = new AuthState();
         authState = DriveManager.getAuthState();
+
+
+        AppContextProvider.runWithSafeActivity(new AppContextProvider.SafeActivityRunnable() {
+            @Override
+            public void onActivityReady(Activity activity) {
+                //Se obtiene el precio del dolar por primera vez
+                new GetDollar(activity);
+                try {
+                    GetDollar.urlRun();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
 
 
         if(authState.isAuthorized()) {

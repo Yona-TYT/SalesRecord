@@ -2,6 +2,9 @@ package com.example.salesrecord;
 
 import android.content.Context;
 
+import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.Sale;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,7 +15,14 @@ public class GlobalData {
 
     // Variables globales
 
+    public Article currArt = null;
+    public String currSalId = "";
+
     public List<String> unitList = Arrays.asList("", "kg", "L", "m", "cm", "?", "?", "?");
+
+    public List<String> categ = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
+
+    public List<String> saleType = Arrays.asList("Venta", "Fiado", "Perdida");
 
     public List<String> spinTasa = Arrays.asList("BCV", "Promedio", "Paralelo", "Valor Personalizado");
     public int optTasa = 0;
@@ -26,21 +36,15 @@ public class GlobalData {
             new Double[] {0.0, 0.0, 0.0}
     };
 
-
     public static String[] dataList = {"","","","","","",""};
 
     public static long[] longList = new long[0];
 
     public static double[] doubList = new double[0];
 
-
     public static String[] dataDbg = {""};
 
     public int optCalc = 0;
-
-
-
-
 
     private GlobalData(Context context) {
         this.applicationContext = AppContextProvider.getContext(); // Garantizamos ApplicationContext
@@ -70,6 +74,20 @@ public class GlobalData {
         if (instance == null) {
             instance = new GlobalData(context);
         }
+    }
+
+    public void setCurrArt(Article obj){
+        this.currArt = obj;
+    }
+    public Article getCurrArt(){
+        return this.currArt;
+    }
+
+    public void setCurrSalId(String obj){
+        this.currSalId = obj;
+    }
+    public String getCurrSalId(){
+        return this.currSalId;
     }
 
     public void setTasaDolar(double tasa) {

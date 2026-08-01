@@ -1,7 +1,11 @@
 package com.example.salesrecord;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -23,20 +27,30 @@ import okhttp3.Response;
 
 public class GetDollar {
 
+    private static GetDollar instance;
+
     private static Context mContext;
-    private static FragmentActivity mActivity;
+    private static Activity mActivity;
     private static CurrencyEditText mInput1;
     private static int mSelec;
 
     static List<String> mUrl = Arrays.asList("https://ve.dolarapi.com/v1/dolares/oficial", "https://pydolarve.org/api/v1/dollar?page=criptodolar", "https://ve.dolarapi.com/v1/dolares/paralelo");
     static List<String> mkey = Arrays.asList("usd", "enparalelovzla");
 
-    public GetDollar(Context applicationContext, FragmentActivity mActivity, int mSelec, CurrencyEditText mInput1) {
-        this.mContext = mContext;
+    public GetDollar(Activity mActivity, int mSelec, CurrencyEditText mInput1) {
+        this.mContext = AppContextProvider.getContext();
         this.mActivity = mActivity;
         this.mSelec = mSelec;
         this.mInput1 = mInput1;
     }
+
+    public GetDollar(Activity mActivity) {
+        this.mContext = AppContextProvider.getContext();
+        this.mActivity = mActivity;
+        this.mSelec = 0;
+        this.mInput1 = null;
+    }
+
 
     public static void urlRun() throws IOException {
 
@@ -53,7 +67,67 @@ public class GetDollar {
                     @SuppressLint("SetTextI18n")
                     @Override
                     public void run() {
-                        Basic.msg("Error de CONEXION!");
+                        Basic.msg("Error de CONEXION!1");
+
+                        if(mInput1 != null ) {
+ //                           mInput1.setFocusable(true);
+                            mInput1.setFocusableInTouchMode(true);
+                            mInput1.setClickable(true);
+                            mInput1.setEnabled(true);
+//                            mInput1.setCursorVisible(true);
+
+                            mInput1.setError("Error de CONEXION");
+                            mInput1.setCurrencySymbol("Bs");
+
+                            if(StartVar.mDollar > 0) {
+                               // mInput1.setCurrencySymbol("Bs (" + StartVar.mShortDate + ")");
+                                mInput1.setText(Basic.setFormatterEs(StartVar.mDollar));
+
+                                mInput1.setError("Error de CONEXION, ultima tasa disponible de: "+StartVar.mShortDate);
+
+                            }
+                            mInput1.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                                @Override
+                                public void onFocusChange(View v, boolean hasFocus) {
+                                    if(!hasFocus) {
+                                        if (StartVar.mDollar > 0) {
+
+                                            mInput1.setText(Basic.setFormatterEs(StartVar.mDollar));
+
+                                            mInput1.setError("Error de CONEXION, ultima tasa disponible de: " + StartVar.mShortDate);
+                                        }
+                                    }
+                                }
+                            });
+
+//                            Editable editable = mInput1.getText();
+//                            if (editable != null) {
+//                                TextWatcher[] watchers = editable.getSpans(0, editable.length(), TextWatcher.class);
+//                                for (TextWatcher watcher : watchers) {
+//                                    mInput1.removeTextChangedListener(watcher);
+//                                }
+//                            }
+//                            mInput1.addTextChangedListener(new TextWatcher() {
+//                                @Override
+//                                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//                                }
+//
+//                                @Override
+//                                public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                                    double value = mInput1.getNumericValue();
+//                                    if (value > 0){
+//                                        StartVar startVar = new StartVar();
+//                                        startVar.setDollar(value);
+//                                    }
+//                                }
+//
+//                                @Override
+//                                public void afterTextChanged(Editable s) {
+//
+//                                }
+//                            });
+                        }
                     }
                 });
                 call.cancel();
@@ -84,7 +158,27 @@ public class GetDollar {
 
                                     if(mValue > 0) {
                                         startVar.setDollar(mValue);
-                                        mInput1.setText(Basic.setFormatterEs(price));
+                                        if(mInput1 != null) {
+
+                                            Editable editable = mInput1.getText();
+                                            if (editable != null) {
+                                                TextWatcher[] watchers = editable.getSpans(0, editable.length(), TextWatcher.class);
+                                                for (TextWatcher watcher : watchers) {
+                                                    mInput1.removeTextChangedListener(watcher);
+                                                }
+                                            }
+
+                                            mInput1.setError(null);
+                                            mInput1.setFocusable(false);
+                                            mInput1.setFocusableInTouchMode(false);
+                                            mInput1.setClickable(false);
+                                            mInput1.setEnabled(false);
+                                            mInput1.setCursorVisible(false);
+
+                                            mInput1.setCurrencySymbol("Bs  Dolar BCV");
+
+                                            mInput1.setText(Basic.setFormatterEs(price));
+                                        }
                                     }
                                     //Basic.msg("Precio del dolar Actualizado: " + price);
 

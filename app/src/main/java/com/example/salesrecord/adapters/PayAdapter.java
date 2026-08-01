@@ -21,10 +21,13 @@ import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.content.ContextCompat;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.activitys.PayDetailsActivity;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ThemeHelper;
+import com.example.salesrecord.utls.CalendUtls;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +36,8 @@ import java.util.List;
 public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickListener{
     //Test------------------------------------------------------------
     private Context mContex;
+    private CalendUtls cale = new CalendUtls();
     private Basic mBasic;
-    private Activity mActivity;
 
     private List<Object[]> textList = new ArrayList<>();
     private List<Object[]> currList = new ArrayList<>(); // Original Values
@@ -43,11 +46,12 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
     private ArrayList<Integer> newList = new ArrayList<>();    // Values to be displayed
 
-    public  PayAdapter(Context mContex, List<Object[]> textList, Activity mActivity){
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
+    public  PayAdapter(Context mContex, List<Object[]> textList){
         this.mContex = mContex;
         this.textList = textList;
         this.currList = textList;
-        this.mActivity = mActivity;
 
         mBasic = new Basic(mContex);
     }
@@ -76,7 +80,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             TextView text1 = new TextView(mContex);
             TextView text2 = new TextView(mContex);
 
-            int buttonStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());//R.style.Theme_RegistroCuentas;
+            int buttonStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
 
             Button butt = new Button(new ContextThemeWrapper(mContex, buttonStyle));
             int idx = newList.get(pos);
@@ -97,10 +101,9 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             // Se ajustan los parametros del Texto ----------------------------------
             Integer opt = (Integer) textList.get(idx)[4];
             String txName = (String) textList.get(idx)[1];
-
-            String txMont = (opt == 0 ? "+" : "-") + Basic.setFormatterEs((double) textList.get(idx)[2]) + " " + mCurrencyList.get(mCindex);
+            String txMont = (opt == 0 ? "+" : "-") + Basic.getValueFormatter((double) textList.get(idx)[2]) + " " + mCurrencyList.get(mCindex);
             String txFech = (String) textList.get(idx)[3];
-            text1.setText(" " + txMont + " " + txName);
+            text1.setText(" " + txName + " " + txMont );
             text1 = setTextView(text1, R.dimen.txview_wm2, R.dimen.button_h1);
             layout.addView(text1);
 
@@ -183,11 +186,10 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         int itemId = view.getId();
 
         if(itemId == R.id.butt_paylist) {
-            StartVar startVar = new StartVar();
-            startVar.setPayId( (String) view.getTag());
+            glData.setCurrSalId( (String) view.getTag());
 
             Application application = (Application) mContex.getApplicationContext();
-            Intent mIntent = new Intent(mContex, mActivity.getClass());
+            Intent mIntent = new Intent(mContex, PayDetailsActivity.class);
             mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             application.startActivity(mIntent);
         }

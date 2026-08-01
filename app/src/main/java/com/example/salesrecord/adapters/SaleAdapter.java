@@ -101,11 +101,21 @@ public class SaleAdapter extends BaseAdapter  {
                 Obj mitem = objList.get(idx);
                 double num = mitem.saleCount;
 
-                mitem.saleCount = ( num > 0 ? num-1 : 0 ); //Decrementa si es el Button X
+                if(num >= 1) {
+                    mitem.saleCount = num - 1; //Decrementa si es el Button X
+
+                    mitem.currCount++;
+                }
+                else {
+                    mitem.saleCount -= num;
+                    mitem.currCount += num;
+
+                }
 
                 //Actualiza datos en el Objeto
-                mitem.currCount++;
+
                 mitem.click = 0;
+
                 if(mitem.currCount > mitem.maxCount){
                     return;
                 }

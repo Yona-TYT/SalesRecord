@@ -1,35 +1,37 @@
 package com.example.salesrecord.ui.pays;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.AppContextProvider;
-import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.activitys.ReloadActivity;
+import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
-import com.example.salesrecord.databinding.FragmentAddBinding;
 import com.example.salesrecord.databinding.FragmentPaysBinding;
 import com.example.salesrecord.db.Article;
-import com.example.salesrecord.db.DatabaseUtils;
+import com.example.salesrecord.db.Fecha;
+import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.CalendUtls;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class PayListFragment extends Fragment {
@@ -38,30 +40,30 @@ public class PayListFragment extends Fragment {
 
     // DB
     private DaoArt daoArt;
+    private DaoSal daoSal;
+    private List<Sale> mSalList = new ArrayList<>();
+
+    private ListView mListView;
+    private PayAdapter mAdapter1;
+    private Article crrArt;
+
+    private Context contex;
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private List<EditText> mInpList =  new ArrayList<>();
 
-    CurrencyEditText mInput1;
-
-    private List<String> spinL1 = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
-    private Spinner mSpin1;
-    private int currSel1 = 0;
-
-    private List<String> spinL2 = new ArrayList<>();
-    private Spinner mSpin2;
+    private List<Fecha> dateOrderedList;
+    private List<String> mStrFecList =  new ArrayList<>();
+    private Spinner mSpinn1;
+    private SelecAdapter mAdapter2;
     private int currSel2 = 0;
-
-    private Button mBtn1;
-
-    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         binding = FragmentPaysBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-
-        spinL2 = glData.getUnitList();
 
         setViwes();
 
@@ -70,157 +72,92 @@ public class PayListFragment extends Fragment {
     }
 
     private void setViwes(){
-        mInpList.add(binding.etNombre);
-        mInpList.add(binding.etDescr);
 
-        //mInpList.add(binding.etPrecio);
+        contex = AppContextProvider.getContext();
 
-        mInput1 = binding.etPrecio;
+        mSpinn1 = binding.paySelect1;
+        mListView = binding.payViewList;
 
-        mInpList.add(binding.etMargen);
+        daoSal = StartVar.appDBall.daoSal();
+        //mSalList = daoSal.getUsers();
 
-        mInpList.add(binding.etTotalcount);
-        mInpList.add(binding.etIsopen);
-        mInpList.add(binding.etCaduca);
+        dateOrderedList = StartVar.appDBall.daoDat().getUsers();
 
-        mSpin1 = binding.select1;
-        mSpin2 = binding.select2;
+        List<Fecha> listFecha = dateOrderedList;
 
-        mBtn1 = binding.btnAceptar;
-
-        daoArt = StartVar.appDBall.daoAtr();
-
-
-        //Para el selector de tipo de producto
-        mSpin1.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL1));
-        mSpin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currSel1 = position;
+        mStrFecList.clear();
+        long   currDate = 0;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            currDate = Instant.now().toEpochMilli();
+        }
+        for (Fecha d : listFecha){
+            if(CalendUtls.isSameDay(currDate, d.date)){
+                mStrFecList.add("Ventas de Hoy");
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
+            else {
+                mStrFecList.add(d.strdate);
             }
-        });
+        }
 
-        //Para el selector de tipo de producto
-        mSpin2.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL2));
-        mSpin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        Collections.reverse(mStrFecList);
+        mSalList = daoSal.getUsers();
+
+        Collections.reverse(mSalList);
+
+        mAdapter2 = new SelecAdapter(contex, mStrFecList);
+        mSpinn1.setAdapter(mAdapter2);
+
+        Collections.reverse(dateOrderedList);
+
+        mSpinn1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 currSel2 = position;
-            }
 
+                setPayList();
+            }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
 
-        mBtn1.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                List<String> mTxList =  new ArrayList<>();
-
-                boolean isOk = true;
-                for (EditText obj : mInpList){
-                    String t = obj.getText().toString();
-                    boolean b = validateField(obj);
-                    if(isOk) {
-                        isOk = b;
-                    }
-                    if (t.isEmpty()){
-                        mTxList.add("0");
-                    }
-                    else {
-                        mTxList.add(t);
-                    }
-                }
-
-                //Si la validacion falla, isOk es false y terminar el linsterner
-                if (!isOk){
-                    return;
-                }
-
-                long currDate = 0;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    currDate = java.time.Instant.now().toEpochMilli();
-                }
-
-                Article objA = null;
-                String atrId = DatabaseUtils.generateId("atrID", daoArt);
-
-
-
-                objA = new Article(atrId, mTxList.get(0), mTxList.get(1),"@null", "",
-                        (currSel1 == 0 ? (mInput1.getNumericValue()) : 0.0),
-                        (currSel1 == 1 ? (mInput1.getNumericValue()) : 0.0),
-                        (currSel1 == 2 ? (mInput1.getNumericValue()) : 0.0),
-
-                        Double.parseDouble(mTxList.get(2)),
-                        Double.parseDouble(mTxList.get(3)), Double.parseDouble(mTxList.get(3)),
-                        Integer.parseInt(mTxList.get(4)), currSel1,
-                        currSel2, Integer.parseInt(mTxList.get(5)),
-
-                        0, currDate, currDate
-                );
-                daoArt.insert(objA);
-                //Esto inicia las actividad Reload
-                Intent mIntent = new Intent(AppContextProvider.getContext(), ReloadActivity.class);
-                mIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(mIntent);
-            }
-        });
-
-    }
-
-    public boolean validateField(EditText input) {
-            // Si el input tiene un tag, lo usa
-            Object tag = input.getTag();
-            if(tag != null) {
-                String s = input.getText().toString().trim();
-                if (s.isEmpty()) {
-
-                    String msg = tag.toString();
-                    input.setError(msg);
-                    return false;
-                }
-                else if (getInputType(input) == 0 && Double.parseDouble(s.replaceAll("\\D","")) <= 0){
-                    String msg = tag.toString();
-                    input.setError(msg);
-                    return false;
-                }
-            }
-
-        return true;
-    }
-
-    public int getInputType(EditText input) {
-        int type = input.getInputType();
-        int inputClass = type & InputType.TYPE_MASK_CLASS;
-
-        if (inputClass == InputType.TYPE_CLASS_NUMBER) {
-            return 0;
-        }
-
-        if (inputClass == InputType.TYPE_CLASS_PHONE) {
-            return 1;
-        }
-
-        if (inputClass == InputType.TYPE_CLASS_TEXT) {
-
-            return 2;
-        }
-        return 3;
+        setPayList();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    //Configura la lista de pagos por cuenta
+    public void setPayList(){
+
+        //Basic.msg("currSel: "+currSel2+" "+listFecha.get(currSel2).strdate);
+
+        Fecha selFecha = dateOrderedList.get(currSel2);
+        List<Object[]> mPayList = new ArrayList<>();
+        for (int i = 0; i < mSalList.size(); i++) {
+            Sale mPay = mSalList.get(i);
+            String name = glData.saleType.get(mPay.status);
+            long fecha = mPay.fecha;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                String date = CalendUtls.getDate(fecha);
+
+                if (CalendUtls.isSameMonth(fecha, selFecha.date)) {
+                    Object[] stList = new Object[5];
+                    stList[0] = mPay.sale;
+                    stList[1] = name;
+                    stList[2] = mPay.monto;
+                    stList[3] = date;
+                    stList[4] = mPay.status;
+                    mPayList.add(stList);
+                }
+            }
+        }
+        //Para configurar la lista de pagos
+        mAdapter1 = new PayAdapter(contex, mPayList);
+        mListView.setAdapter(mAdapter1);
+        mAdapter1.getFilter().filter("");
     }
 }

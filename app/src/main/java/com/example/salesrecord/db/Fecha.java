@@ -9,24 +9,21 @@ public class Fecha {
     @PrimaryKey(autoGenerate = true)
     public long uid;
     public String fecha;
-    public String year;
-    public String mes;
-    public String dia;
-    public String hora;
-    public String date;
+    public String strdate;
+    public Long date;
+    public Long time;
 
-    public Fecha(@NonNull String fecha, String year, String mes, String dia, String hora, String date)
+
+    public Fecha(@NonNull String fecha, String strdate, Long date, Long time)
     {
             this.fecha = fecha;
-            this.year = year;
-            this.mes = mes;
-            this.dia = dia;
-            this.hora = hora;
+            this.strdate = strdate;
             this.date = date;
+            this.time = time;
     }
 
     // Getter requerido para el sorting (y otros accesos)
-    public String getDate() {
+    public Long getDate() {
         return date;
     }
 }

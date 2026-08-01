@@ -1,6 +1,7 @@
 package com.example.salesrecord.ui.home;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,6 +14,7 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,8 +26,10 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelListAdapter;
 import com.example.salesrecord.adapters.SaleAdapter;
+import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentHomeBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
@@ -33,6 +37,9 @@ import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.CalendUtls;
+import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.R;
 
@@ -62,6 +69,9 @@ public class HomeFragment extends Fragment {
 
     private Button mButt1;
     private Button mButt2;
+
+    private Spinner mSpinn1;
+    private int currSel1 = 0;
 
     private Long currGrid = 0L;
 
@@ -95,12 +105,22 @@ public class HomeFragment extends Fragment {
         mButt1 = binding.buttHome1;
         mButt2 = binding.buttHome2;
 
-        GetDollar mGet = new GetDollar(contex, getActivity(), 0, mInput1);
-        try {
-            GetDollar.urlRun();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        mSpinn1 = binding.homeSelect1;
+
+        AppContextProvider.runWithSafeActivity(new AppContextProvider.SafeActivityRunnable() {
+            @Override
+            public void onActivityReady(Activity activity) {
+                //Se obtiene el precio del dolar por primera vez
+                GetDollar mGet = new GetDollar( getActivity(), 0, mInput1);
+                try {
+                    GetDollar.urlRun();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+
 
 //        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         setViwes();
@@ -140,7 +160,7 @@ public class HomeFragment extends Fragment {
         mButt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GetDollar mGet = new GetDollar(contex, getActivity(), 0, mInput1);
+                GetDollar mGet = new GetDollar(getActivity(), 0, mInput1);
                 try {
                     GetDollar.urlRun();
                 } catch (IOException e) {
@@ -196,11 +216,11 @@ public class HomeFragment extends Fragment {
 
         //Para la lista de todos los productos
         for (Article obj : mArtList) {
-            objListAll.add(setGalleryArray(obj));
+            if(obj.staus > 0) {
+                objListAll.add(setGalleryArray(obj));
+            }
         }
-
-        Basic.msg(mArtList.get(0).descr);
-
+        
         //Basic.msg(""+mArtList.get(0).totalcount);
 
         //Para la lista de ventas ----------------------------
@@ -300,6 +320,19 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
+        mSpinn1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currSel1 = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         // Para el Boton de Precesar PAgos
         mButt2.setOnClickListener(v -> {
             if(!objListSal.isEmpty()){
@@ -335,21 +368,27 @@ public class HomeFragment extends Fragment {
                 Basic.msg("Lista VACIA!");
             }
         });
+
+
     }
 
     private double setTotal(List<Obj> list){
         if (list.isEmpty()){
             viewTotal.setVisibility(View.INVISIBLE);
             mButt2.setEnabled(false);
+            mSpinn1.setEnabled(false);
+
         }
         else {
             viewTotal.setVisibility(View.VISIBLE);
             mButt2.setEnabled(true);
+            mSpinn1.setEnabled(true);
         }
 
         double total = 0.0;
         for (Obj obj : list) {
-            total = total + ( obj.price * obj.saleCount);
+              double price = MathUtls.addPercentage(obj.price, obj.margen);
+            total = total + ( price * obj.saleCount);
         }
         return total;
     }
@@ -420,7 +459,7 @@ public class HomeFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.currcount, art.totalcount, 0, mPrice, art.margen
+                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen
 ,                art.uid);
 
         return mObj;
@@ -432,19 +471,23 @@ public class HomeFragment extends Fragment {
         if (crrSale == null) {
 
             long currDate = 0;
+            long currTime = 0;
+
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 currDate = java.time.Instant.now().toEpochMilli();
+                currTime = System.currentTimeMillis();
             }
 
             String strId = DatabaseUtils.generateId("salID", daoSal);
             String strClt = "Cliente "+strId.replaceAll("\\D","");
             StringBuilder strArtList = new StringBuilder();
-            Double total = 0.0;
+            double total = 0.0;
 
             List<Article> artList = new ArrayList<>();
 
             for (Obj o : objListSal){
-                total = total + ( o.price * o.saleCount);
+                double price = MathUtls.addPercentage(o.price, o.margen);
+                total = total + ( price * o.saleCount);
                 strArtList.append("|").append(o.strId);
 
                 Article art = daoArt.getUsers(o.id);
@@ -455,15 +498,18 @@ public class HomeFragment extends Fragment {
                 artList.add(art);
             }
             Sale mObj = new Sale(
-                    strId, strClt, strArtList.toString(), total, StartVar.mDollar, 0,
-                    "", "", "@null", 0, "", currDate
+                    strId, strClt, strArtList.toString(), total, StartVar.mDollar, currSel1,
+                    "", currTime, "@null", 0, "", currDate
             );
 
             //Se guarda la venta
-            //daoSal.insertUser(mObj);
+            daoSal.insertUser(mObj);
 
             //Se actualiza la lista de articulos con valores descontados
             daoArt.updateUser(artList);
+
+            //Se actualiza la lista de fechas si esta no existe
+            CalendUtls.addCurrentMonthIfAbsent(contex);
 
             return true;
 

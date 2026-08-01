@@ -11,22 +11,25 @@ public class Conf {
     public String config;
     public String version;
     public String hexid;
-    public String date;
-    public String time;
-    public Integer curr;
+    public String datetasa;
     public Double dolar;
+    public Long date;
+    public Long time;
+    public Integer curr;
     public Integer moneda;
     public Integer mes;
     public Integer show;
 
-    public Conf(@NonNull String config, String version, String hexid, String date, String time, Integer curr, Double dolar, Integer moneda, Integer mes, Integer show) {
+
+    public Conf(@NonNull String config, String version, String hexid, String datetasa, Double dolar, Long date, Long time, Integer curr, Integer moneda, Integer mes, Integer show) {
         this.config = config;
         this.version = version;
         this.hexid = hexid;
+        this.datetasa = datetasa;
+        this.dolar = dolar;
         this.date = date;
         this.time = time;
         this.curr = curr;
-        this.dolar = dolar;
         this.moneda = moneda;
         this.mes = mes;
         this.show = show;

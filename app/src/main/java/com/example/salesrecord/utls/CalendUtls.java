@@ -8,14 +8,19 @@ import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.dao.DaoDat;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,6 +75,40 @@ public class CalendUtls {
         return null;
     }
 
+    public static String getDate(Long value) {
+        // 1. Convertimos el long a LocalDate usando la zona horaria del dispositivo
+        LocalDate date = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            date = Instant.ofEpochMilli(value)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            // 2. Definimos el formato: dd (día), MM (mes numérico), yyyy (año completo)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            // 3. Retornamos el texto formateado
+            return date.format(formatter);
+        }
+        return "NA";
+    }
+
+    public static String getTime(Long value) {
+        // 1. Convertimos el long a LocalTime usando la zona horaria del dispositivo
+        LocalTime time = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            time = Instant.ofEpochMilli(value)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime();
+
+            // 2. Definimos el formato de 24 horas (HH mayúscula fuerza las 24h)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            // 3. Retornamos el texto formateado
+            return time.format(formatter);
+        }
+        return "NA";
+    }
+
     public static String getTime(String value) {
         String text = "";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -87,10 +126,22 @@ public class CalendUtls {
             LocalDate currdate = LocalDate.now();
             List<Fecha> listFecha = daoFecha.getUsers();
             boolean exists = false;
+
+            // Forzamos la zona horaria a UTC para garantizar consistencia global
+            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+            // 1. Instancia de la fecha actual en UTC
+            Calendar calCurr = Calendar.getInstance(utcZone);
+            int currMonth = calCurr.get(Calendar.MONTH);
+            int currYear = calCurr.get(Calendar.YEAR);
+
+            // 2. Instancia reutilizable en UTC para el bucle
+            Calendar calItem = Calendar.getInstance(utcZone);
+
             for (Fecha d : listFecha) {
-                String f = d.date;
-                LocalDate date = LocalDate.parse(f);
-                if (currdate.getMonth().equals(date.getMonth()) && currdate.getYear() == date.getYear()) {
+                calItem.setTimeInMillis(d.date);
+
+                if (currMonth == calItem.get(Calendar.MONTH) && currYear == calItem.get(Calendar.YEAR)) {
                     exists = true;
                     break;
                 }
@@ -98,16 +149,97 @@ public class CalendUtls {
             if (exists) {
                 return;
             }
-            LocalTime currtime = LocalTime.now();
-            Fecha obj = new Fecha("dateID" + listFecha.size(), "" + currdate.getYear(),
-                    currdate.getMonth().toString(), "" + currdate.getDayOfMonth(),
-                    CalendUtls.getTime(currtime.toString()), currdate.toString());
+
+            long   currDate = java.time.Instant.now().toEpochMilli();
+            long   currTime = System.currentTimeMillis();
+
+
+
+            Fecha obj = new Fecha("dateID" + listFecha.size(), getShortDateYear(currDate), currDate, currTime);
             daoFecha.insertUser(obj);
             // Recarga la lista de la DB ----------------------------
             StartVar var = new StartVar();
             var.getFecListDB();
             // -------------------------------------------------------
         }
+    }
+
+    public static boolean isSameMonth(long date1, long date2) {
+        // Si son idénticos en milisegundos, obviamente son del mismo mes/año (Ahorra cálculos)
+        if (date1 == date2) {
+            return true;
+        }
+
+        // Usamos la zona horaria UTC para una consistencia absoluta
+        TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+        // Instancia para procesar el primer long
+        Calendar cal1 = Calendar.getInstance(utcZone);
+        cal1.setTimeInMillis(date1);
+        int month1 = cal1.get(Calendar.MONTH);
+        int year1 = cal1.get(Calendar.YEAR);
+
+        // Instancia para procesar el segundo long
+        Calendar cal2 = Calendar.getInstance(utcZone);
+        cal2.setTimeInMillis(date2);
+
+        // Comparación en cascada: si el año no coincide, se descarta de inmediato sin evaluar el mes
+        return year1 == cal2.get(Calendar.YEAR) && month1 == cal2.get(Calendar.MONTH);
+    }
+
+    public static boolean isSameDay(long date1, long date2) {
+        // Si son idénticos en milisegundos, obviamente son de la misma fecha (Ahorra cálculos)
+        if (date1 == date2) {
+            return true;
+        }
+
+        // Usamos la zona horaria UTC para una consistencia absoluta
+        TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+        // Instancia para procesar el primer long
+        Calendar cal1 = Calendar.getInstance(utcZone);
+        cal1.setTimeInMillis(date1);
+        int day1 = cal1.get(Calendar.DAY_OF_MONTH);
+        int month1 = cal1.get(Calendar.MONTH);
+        int year1 = cal1.get(Calendar.YEAR);
+
+        // Instancia para procesar el segundo long
+        Calendar cal2 = Calendar.getInstance(utcZone);
+        cal2.setTimeInMillis(date2);
+
+        // Comparación en cascada: el procesador descarta la operación de golpe si el año
+        // o el mes no coinciden, evaluando el día sólo si es estrictamente necesario.
+        return year1 == cal2.get(Calendar.YEAR) &&
+                month1 == cal2.get(Calendar.MONTH) &&
+                day1 == cal2.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public static String getShortDateYear(long timestamp) {
+        return getShortDateInternal(timestamp, true);
+    }
+
+    public static String getShortDate(long timestamp) {
+        return getShortDateInternal(timestamp, false);
+    }
+
+    public static String getShortDateInternal(long timestamp, boolean year) {
+        // 1. Convertimos el long a LocalDate usando la zona horaria del dispositivo
+        LocalDate date = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            date = Instant.ofEpochMilli(timestamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            // 2. Construimos un formato personalizado para forzar la primera letra en Mayúscula sin puntos
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                    .appendPattern("d ") // 'd' sin repetir muestra el día sin ceros a la izquierda (ej: 2 en vez de 02)
+                    .appendText(java.time.temporal.ChronoField.MONTH_OF_YEAR, java.time.format.TextStyle.SHORT)
+                    .toFormatter(Locale.getDefault()); // Usa el idioma del teléfono del usuario
+
+            // 3. Retornamos el texto y limpiamos posibles puntos finales que añade Android en algunos idiomas (como "jul.")
+            return date.format(formatter).replace(".", "")+ (year ? " "+date.getYear():"");
+        }
+        return "NA";
     }
 
     public static int getRangeMultiple(String txDate, int selec) {

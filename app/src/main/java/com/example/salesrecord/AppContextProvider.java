@@ -77,4 +77,42 @@ public class AppContextProvider extends Application {
     public static Activity getCurrentActivity() {
         return sInstance.currentActivity;
     }
+
+    /**
+     * Ejecuta una acción de interfaz de forma 100% segura.
+     * Si la aplicación está en la transición (el Preloader murió pero la MainActivity aún es null),
+     * este método esperará de forma asíncrona en el hilo principal hasta que la pantalla esté lista.
+     *
+     * @param runnable Bloque de código que requiere la Activity viva.
+     */
+    public static void runWithSafeActivity(final SafeActivityRunnable runnable) {
+        final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Activity activity = sInstance.currentActivity;
+
+                // 1. Verificamos que la actividad no sea null, no esté muriendo y no sea el Preloader cerrándose
+                if (activity != null
+                        && !activity.isFinishing()
+                        && !activity.isDestroyed()
+                        && !activity.getClass().getSimpleName().equals("Preloader")) {
+
+                    // ¡Éxito absoluto! Encontramos la MainActivity (o la pantalla activa válida)
+                    runnable.onActivityReady(activity);
+
+                } else {
+                    // 2. Zona muerta detectada: Volvemos a consultar en 80 milisegundos sin congelar la app
+                    android.util.Log.w("AppContextProvider", "Limbo de cambio de pantalla detectado. Esperando a MainActivity...");
+                    handler.postDelayed(this, 80);
+                }
+            }
+        });
+    }
+
+    // Interfaz de soporte para pasar la Activity de forma segura como parámetro
+    public interface SafeActivityRunnable {
+        void onActivityReady(Activity activity);
+    }
 }

@@ -135,9 +135,14 @@ public class Basic {
         return value;
     }
 
+    public static String getMaskConv(Double value, Double tasa, int symb) {
+
+        return getMask(getConv(value, tasa, symb), symb);
+    }
+
     public static String getMaskConv(Double value, int symb) {
 
-        return getMask(getConv(value, symb), symb);
+        return getMask(getConv(value, null, symb), symb);
     }
 
     @SuppressLint("DefaultLocale")
@@ -161,9 +166,9 @@ public class Basic {
         return value;
     }
 
-    public static Double getConv(Double value, int symb) {
+    public static Double getConv(Double value, Double tasa, int symb) {
 
-        Double precDoll = StartVar.mDollar;
+        Double precDoll = (tasa == null ? StartVar.mDollar : tasa);
         if(symb == 1) {   //Selector en Bs
             value = value * precDoll;
         }
@@ -363,22 +368,22 @@ public class Basic {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
-    public static void sendFileUploadedBroadcast(Context context, String[] filePaths, String senderType) {
-        //LOG.debug("Sending file uploaded broadcast para: " + senderType);
-        Intent intent = new Intent(ACTION_APP_EVENT);
-        intent.putExtra(EXTRA_EVENT_TYPE, EVENT_FILE_UPLOADED);
-        intent.putExtra(EXTRA_FILE_PATHS, filePaths);
-        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
-        context.sendBroadcast(intent);
-    }
-
-    // También para errores
-    public static void sendUploadErrorBroadcast(Context context, String errorMessage, String senderType) {
-        //LOG.debug("Sending upload error broadcast: " + errorMessage);
-        Intent intent = new Intent(ACTION_APP_EVENT);
-        intent.putExtra(EXTRA_EVENT_TYPE, "upload_error");
-        intent.putExtra("error_message", errorMessage);
-        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
-        context.sendBroadcast(intent);
-    }
+//    public static void sendFileUploadedBroadcast(Context context, String[] filePaths, String senderType) {
+//        //LOG.debug("Sending file uploaded broadcast para: " + senderType);
+//        Intent intent = new Intent(ACTION_APP_EVENT);
+//        intent.putExtra(EXTRA_EVENT_TYPE, EVENT_FILE_UPLOADED);
+//        intent.putExtra(EXTRA_FILE_PATHS, filePaths);
+//        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
+//        context.sendBroadcast(intent);
+//    }
+//
+//    // También para errores
+//    public static void sendUploadErrorBroadcast(Context context, String errorMessage, String senderType) {
+//        //LOG.debug("Sending upload error broadcast: " + errorMessage);
+//        Intent intent = new Intent(ACTION_APP_EVENT);
+//        intent.putExtra(EXTRA_EVENT_TYPE, "upload_error");
+//        intent.putExtra("error_message", errorMessage);
+//        intent.putExtra(EXTRA_SENDER_TYPE, senderType);
+//        context.sendBroadcast(intent);
+//    }
 }

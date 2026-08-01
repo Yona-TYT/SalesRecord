@@ -7,232 +7,39 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.pays.PayListFragment">
 
-    <!-- ScrollView para que el formulario sea desplazable (hay muchos campos) -->
-    <ScrollView
-        android:id="@+id/scroll_form"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:fillViewport="true"
-        android:paddingBottom="16dp"
+    <Spinner
+        android:id="@+id/pay_select1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/spinner_hs"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/btn_aceptar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        tools:ignore="MissingConstraints" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="16dp">
+    <ListView
+        android:id="@+id/pay_viewList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
 
-            <!-- Título del formulario -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Agregar / Editar Artículo"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:layout_marginBottom="24dp" />
-
-            <!-- ========================================= -->
-            <!-- CAMPOS STRING (inputType="text")          -->
-            <!-- ========================================= -->
-
-
-            <!-- nombre -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Nombre del Artículo"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_nombre"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:hint="Nombre del artículo"
-                android:layout_marginBottom="16dp"
-                android:tag="Campo de nombre no debe estar Vacio!"
-
-                />
-
-            <!-- descr -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Descripción"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_descr"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:lines="1"
-                android:hint="Descripción del artículo"
-                android:layout_marginBottom="24dp" />
-
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tipo de Artículo (Unidad, Paquete, Caja)"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <Spinner
-                android:id="@+id/select1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="0"
-                android:text="0"
-                android:layout_marginBottom="16dp" />
-
-
-            <!-- ========================================= -->
-            <!-- PRECIOS (Double → inputType="numberDecimal") -->
-            <!-- ========================================= -->
-
-            <!-- precund -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Precio Producto"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <com.example.salesrecord.CurrencyEditText
-                android:id="@+id/et_precio"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:imeOptions="actionDone"
-                android:maxLines="1"
-                android:layout_marginBottom="16dp"
-                android:hint="0,00"
-                android:tag="Este valor debe ser mayor a 0"
-
-                app:localeTag="ES"
-                app:maxNumberOfDecimalDigits="2"
-                app:currencySymbol="$"
-                app:currencySymbolSuffix="true"
-
-                />
-
-
-            <!-- margen -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Margen de Ganancia"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_margen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0.00"
-                android:text="0.00"
-                android:layout_marginBottom="24dp" />
-
-            <!-- ========================================= -->
-            <!-- SELECTORES / ENTEROS (inputType="number") -->
-            <!-- ========================================= -->
-
-            <!-- totalcount -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cantidad Total de Unidades"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-
-            <EditText
-                android:id="@+id/et_totalcount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0.00"
-                android:layout_marginBottom="16dp"
-                android:tag="Este valor debe ser mayor a 0"
-                />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="¿Paquete/Caja Abierto? (0 = No, 1 = Sí)"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-
-            <EditText
-                android:id="@+id/et_isopen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="0"
-                android:text="0"
-                android:layout_marginBottom="16dp" />
-
-
-
-            <!-- metrica -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Métrica (0 = sin unidad, 1 = Kg, 2 = L, etc.)"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/select2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <!-- caduca -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tiempo de Caducidad (días)"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/et_caduca"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="0"
-                android:text="0"
-                android:layout_marginBottom="32dp" />
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- Botón Aceptar (siempre visible al fondo) -->
-    <Button
-        android:id="@+id/btn_aceptar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Aceptar"
-        android:textSize="18sp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/pay_select1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="10dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="10dp" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

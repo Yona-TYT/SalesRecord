@@ -57,7 +57,11 @@ public class DBListCreator extends AppCompatActivity {
         mList.add(new String[]{"<0>"});// Etiqueta para config
         //Instancia de la base de datos
         Conf mConf =  daoConf.getUsers(StartVar.mConfID);
-        mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.date, mConf.time, mConf.curr.toString(), String.valueOf(mConf.dolar), mConf.moneda.toString(),mConf.mes.toString(), mConf.show.toString() });
+        mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.datetasa,
+                String.valueOf(mConf.dolar), String.valueOf(mConf.date),
+                String.valueOf(mConf.time), mConf.curr.toString(), mConf.moneda.toString(),
+                mConf.mes.toString(), mConf.show.toString()
+        });
 
         //=================================== Cuenta DB Lista =====================================================
 
@@ -287,24 +291,19 @@ public class DBListCreator extends AppCompatActivity {
 
             //------------------------------------------------------
             // Se crea la lista para esportar a csv  ---------------
-            String[] txList = new String[6];
+            String[] txList = new String[4];
 
             txList[0] = myDat.fecha;
-            txList[1] = myDat.year;
-            txList[2] = myDat.mes;
-            txList[3] = myDat.dia;
-            txList[4] = myDat.hora;
-            txList[5] = myDat.date;
-
+            txList[1] = myDat.strdate;
+            txList[2] = String.valueOf(myDat.date);
+            txList[3] = String.valueOf(myDat.time);
             mList.add(txList);
 
             //--------------------------------------------------------
             datLmA.add(myDat.fecha);
-            datLmB.add(myDat.year);
-            datLmC.add(myDat.mes);
-            datLmD.add(myDat.dia);
-            datLmE.add(myDat.hora);
-            datLmF.add(myDat.date);
+            datLmB.add(myDat.date);
+            datLmC.add(myDat.time);
+
             //------------------------------------------
         }
 
@@ -357,7 +356,7 @@ public class DBListCreator extends AppCompatActivity {
             txList[4] = String.valueOf(mySal.tasa);
             txList[5] = String.valueOf(mySal.status);
             txList[6] = mySal.imagen;
-            txList[7] = mySal.time;
+            txList[7] = String.valueOf(mySal.time);
             txList[8] = mySal.cltid;
             txList[9] = String.valueOf(mySal.more4);
             txList[10] = mySal.more5;
@@ -475,7 +474,7 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 if(opt==0) {
                     version = spl[1];
-                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], spl[4], Integer.parseInt(spl[5]), Double.parseDouble(spl[6]) ,Integer.parseInt(spl[7]), Integer.parseInt(spl[8]), 0);
+                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]));
                 }
                 else if(opt==1){
                     Article obj = new Article(
@@ -504,14 +503,14 @@ public class DBListCreator extends AppCompatActivity {
 
                 else if(opt==4){
                     Fecha obj = new Fecha(
-                            spl[0], spl[1], spl[2], spl[3], spl[4], spl[5]
+                            spl[0], spl[1], Long.parseLong(spl[2]), Long.parseLong(spl[3])
                     );
                     daoFecha.insertUser(obj);
                 }
                 else {
                     Sale obj = new Sale(
                             spl[0], spl[1], spl[2], Double.parseDouble(spl[3]), Double.parseDouble(spl[4]), Integer.parseInt(spl[5]),
-                            spl[6], spl[7], spl[8], Integer.parseInt(spl[9]), spl[10], Long.parseLong(spl[11])
+                            spl[6], Long.parseLong(spl[7]), spl[8], Integer.parseInt(spl[9]), spl[10], Long.parseLong(spl[11])
                     );
                     daoPagos.insertUser(obj);
                 }

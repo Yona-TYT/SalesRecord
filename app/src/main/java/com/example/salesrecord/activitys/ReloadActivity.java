@@ -20,6 +20,7 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.Msg;
 
 import net.openid.appauth.AuthState;
 
@@ -60,7 +61,7 @@ public class ReloadActivity extends AppCompatActivity {
                 //startVar.setCurrentTyp(listArticle.get(idx).acctipo);
                 startVar.setCurrentAcc(idx);
                 startVar.setCurrency(mCfg.moneda);
-                startVar.setDollar(mCfg.dolar);
+                //startVar.setDollar(mCfg.dolar);
                 startVar.setCurrentMes(mCfg.mes);
             }
         }

@@ -163,9 +163,17 @@ public class SelListAdapter extends BaseAdapter  {
 
                 // 4. Aplicar cambios lógicos
                 if (mitem.saleCount > 0) {
-                    mitem.saleCount--;
+                    if(mitem.saleCount < 1){
+                        mitem.saleCount = 0;
+                    }
+                    else {
+                        mitem.saleCount--;
+                    }
                 }
                 mitem.currCount++;
+                if(mitem.currCount > mitem.maxCount){
+                    mitem.currCount = mitem.maxCount;
+                }
 
                 // 5. Notificar  el cambio
                 notifyDataSetChanged();
@@ -256,11 +264,16 @@ public class SelListAdapter extends BaseAdapter  {
 
                             // 1. Guardamos el valor de forma segura en tu lista de datos
                             Obj mitem = objList.get(idx);
-                            mitem.saleCount = inputCount.getNumericValue();
-                            mitem.currCount = mitem.maxCount - inputCount.getNumericValue();
-
-                            objList.set(idx, mitem);
-
+                            double value = inputCount.getNumericValue();
+                            if(value <= mitem.maxCount) {
+                                mitem.saleCount = value;
+                                mitem.currCount = mitem.maxCount - value;
+                                objList.set(idx, mitem);
+                            }
+                            else {
+                                inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
+                                Basic.msg("Valor EXCEDIDO!");
+                            }
 
                             // 2. Ocultamos el input y regresamos al diseño del texto original
                             inputCount.setVisibility(View.INVISIBLE);
@@ -303,10 +316,16 @@ public class SelListAdapter extends BaseAdapter  {
 
                             // 1. Guardamos el valor de forma segura en tu lista de datos
                             Obj mitem = objList.get(idx);
-                            mitem.saleCount = inputCount.getNumericValue();
-                            mitem.currCount = mitem.maxCount - inputCount.getNumericValue();
-
-                            objList.set(idx, mitem);
+                            double value = inputCount.getNumericValue();
+                            if(value <= mitem.maxCount) {
+                                mitem.saleCount = value;
+                                mitem.currCount = mitem.maxCount - value;
+                                objList.set(idx, mitem);
+                            }
+                            else {
+                                inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
+                                Basic.msg("Valor EXCEDIDO!");
+                            }
 
                             // 2. Ocultamos el input y regresamos al diseño del texto original
                             inputCount.setVisibility(View.INVISIBLE);

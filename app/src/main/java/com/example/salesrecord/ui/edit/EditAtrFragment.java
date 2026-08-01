@@ -2,6 +2,7 @@ package com.example.salesrecord.ui.edit;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -20,6 +21,7 @@ import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.activitys.FullEditActivity;
 import com.example.salesrecord.adapters.SummaryAdapter;
 import com.example.salesrecord.databinding.FragmentEditBinding;
 import com.example.salesrecord.db.Article;
@@ -28,6 +30,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.utls.StringsUtls;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -43,9 +46,10 @@ public class EditAtrFragment extends Fragment {
     private DaoArt daoArt;
     private List<Article> mArtList =  new ArrayList<>();
 
-    private SummaryAdapter mAdapter2;
+    private SummaryAdapter mAdapter1;
     private ListView mListView;
     private List<Obj> objListSal = new ArrayList<>();
+    private int currSel1 = 0;
 
     private TextInputEditText mInput1;
     private CurrencyEditText mInput2;
@@ -55,6 +59,9 @@ public class EditAtrFragment extends Fragment {
     private TextInputLayout mTil1;
     private TextInputLayout mTil2;
 
+    private SwitchMaterial mSw1;
+
+    private Button editButt;
     private Button acepButt;
 
     private Article crrArt;
@@ -83,11 +90,44 @@ public class EditAtrFragment extends Fragment {
         mTil1 = binding.tilReponer;
         mTil2 = binding.tilMargen;
 
+        mSw1 = binding.swDisponible;
+
+        editButt = binding.buttHome3;
         acepButt = binding.buttHome2;
 
         setViwes();
 
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if(crrArt != null) {
+
+            objListSal.clear();
+
+            mArtList = daoArt.getUsers();
+
+            for (Article obj : mArtList) {
+                objListSal.add(setGalleryArray(obj));
+            }
+            mAdapter1.notifyDataSetChanged();
+
+            if (!objListSal.isEmpty() && currSel1 < objListSal.size()) {
+
+                // Mueve el scroll visualmente hacia el ítem
+                mListView.setSelection(currSel1);
+
+                // SIMULA EL CLIC: Ejecuta el código dentro de tu onItemClick
+                mListView.performItemClick(
+                        mListView.getAdapter().getView(currSel1, null, mListView),  // La vista del ítem
+                        currSel1,                                                              // La posición del ítem
+                        mListView.getAdapter().getItemId(currSel1)                             // El ID único del ítem
+                );
+            }
+        }
     }
 
     @Override
@@ -107,9 +147,9 @@ public class EditAtrFragment extends Fragment {
             objListSal.add(setGalleryArray(obj));
         }
 
-        mAdapter2 = new SummaryAdapter(contex, objListSal);
+        mAdapter1 = new SummaryAdapter(contex, objListSal);
         //-----------------------------------------------------
-        mListView.setAdapter(mAdapter2);
+        mListView.setAdapter(mAdapter1);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @SuppressLint("SetTextI18n")
             @Override
@@ -124,6 +164,10 @@ public class EditAtrFragment extends Fragment {
 
                 mTil1.setHint("Reponer");
                 mTil2.setHint("Ganancia");
+
+                currSel1 = position;
+
+                mAdapter1.setSelectedPos(position);
 
                 if (item != null){
                     crrArt = daoArt.getUsers(item.id);
@@ -152,11 +196,20 @@ public class EditAtrFragment extends Fragment {
                         mInput3.setEnabled(true);
                         mInput4.setEnabled(true);
 
+                        mSw1.setEnabled(true);
+                        editButt.setEnabled(true);
+                        acepButt.setEnabled(true);
 
+                        mSw1.setChecked(crrArt.staus != 0);
 
-
+                        //Termina el proceso
+                        return;
                     }
                 }
+
+                mSw1.setChecked(false);
+                mSw1.setEnabled(false);
+                editButt.setEnabled(false);
 
             }
         });
@@ -201,6 +254,22 @@ public class EditAtrFragment extends Fragment {
             }
         });
 
+        editButt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(crrArt == null){
+                    Basic.msg("Seleccione un producto primero!");
+                    return;
+                }
+                else {
+                    glData.setCurrArt(crrArt);
+
+                    Intent intent = new Intent(contex, FullEditActivity.class);
+                    startActivity(intent);
+                }
+            }
+        });
+
         acepButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -237,6 +306,8 @@ public class EditAtrFragment extends Fragment {
 
                 crrArt.margen = mInput4.getNumericValue();
 
+                crrArt.staus = (mSw1.isChecked() ? 1 : 0);
+
                 daoArt.update(crrArt);
 
                 //Limpia y Desactiva los inputs
@@ -253,6 +324,10 @@ public class EditAtrFragment extends Fragment {
                 mInput3.setEnabled(false);
                 mInput4.setEnabled(false);
 
+                mSw1.setChecked(false);
+                mSw1.setEnabled(false);
+                editButt.setEnabled(false);
+                acepButt.setEnabled(false);
 
                 crrArt = null;
 
@@ -260,12 +335,14 @@ public class EditAtrFragment extends Fragment {
 
                 objListSal.clear();
 
+                mAdapter1.setSelectedPos(-1);
+
                 //Para la lista de Articulos ----------------------------
                 //Para la lista de todos los productos
                 for (Article obj : mArtList) {
                     objListSal.add(setGalleryArray(obj));
                 }
-                mAdapter2.notifyDataSetChanged();
+                mAdapter1.notifyDataSetChanged();
             }
         });
     }
@@ -283,7 +360,7 @@ public class EditAtrFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.currcount, art.totalcount, 0, mPrice, art.margen
+                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen
                 , art.uid);
 
         return mObj;

@@ -26,6 +26,7 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.InputHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,8 +42,11 @@ public class AddAtrFragment extends Fragment {
     private List<EditText> mInpList =  new ArrayList<>();
 
     CurrencyEditText mInput1;
+    CurrencyEditText mInput2;
+    CurrencyEditText mInput3;
 
-    private List<String> spinL1 = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
+
+    private List<String> spinL1 = new ArrayList<>();
     private Spinner mSpin1;
     private int currSel1 = 0;
 
@@ -62,7 +66,8 @@ public class AddAtrFragment extends Fragment {
         binding = FragmentAddBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        spinL2 = glData.getUnitList();
+        spinL1 = glData.categ;
+        spinL2 = glData.unitList;
 
         setViwes();
 
@@ -77,6 +82,8 @@ public class AddAtrFragment extends Fragment {
         //mInpList.add(binding.etPrecio);
 
         mInput1 = binding.etPrecio;
+        mInput2 = binding.etMargen;
+        mInput3 = binding.etTotalcount;
 
         mInpList.add(binding.etMargen);
 
@@ -130,7 +137,7 @@ public class AddAtrFragment extends Fragment {
                 boolean isOk = true;
                 for (EditText obj : mInpList){
                     String t = obj.getText().toString();
-                    boolean b = validateField(obj);
+                    boolean b = InputHelper.validateField(obj);
                     if(isOk) {
                         isOk = b;
                     }
@@ -162,12 +169,12 @@ public class AddAtrFragment extends Fragment {
                         (currSel1 == 1 ? (mInput1.getNumericValue()) : 0.0),
                         (currSel1 == 2 ? (mInput1.getNumericValue()) : 0.0),
 
-                        Double.parseDouble(mTxList.get(2)),
-                        Double.parseDouble(mTxList.get(3)), Double.parseDouble(mTxList.get(3)),
+                        mInput2.getNumericValue(),
+                        mInput3.getNumericValue(), mInput3.getNumericValue(),
                         Integer.parseInt(mTxList.get(4)), currSel1,
                         currSel2, Integer.parseInt(mTxList.get(5)),
 
-                        0, currDate, currDate
+                        1, currDate, currDate
                 );
                 daoArt.insert(objA);
                 //Esto inicia las actividad Reload
@@ -177,46 +184,6 @@ public class AddAtrFragment extends Fragment {
             }
         });
 
-    }
-
-    public boolean validateField(EditText input) {
-            // Si el input tiene un tag, lo usa
-            Object tag = input.getTag();
-            if(tag != null) {
-                String s = input.getText().toString().trim();
-                if (s.isEmpty()) {
-
-                    String msg = tag.toString();
-                    input.setError(msg);
-                    return false;
-                }
-                else if (getInputType(input) == 0 && Double.parseDouble(s.replaceAll("\\D","")) <= 0){
-                    String msg = tag.toString();
-                    input.setError(msg);
-                    return false;
-                }
-            }
-
-        return true;
-    }
-
-    public int getInputType(EditText input) {
-        int type = input.getInputType();
-        int inputClass = type & InputType.TYPE_MASK_CLASS;
-
-        if (inputClass == InputType.TYPE_CLASS_NUMBER) {
-            return 0;
-        }
-
-        if (inputClass == InputType.TYPE_CLASS_PHONE) {
-            return 1;
-        }
-
-        if (inputClass == InputType.TYPE_CLASS_TEXT) {
-
-            return 2;
-        }
-        return 3;
     }
 
     @Override

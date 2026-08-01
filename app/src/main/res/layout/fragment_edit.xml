@@ -137,16 +137,31 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- BOTÓN EDITOR -->
+
     <!-- SWITCH: DISPONIBLE / NO DISPONIBLE -->
+
+    <Button
+        android:id="@+id/butt_home3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:enabled="false"
+        android:text="Editor"
+        app:layout_constraintEnd_toStartOf="@+id/swDisponible"
+        app:layout_constraintHorizontal_bias="0.148"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tilReponer" />
+
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/swDisponible"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="189dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="10dp"
+        android:enabled="false"
         android:text="Disponible"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/tilMargen"
-        app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintTop_toBottomOf="@+id/tilMargen" />
 
     <!-- BOTÓN PROCESAR -->
     <Button
@@ -155,7 +170,7 @@
         android:layout_height="wrap_content"
         android:text="Guardar"
         android:layout_marginBottom="10dp"
-        android:enabled="true"
+        android:enabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />

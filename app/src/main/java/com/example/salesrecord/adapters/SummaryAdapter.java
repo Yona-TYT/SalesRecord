@@ -7,9 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
@@ -29,6 +27,7 @@ public class SummaryAdapter extends BaseAdapter  {
     private Context mContex;
     private List<Obj> objList = new ArrayList<>();
 
+    private int currPos = -1;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
 
@@ -41,6 +40,15 @@ public class SummaryAdapter extends BaseAdapter  {
     public  SummaryAdapter(Context mContex, List<Obj> objList){
         this.mContex = mContex;
         this.objList = objList;
+    }
+
+    public void setSelectedPos(int pos) {
+        this.currPos = pos;
+        notifyDataSetChanged();
+    }
+
+    public int getSelectedPos() {
+        return currPos;
     }
 
     @Override
@@ -84,25 +92,41 @@ public class SummaryAdapter extends BaseAdapter  {
         Obj item = objList.get(pos);   // Cambia TuItem por tu clase
 
         // Layout
-        if (item.currCount <= 0 || item.maxCount <= 0){
+        if (pos == currPos) {
+
             holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
+                    ContextCompat.getColor(holder.layout1.getContext(), R.color.selected_background)
             );
-        }
-        else {
-            holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.text_background2)
-            );
+        } else {
+            // Si no está seleccionado, mantiene tus colores lógicos originales
+            if (item.status == 0){
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.retire_background)
+                );
+            }
+            else if (item.currCount <= 0 || item.maxCount <= 0){
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
+                );
+            }
+            else {
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.text_background2)
+                );
+            }
         }
 
 
         // Textos
-        holder.view1.setText(item.name);
+        String off = item.status == 0 ? "(RETIRADO) ":"";
+
+        holder.view1.setText(off+item.name);
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
         Double total = (clcPrice*item.saleCount);
         holder.view2.setText("Disponible: " + Basic.formatDecimal(item.maxCount) +
                 "  -  Precio: " + Basic.getMaskConv(item.price, 0) +
+                " / "+  Basic.getMaskConv(item.price, 1) +
                 "  -  Margen: " + Basic.formatDecimal(item.margen)+" %");
 
         holder.view1.setTextColor(
