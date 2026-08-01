@@ -142,15 +142,18 @@ public class PayListFragment extends Fragment {
             String name = glData.saleType.get(mPay.status);
             long fecha = mPay.fecha;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                String date = CalendUtls.getDate(fecha);
+                String date = CalendUtls.getShortDate(fecha);
+                String time = CalendUtls.getTime(mPay.time);
 
                 if (CalendUtls.isSameMonth(fecha, selFecha.date)) {
-                    Object[] stList = new Object[5];
+                    Object[] stList = new Object[7];
                     stList[0] = mPay.sale;
                     stList[1] = name;
                     stList[2] = mPay.monto;
                     stList[3] = date;
                     stList[4] = mPay.status;
+                    stList[5] = time;
+                    stList[6] = mPay.tasa;
                     mPayList.add(stList);
                 }
             }

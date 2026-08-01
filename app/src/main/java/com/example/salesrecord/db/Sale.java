@@ -12,6 +12,8 @@ public class Sale {
     public String sale;         //ID en string
     public String cliente;      //Nombre del cliente (opcional)
     public String artclist;     //Lista de producto ids en string
+    public String countlist;     //Lista de cantidad de productos en string
+
     public Double monto;        //Monto total de la venta
     public Double tasa;        //Tasa al momento de realizar la venta
 
@@ -28,7 +30,7 @@ public class Sale {
 
     public Long fecha;
 
-    public Sale(@NonNull String sale, String cliente, String artclist, Double monto, Double tasa,
+    public Sale(@NonNull String sale, String cliente, String artclist, String countlist, Double monto, Double tasa,
                 Integer status, String imagen, Long time, String cltid, Integer more4, String more5,
                 Long fecha
                 )
@@ -36,6 +38,7 @@ public class Sale {
         this.sale = sale;
         this.cliente = cliente;
         this.artclist = artclist;
+        this.countlist = countlist;
         this.monto = monto;
         this.tasa = tasa;
         this.status = status;

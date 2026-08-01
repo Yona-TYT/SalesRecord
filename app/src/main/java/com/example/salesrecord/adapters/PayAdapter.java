@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -56,6 +57,13 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         mBasic = new Basic(mContex);
     }
 
+    static class ViewHolder {
+        LinearLayout layout;
+        Button butt;
+        TextView text1;
+        TextView text2;
+    }
+
     @Override
     public int getCount(){
         return newList.size();
@@ -71,65 +79,49 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
     @SuppressLint("SetTextI18n")
     @Override
-    public View getView(int pos, View convertView, ViewGroup parent){
+    public View getView(int pos, View convertView, ViewGroup parent) {
+        ViewHolder holder;
 
-        LinearLayout layout = new LinearLayout(mContex);
+        if (convertView == null) {
+            // 1. Obtenemos el tema de la actividad para que el botón lo herede de forma nativa
+            int mStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
+            ContextThemeWrapper themedContext = new ContextThemeWrapper(mContex, mStyle);
 
-        if(textList != null) {
-            Log.d("PhotoPicker", "Ya hay ? 11111------------------------: " + newList.size() + " ::" + pos);
-            TextView text1 = new TextView(mContex);
-            TextView text2 = new TextView(mContex);
+            // 2. Inflamos el nuevo archivo XML usando ese contexto con estilo
+            convertView = LayoutInflater.from(themedContext).inflate(R.layout.item_pay, parent, false);
 
-            int buttonStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
+            holder = new ViewHolder();
+            holder.layout = convertView.findViewById(R.id.pay_item_layout);
+            holder.butt = convertView.findViewById(R.id.butt_paylist);
+            holder.text1 = convertView.findViewById(R.id.pay_text1);
+            holder.text2 = convertView.findViewById(R.id.pay_text2);
 
-            Button butt = new Button(new ContextThemeWrapper(mContex, buttonStyle));
-            int idx = newList.get(pos);
-
-            // Se ajustan los parametros del Boton ----------------------------------
-            butt.setId(R.id.butt_paylist);
-            butt.setTag((String) textList.get(idx)[0]);
-            butt.setText("+");
-            butt.setTypeface(Typeface.DEFAULT_BOLD);
-            LinearLayout.LayoutParams buttParams = new LinearLayout.LayoutParams(mBasic.getPixelSiz(R.dimen.button_wss), mBasic.getPixelSiz(R.dimen.button_h1));
-            buttParams.gravity = Gravity.CENTER;
-            butt.setLayoutParams(buttParams);
-            butt.setTextSize(mBasic.getFloatSiz(R.dimen.inner_text_2));
-            butt.setPadding(1, 1, 1, 1);
-            butt.setOnClickListener(this);
-            layout.addView(butt);
-            //-----------------------------------------------------------------------
-            // Se ajustan los parametros del Texto ----------------------------------
-            Integer opt = (Integer) textList.get(idx)[4];
-            String txName = (String) textList.get(idx)[1];
-            String txMont = (opt == 0 ? "+" : "-") + Basic.getValueFormatter((double) textList.get(idx)[2]) + " " + mCurrencyList.get(mCindex);
-            String txFech = (String) textList.get(idx)[3];
-            text1.setText(" " + txName + " " + txMont );
-            text1 = setTextView(text1, R.dimen.txview_wm2, R.dimen.button_h1);
-            layout.addView(text1);
-
-            text2.setText(txFech);
-            text2 = setTextView(text2, R.dimen.txview_ws, R.dimen.button_h1);
-            layout.addView(text2);
-            //-----------------------------------------------------------------------
-
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-            layout.setVisibility(View.VISIBLE);
-            layout.setPadding(2, 2, 2, 2);
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
         }
 
-        return layout;
-    }
+        if (textList != null && pos < newList.size()) {
+            int idx = newList.get(pos);
 
-    public TextView setTextView(TextView view, int w, int h){
-        view.setTypeface(Typeface.DEFAULT_BOLD);
-        view.setTextColor(ContextCompat.getColor(view.getContext(), R.color.text_color1));
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(mBasic.getPixelSiz(w), mBasic.getPixelSiz(h));
-        textParams.gravity = Gravity.CENTER;
-        view.setLayoutParams(textParams);
-        view.setTextSize(mBasic.getFloatSiz(R.dimen.inner_text_2));
-        view.setMaxLines(1);
-        view.setPadding(2, 15, 2, 2);
-        return view;
+            // Configuración dinámica del Botón
+            holder.butt.setTag((String) textList.get(idx)[0]);
+            holder.butt.setOnClickListener(this); // Asigna el listener de la clase
+
+            // Construcción y asignación de Textos
+            Integer opt = (Integer) textList.get(idx)[4];
+            String txName = (String) textList.get(idx)[1];
+            String txMont = (opt == 0 ? "+" : "-") +" ("+ Basic.getMask((double) textList.get(idx)[2], 0) + " / "+
+                    Basic.getMaskConv((double) textList.get(idx)[2], (double) textList.get(idx)[6], 1)+")";
+            String txFech = (String) textList.get(idx)[3];
+            String txTime = (String) textList.get(idx)[5];
+
+
+            holder.text1.setText(" " + txName + " " + txMont);
+            holder.text2.setText(txFech+" "+txTime);
+        }
+
+        return convertView;
     }
 
     @Override

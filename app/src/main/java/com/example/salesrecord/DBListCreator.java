@@ -347,20 +347,21 @@ public class DBListCreator extends AppCompatActivity {
 
             //------------------------------------------------------
             // Se crea la lista para esportar a csv  ---------------
-            String[] txList = new String[12];
+            String[] txList = new String[13];
 
             txList[0] = mySal.sale;
             txList[1] = mySal.cliente;
             txList[2] = mySal.artclist;
-            txList[3] = String.valueOf(mySal.monto);
-            txList[4] = String.valueOf(mySal.tasa);
-            txList[5] = String.valueOf(mySal.status);
-            txList[6] = mySal.imagen;
-            txList[7] = String.valueOf(mySal.time);
-            txList[8] = mySal.cltid;
-            txList[9] = String.valueOf(mySal.more4);
-            txList[10] = mySal.more5;
-            txList[11] = String.valueOf(mySal.fecha);
+            txList[3] = mySal.countlist;
+            txList[4] = String.valueOf(mySal.monto);
+            txList[5] = String.valueOf(mySal.tasa);
+            txList[6] = String.valueOf(mySal.status);
+            txList[7] = mySal.imagen;
+            txList[8] = String.valueOf(mySal.time);
+            txList[9] = mySal.cltid;
+            txList[10] = String.valueOf(mySal.more4);
+            txList[11] = mySal.more5;
+            txList[12] = String.valueOf(mySal.fecha);
 
             mList.add(txList);
 
@@ -509,8 +510,8 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 else {
                     Sale obj = new Sale(
-                            spl[0], spl[1], spl[2], Double.parseDouble(spl[3]), Double.parseDouble(spl[4]), Integer.parseInt(spl[5]),
-                            spl[6], Long.parseLong(spl[7]), spl[8], Integer.parseInt(spl[9]), spl[10], Long.parseLong(spl[11])
+                            spl[0], spl[1], spl[2], spl[3], Double.parseDouble(spl[4]), Double.parseDouble(spl[5]), Integer.parseInt(spl[6]),
+                            spl[7], Long.parseLong(spl[8]), spl[9], Integer.parseInt(spl[10]), spl[11], Long.parseLong(spl[12])
                     );
                     daoPagos.insertUser(obj);
                 }

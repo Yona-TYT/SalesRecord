@@ -481,6 +481,8 @@ public class HomeFragment extends Fragment {
             String strId = DatabaseUtils.generateId("salID", daoSal);
             String strClt = "Cliente "+strId.replaceAll("\\D","");
             StringBuilder strArtList = new StringBuilder();
+            StringBuilder strCountList = new StringBuilder();
+
             double total = 0.0;
 
             List<Article> artList = new ArrayList<>();
@@ -489,6 +491,7 @@ public class HomeFragment extends Fragment {
                 double price = MathUtls.addPercentage(o.price, o.margen);
                 total = total + ( price * o.saleCount);
                 strArtList.append("|").append(o.strId);
+                strCountList.append("|").append(o.saleCount);
 
                 Article art = daoArt.getUsers(o.id);
 
@@ -498,7 +501,7 @@ public class HomeFragment extends Fragment {
                 artList.add(art);
             }
             Sale mObj = new Sale(
-                    strId, strClt, strArtList.toString(), total, StartVar.mDollar, currSel1,
+                    strId, strClt, strArtList.toString(),strCountList.toString(), total, StartVar.mDollar, currSel1,
                     "", currTime, "@null", 0, "", currDate
             );
 

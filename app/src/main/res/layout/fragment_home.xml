@@ -112,8 +112,9 @@
         android:enabled="false"
         android:text="Procesar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/home_select1"
+        app:layout_constraintTop_toTopOf="@id/home_select1"
+        app:layout_constraintStart_toEndOf="@id/home_select1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintHorizontal_weight="1" />
 
     <!-- SPINNER SELECT1 (CORREGIDO: Mismo ancho, altura simétrica y restricciones limpias) -->
@@ -126,9 +127,8 @@
         android:gravity="center"
         android:enabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="@id/butt_home2"
-        app:layout_constraintStart_toEndOf="@id/butt_home2"
-        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@+id/butt_home2"
         app:layout_constraintHorizontal_weight="1" />
 
     <androidx.constraintlayout.widget.Guideline
