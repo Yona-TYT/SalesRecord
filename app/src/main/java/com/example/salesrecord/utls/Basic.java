@@ -88,7 +88,7 @@ public class Basic {
     public static String setFormatter(Double value){
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("ES"));
         DecimalFormat formatter = (DecimalFormat) nf;
-        formatter.applyPattern("###,##0.00");
+        formatter.applyPattern("###,###.##");
         return formatter.format(value);
     }
 

@@ -71,6 +71,12 @@ public class PayListFragment extends Fragment {
         return root;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        setViwes();
+    }
+
     private void setViwes(){
 
         contex = AppContextProvider.getContext();

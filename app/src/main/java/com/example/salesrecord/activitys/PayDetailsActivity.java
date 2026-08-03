@@ -6,8 +6,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -27,16 +29,16 @@ import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.adapters.SelecAdapter;
+import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Sale;
+import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
-import com.example.salesrecord.utls.MathUtls;
 
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,6 +67,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Button mBtton1;
     private Button mBtton2;
 
+    private Spinner mSpinn1;
+    private int currSel1 = 0;
+
     public String payId = StartVar.currPayId;
     public int accIndex = StartVar.accSelect;
 
@@ -79,6 +84,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Context contex;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
+    private Sale mSale;
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,6 +133,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mBtton2  = findViewById(R.id.butt_dts2);
         mSw = findViewById(R.id.sw_dts1);
 
+        mSpinn1= findViewById(R.id.pay_dts_select1);
+
         mBtton1.setOnClickListener(this);
         mBtton2.setOnClickListener(this);
         mImage1.setOnClickListener(this);
@@ -164,34 +174,67 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     @SuppressLint("SetTextI18n")
     public void setTextViewList(){
 
-        Sale mPay = daoSal.getUsers(glData.getCurrSalId());
+        mSale = daoSal.getUsers(glData.getCurrSalId());
 
-        if(mPay != null) {
+        if(mSale != null) {
+
+            mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
+            mSpinn1.setSelection(mSale.status);
+            mSpinn1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    currSel1 = position;
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+
+            String[] artcList = mSale.artclist.split("\\|");
+            String[] countList = mSale.countlist.split("\\|");
+
+            DaoArt daoArt = StartVar.appDBall.daoAtr();
+            StringBuilder strNames = new StringBuilder();
+            for(int i = 0; i < artcList.length; i++ ){
+                Article crrArt = daoArt.getUsers(artcList[i]);
+
+                if(crrArt != null) {
+                    double count = Double.parseDouble(countList[i]);
+                    String txCount = "x"+Basic.setFormatter(count);
+
+                    String shortName = (crrArt.nombre.length() > 5) ?
+                            crrArt.nombre.substring(0, 5)+". " : crrArt.nombre;
+                    strNames.append(shortName).append(txCount).append(" , ");
+                }
+            }
+
             CalendUtls cale = new CalendUtls();
-            mUser = mPay.sale;
+            mUser = mSale.sale;
             String txName = "";
             String txAlias = "";
 
             String txConc = "Pagado";
-            String txMont = mPay.monto.toString();
-            String txOpt = (mPay.status==0?"+ ":"- ");
+            String txMont = mSale.monto.toString();
+            String txOpt = (mSale.status==0?"+ ":"- ");
             String txFech = "";
-            txFech = CalendUtls.getDate(mPay.fecha);
+            txFech = CalendUtls.getDate(mSale.fecha);
 
-            String txHora = CalendUtls.getTime(mPay.time);
+            String txHora = CalendUtls.getTime(mSale.time);
 
             int i = 0;
-            mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mPay.status));
+            mTextList.get(i).setText("Lista: "+ strNames);
             i++;
-            mTextList.get(i).setText("Monto: "+txOpt+ Basic.getMaskConv(mPay.monto, 0) +" / " + Basic.getMaskConv(mPay.monto, mPay.tasa, 1));
+            mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;
-            mTextList.get(i).setText("Tasa: " + Basic.getMask(mPay.tasa, 1));
+            mTextList.get(i).setText("Monto: "+txOpt+ Basic.getMaskConv(mSale.monto, 0) +" / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
             i++;
-            mTextList.get(i).setText("Fecha: "+ txFech);
+            mTextList.get(i).setText("Tasa: " + Basic.getMask(mSale.tasa, 1));
             i++;
-            mTextList.get(i).setText("Hora: "+ txHora);
+            mTextList.get(i).setText("Fecha y Hora: "+ txFech+" "+txHora);
 
-            currDir = mFileM.getImage(mPay.imagen, mImage1);
+            currDir = mFileM.getImage(mSale.imagen, mImage1);
         }
     }
 
@@ -199,32 +242,46 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     public void onClick(View view) {
         int itemId = view.getId();
         if (itemId == R.id.sw_dts1){
-//            swDel = !swDel;
-//            if(swDel) {
-//                mBtton1.setEnabled(true);
-//            }
-//            else{
-//                mBtton1.setEnabled(false);
-//            }
+            swDel = !swDel;
+            if(swDel) {
+                mBtton1.setEnabled(true);
+            }
+            else{
+                mBtton1.setEnabled(false);
+            }
         }
         if (itemId == R.id.butt_dts1){
-//            //fmang.RemoveFile(saveImage, this.getContentResolver());
-//
-//            //Elimina el registro selecionado
-//            //appDBregistro.get(accIndex).daoUser().removerUser(mUser);
-//            StartVar mVars = new StartVar();
-//            //Recarga La lista de la DB ----------------------------
-//            mVars.getCltListDB();
-//            //-------------------------------------------------------
-//
-//            Intent mIntent = new Intent(this, MainActivity.class);
-//            startActivity(mIntent);
-//            finish(); //Finaliza la actividad y ya no se accede mas
+
+            if(mSale != null) {
+                //fmang.RemoveFile(saveImage, this.getContentResolver());
+
+                String[] artcList = mSale.artclist.split("\\|");
+                String[] countList = mSale.countlist.split("\\|");
+
+                DaoArt daoArt = StartVar.appDBall.daoAtr();
+                for(int i = 0; i < artcList.length; i++ ){
+                    String strArtc = artcList[i];
+                    Article crrArt = daoArt.getUsers(strArtc);
+                    if(crrArt != null){
+                        double count = Double.parseDouble(countList[i]);
+                        crrArt.totalcount += count;
+                        crrArt.currcount += count;
+                        daoArt.update(crrArt);
+                    }
+                }
+                //Elimina el registro selecionado
+                daoSal.removerUser(mSale.uid);
+
+                finish(); //Finaliza la actividad y ya no se accede mas
+            }
         }
         if (itemId == R.id.butt_dts2){
-//            Intent mIntent = new Intent(this, PayEditActivity.class);
-//            this.finish();
-//            startActivity(mIntent);
+
+            if(mSale != null) {
+                mSale.status = currSel1;
+                daoSal.insertUser(mSale);
+                finish(); //Finaliza la actividad y ya no se accede mas
+            }
         }
         if(itemId == R.id.image_dts1) {
 //            Intent mIntent = new Intent(this, ImageActivity.class);

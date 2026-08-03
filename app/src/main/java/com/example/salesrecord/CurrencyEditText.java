@@ -42,6 +42,7 @@ public class CurrencyEditText extends AppCompatEditText {
     private List<Integer> viewIdsToHide = new ArrayList<>();  // NUEVO: IDs de views a ocultar
     private boolean keepFocusOnKeyboardClose;
     private boolean currencySymbolSuffix;  // NUEVO: Símbolo como sufijo
+    private float maxValue = Float.MAX_VALUE;
 
     @SuppressLint({"PrivateResource", "DiscouragedApi"})
     public CurrencyEditText(Context mContext, AttributeSet attrs) {
@@ -85,8 +86,8 @@ public class CurrencyEditText extends AppCompatEditText {
             }
             this.viewIdsToHide = viewIdsToHide;
             this.keepFocusOnKeyboardClose = a.getBoolean(R.styleable.CurrencyEditText_keepFocusOnKeyboardClose, false);
-            // NUEVO: Parsea si símbolo es sufijo (default false para prefix)
             this.currencySymbolSuffix = a.getBoolean(R.styleable.CurrencyEditText_currencySymbolSuffix, false);
+            this.maxValue = a.getFloat(R.styleable.CurrencyEditText_maxValue, Float.MAX_VALUE);
 
         } finally {
             a.recycle();
@@ -101,7 +102,7 @@ public class CurrencyEditText extends AppCompatEditText {
 
         if (useCurrencySymbolAsHint) setHint(currencySymbolStr);
         if (Basic.isLollipopAndAbove() && localeTag != null && !localeTag.isEmpty()) locale = getLocaleFromTag(localeTag);
-        textWatcher = new CurrencyInputWatcher(this, currencySymbolStr, locale, maxDP, currencySymbolSuffix);
+        textWatcher = new CurrencyInputWatcher(this, currencySymbolStr, locale, maxDP, currencySymbolSuffix, maxValue);
         addTextChangedListener(textWatcher);
 
         // Inicializa detector para double-tap y long-press
@@ -178,9 +179,14 @@ public class CurrencyEditText extends AppCompatEditText {
         invalidateTextWatcher();
     }
 
+    public void setMaxValue(float maxValue) {
+        this.maxValue = maxValue;
+        invalidateTextWatcher();
+    }
+
     private void invalidateTextWatcher() {
         removeTextChangedListener(textWatcher);
-        textWatcher = new CurrencyInputWatcher(this, currencySymbolStr, locale, maxDP, currencySymbolSuffix);
+        textWatcher = new CurrencyInputWatcher(this, currencySymbolStr, locale, maxDP, currencySymbolSuffix, maxValue);
         addTextChangedListener(textWatcher);
     }
 
@@ -200,130 +206,7 @@ public class CurrencyEditText extends AppCompatEditText {
         return currencySymbolStr;
     }
 
-    private class CustomSelectionCallback implements ActionMode.Callback {
 
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            menu.clear(); // Limpia cualquier cosa previa
-
-            mode.setTitle("Opciones de Monto");
-
-            // Ítems nativos con iconos en fila
-            menu.add(Menu.NONE, android.R.id.cut, 0, "Cortar")
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-            menu.add(Menu.NONE, android.R.id.copy, 1, "Copiar")
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-            menu.add(Menu.NONE, android.R.id.paste, 2, "Pegar")
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-            menu.add(Menu.NONE, android.R.id.selectAll, 3, "Seleccionar todo")
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-
-            // Custom
-            MenuItem clearItem = menu.add(Menu.NONE, 1001, 4, "Limpiar a 0");
-            clearItem.setIcon(android.R.drawable.ic_menu_delete);
-            clearItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            int mCut = android.R.id.cut;
-            int mCopy = android.R.id.copy;
-            int mPaste = android.R.id.paste;
-            int mSelAll = android.R.id.selectAll;
-            int mClear = 1001;
-
-            // Remueve ítems no deseados del sistema
-            for (int i = menu.size() - 1; i >= 0; i--) {
-                MenuItem item = menu.getItem(i);
-                if (item.getItemId() != mCut && item.getItemId() != mCopy &&
-                        item.getItemId() != mPaste && item.getItemId() != mSelAll &&
-                        item.getItemId() != mClear) {
-                    menu.removeItem(item.getItemId());
-                    // Log para debug (remueve en producción)
-                    Log.d("CurrencyEditText", "Removido ítem no deseado: " + (item.getTitle() != null ? item.getTitle() : "Sin título"));
-                }
-            }
-
-            boolean hasText = !getText().toString().trim().isEmpty();
-            boolean hasSelection = getSelectionStart() != getSelectionEnd();
-
-            // NUEVO: Checks de null para robustez (opcional, pero seguro)
-            MenuItem cutItem = menu.findItem(mCut);
-            if (cutItem != null) cutItem.setEnabled(hasSelection);
-
-            MenuItem copyItem = menu.findItem(mCopy);
-            if (copyItem != null) copyItem.setEnabled(hasSelection);
-
-            MenuItem pasteItem = menu.findItem(mPaste);
-            if (pasteItem != null) pasteItem.setEnabled(hasSelection && clipboardHasText());
-
-            MenuItem selAllItem = menu.findItem(mSelAll);
-            if (selAllItem != null) selAllItem.setEnabled(!hasSelection);
-
-            MenuItem clearItem = menu.findItem(mClear);
-            if (clearItem != null) clearItem.setEnabled(hasText);
-
-            return true;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            int id = item.getItemId();
-
-            if (id == 1001) {
-                setText("0");
-                mode.finish();
-                return true;
-            }
-
-            if (id == android.R.id.cut) {
-                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                clipboard.setPrimaryClip(ClipData.newPlainText("monto", getSelectedText()));
-                deleteSelectedText();
-                mode.finish();
-                return true;
-            }
-
-            if (id == android.R.id.copy) {
-                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                clipboard.setPrimaryClip(ClipData.newPlainText("monto", getSelectedText()));
-                mode.finish();
-                return true;
-            }
-
-            if (id == android.R.id.selectAll) {
-                selectAllText();
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            // Nada especial, el sistema lo maneja
-        }
-
-        // Helpers para cortar/copiar/seleccionar
-        private CharSequence getSelectedText() {
-            return getText().subSequence(getSelectionStart(), getSelectionEnd());
-        }
-
-        private void deleteSelectedText() {
-            int start = getSelectionStart();
-            int end = getSelectionEnd();
-            getText().delete(start, end);
-        }
-
-        private void selectAllText() {
-            setSelection(0, getText().length());
-        }
-    }
 
     private boolean clipboardHasText() {
         ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
@@ -493,7 +376,6 @@ public class CurrencyEditText extends AppCompatEditText {
         return super.onTouchEvent(event);
     }
 
-
     private List<View> viewsToHide = new ArrayList<>();  // Lista de views a ocultar al abrir teclado
     private ViewTreeObserver.OnGlobalLayoutListener keyboardListener;  // Listener para detectar teclado
     private boolean isKeyboardVisible = false;  // Estado del teclado
@@ -511,41 +393,6 @@ public class CurrencyEditText extends AppCompatEditText {
             }
         }
     }
-
-//    // Método para detectar visibilidad del teclado
-//    private void setupKeyboardListener() {
-//        if (keyboardListener == null) {
-//            keyboardListener = new ViewTreeObserver.OnGlobalLayoutListener() {
-//                @Override
-//                public void onGlobalLayout() {
-//                    Rect r = new Rect();
-//                    getRootView().getWindowVisibleDisplayFrame(r);
-//                    int screenHeight = getRootView().getHeight();
-//                    int keypadHeight = screenHeight - r.bottom;
-//
-//                    boolean keyboardShown = keypadHeight > screenHeight * 0.15;  // Umbral ~15% para detectar teclado
-//                    if (keyboardShown != isKeyboardVisible) {
-//                        isKeyboardVisible = keyboardShown;
-//                        toggleViewsVisibility(keyboardShown);  // Oculta si visible, muestra si no
-//
-//                        if (!keyboardShown) {  // FIXED: Al cerrar teclado
-//                            if (keepFocusOnKeyboardClose) {
-//                                // Mantén foco si attr=true
-//                                post(() -> requestFocus());
-//                            } else {
-//                                // FIXED: Fuerza pérdida de foco si attr=false (oculta cursor)
-//                                post(() -> {
-//                                    clearFocus();
-//                                    setSelection(getSelectionStart());
-//                                });
-//                            }
-//                        }
-//                    }
-//                }
-//            };
-//            getViewTreeObserver().addOnGlobalLayoutListener(keyboardListener);
-//        }
-//    }
 
     private void setupKeyboardListener() {
         if (keyboardListener == null) {
@@ -634,6 +481,131 @@ public class CurrencyEditText extends AppCompatEditText {
             return (BigDecimal) format.parse(value);
         } catch (Exception e) {
             return BigDecimal.ZERO;
+        }
+    }
+
+    private class CustomSelectionCallback implements ActionMode.Callback {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            menu.clear(); // Limpia cualquier cosa previa
+
+            mode.setTitle("Opciones de Monto");
+
+            // Ítems nativos con iconos en fila
+            menu.add(Menu.NONE, android.R.id.cut, 0, "Cortar")
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+            menu.add(Menu.NONE, android.R.id.copy, 1, "Copiar")
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+            menu.add(Menu.NONE, android.R.id.paste, 2, "Pegar")
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+            menu.add(Menu.NONE, android.R.id.selectAll, 3, "Seleccionar todo")
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
+            // Custom
+            MenuItem clearItem = menu.add(Menu.NONE, 1001, 4, "Limpiar a 0");
+            clearItem.setIcon(android.R.drawable.ic_menu_delete);
+            clearItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            int mCut = android.R.id.cut;
+            int mCopy = android.R.id.copy;
+            int mPaste = android.R.id.paste;
+            int mSelAll = android.R.id.selectAll;
+            int mClear = 1001;
+
+            // Remueve ítems no deseados del sistema
+            for (int i = menu.size() - 1; i >= 0; i--) {
+                MenuItem item = menu.getItem(i);
+                if (item.getItemId() != mCut && item.getItemId() != mCopy &&
+                        item.getItemId() != mPaste && item.getItemId() != mSelAll &&
+                        item.getItemId() != mClear) {
+                    menu.removeItem(item.getItemId());
+                    // Log para debug (remueve en producción)
+                    Log.d("CurrencyEditText", "Removido ítem no deseado: " + (item.getTitle() != null ? item.getTitle() : "Sin título"));
+                }
+            }
+
+            boolean hasText = !getText().toString().trim().isEmpty();
+            boolean hasSelection = getSelectionStart() != getSelectionEnd();
+
+            // NUEVO: Checks de null para robustez (opcional, pero seguro)
+            MenuItem cutItem = menu.findItem(mCut);
+            if (cutItem != null) cutItem.setEnabled(hasSelection);
+
+            MenuItem copyItem = menu.findItem(mCopy);
+            if (copyItem != null) copyItem.setEnabled(hasSelection);
+
+            MenuItem pasteItem = menu.findItem(mPaste);
+            if (pasteItem != null) pasteItem.setEnabled(hasSelection && clipboardHasText());
+
+            MenuItem selAllItem = menu.findItem(mSelAll);
+            if (selAllItem != null) selAllItem.setEnabled(!hasSelection);
+
+            MenuItem clearItem = menu.findItem(mClear);
+            if (clearItem != null) clearItem.setEnabled(hasText);
+
+            return true;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            int id = item.getItemId();
+
+            if (id == 1001) {
+                setText("0");
+                mode.finish();
+                return true;
+            }
+
+            if (id == android.R.id.cut) {
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("monto", getSelectedText()));
+                deleteSelectedText();
+                mode.finish();
+                return true;
+            }
+
+            if (id == android.R.id.copy) {
+                ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("monto", getSelectedText()));
+                mode.finish();
+                return true;
+            }
+
+            if (id == android.R.id.selectAll) {
+                selectAllText();
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // Nada especial, el sistema lo maneja
+        }
+
+        // Helpers para cortar/copiar/seleccionar
+        private CharSequence getSelectedText() {
+            return getText().subSequence(getSelectionStart(), getSelectionEnd());
+        }
+
+        private void deleteSelectedText() {
+            int start = getSelectionStart();
+            int end = getSelectionEnd();
+            getText().delete(start, end);
+        }
+
+        private void selectAllText() {
+            setSelection(0, getText().length());
         }
     }
 }

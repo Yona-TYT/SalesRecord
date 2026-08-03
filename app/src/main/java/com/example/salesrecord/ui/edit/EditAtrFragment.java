@@ -28,6 +28,7 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.utls.StringsUtls;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -60,6 +61,9 @@ public class EditAtrFragment extends Fragment {
     private TextInputLayout mTil2;
 
     private SwitchMaterial mSw1;
+    private SwitchMaterial mSw2;
+
+    private boolean swCurrency = false;
 
     private Button editButt;
     private Button acepButt;
@@ -90,7 +94,8 @@ public class EditAtrFragment extends Fragment {
         mTil1 = binding.tilReponer;
         mTil2 = binding.tilMargen;
 
-        mSw1 = binding.swDisponible;
+        mSw1 = binding.swBolivares;
+        mSw2 = binding.swDisponible;
 
         editButt = binding.buttHome3;
         acepButt = binding.buttHome2;
@@ -103,6 +108,9 @@ public class EditAtrFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        swCurrency = false;
+        mSw1.setChecked(false);
 
         if(crrArt != null) {
 
@@ -188,7 +196,7 @@ public class EditAtrFragment extends Fragment {
                         mInput2.setText(Basic.setFormatterEs(precio));
                         //mInput3.setText(Basic.setFormatterEn((double)crrArt.currcount) );
                         if(crrArt.margen > 0) {
-                            mInput4.setText(Basic.setFormatterEn(crrArt.margen));
+                            mInput4.setText(Basic.setFormatterEs(crrArt.margen));
                         }
 
                         mInput1.setEnabled(true);
@@ -197,19 +205,42 @@ public class EditAtrFragment extends Fragment {
                         mInput4.setEnabled(true);
 
                         mSw1.setEnabled(true);
+                        mSw2.setEnabled(true);
                         editButt.setEnabled(true);
                         acepButt.setEnabled(true);
 
-                        mSw1.setChecked(crrArt.staus != 0);
+                        mSw2.setChecked(crrArt.staus != 0);
 
                         //Termina el proceso
                         return;
                     }
                 }
-
                 mSw1.setChecked(false);
                 mSw1.setEnabled(false);
+                mSw2.setChecked(false);
+                mSw2.setEnabled(false);
                 editButt.setEnabled(false);
+
+            }
+        });
+
+        mInput2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(crrArt != null) {
+                    double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
 
             }
         });
@@ -254,6 +285,21 @@ public class EditAtrFragment extends Fragment {
             }
         });
 
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                swCurrency = !swCurrency;
+                if(swCurrency) {
+                    mInput2.setCurrencySymbol("Bs");
+                    mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 1, false));
+                }
+                else{
+                    mInput2.setCurrencySymbol("$");
+                    mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 0, false));
+                }
+            }
+        });
+
         editButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -289,27 +335,28 @@ public class EditAtrFragment extends Fragment {
                 crrArt.nombre = nombre;
 
                 int mType = crrArt.artipo;
+                double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
                 if(mType == 0){
-                    crrArt.precund = mInput2.getNumericValue();
+                    crrArt.precund = price;
                 }
                 if(mType == 1){
-                    crrArt.precpq = mInput2.getNumericValue();
+                    crrArt.precpq = price;
                 }
 
                 if(mType == 2){
-                    crrArt.preccj = mInput2.getNumericValue();
+                    crrArt.preccj = price;
                 }
 
-                crrArt.currcount = crrArt.currcount + (float)mInput3.getNumericValue();
+                crrArt.currcount = crrArt.currcount + mInput3.getNumericValue();
                 crrArt.totalcount = crrArt.currcount;
 
                 crrArt.margen = mInput4.getNumericValue();
 
-                crrArt.staus = (mSw1.isChecked() ? 1 : 0);
+                crrArt.staus = (mSw2.isChecked() ? 1 : 0);
 
                 daoArt.update(crrArt);
-
+                
                 //Limpia y Desactiva los inputs
                 mInput1.setText("");
                 mInput2.setText("");
@@ -326,9 +373,14 @@ public class EditAtrFragment extends Fragment {
 
                 mSw1.setChecked(false);
                 mSw1.setEnabled(false);
+                mSw2.setChecked(false);
+                mSw2.setEnabled(false);
                 editButt.setEnabled(false);
                 acepButt.setEnabled(false);
 
+                mInput2.setCurrencySymbol("$");
+
+                swCurrency = false;
                 crrArt = null;
 
                 mArtList = daoArt.getUsers();

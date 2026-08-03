@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="Widget.Theme.SalesRecord.ActionBar.Fullscreen" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
@@ -7,5 +7,9 @@
     <style name="Widget.Theme.SalesRecord.ButtonBar.Fullscreen" parent="">
         <item name="android:background">@color/black_overlay</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
+    </style>
+
+    <style name="HintCompactSize" parent="TextAppearance.Design.Hint">
+        <item name="android:textSize">12sp</item>
     </style>
 </resources>

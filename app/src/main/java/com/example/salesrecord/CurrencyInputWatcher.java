@@ -18,6 +18,7 @@ public class CurrencyInputWatcher implements TextWatcher {
     private final boolean isSuffix;
     private final Locale locale;
     private final int maxNumberOfDecimalPlaces;
+    private final float maxValue;
 
     private boolean hasDecimalPoint;
     private int expectedCursorPos;
@@ -27,12 +28,13 @@ public class CurrencyInputWatcher implements TextWatcher {
 
     private static final String FRACTION_FORMAT_PATTERN_PREFIX = "#,##0.";
 
-    public CurrencyInputWatcher(EditText editText, String currencySymbol, Locale locale, int maxNumberOfDecimalPlaces, boolean isSuffix) {
+    public CurrencyInputWatcher(EditText editText, String currencySymbol, Locale locale, int maxNumberOfDecimalPlaces, boolean isSuffix, float maxValue) {
         this.editText = editText;
         this.currencySymbol = currencySymbol;
         this.isSuffix = isSuffix;
         this.locale = locale;
         this.maxNumberOfDecimalPlaces = maxNumberOfDecimalPlaces;
+        this.maxValue = maxValue;
 
         if (maxNumberOfDecimalPlaces < 1) {
             throw new IllegalArgumentException("Maximum number of Decimal Digits must be a positive integer");
@@ -142,6 +144,21 @@ public class CurrencyInputWatcher implements TextWatcher {
             numberWithoutGroupingSeparator = truncateNumberToMaxDecimalDigits(numberWithoutGroupingSeparator, this.maxNumberOfDecimalPlaces, this.decimalFormatSymbols.getDecimalSeparator());
 
             Number parsedNumber = this.fractionDecimalFormat.parse(numberWithoutGroupingSeparator);
+
+            // ==========================================
+            // INTERCEPTOR DE VALOR MÁXIMO EN TIEMPO REAL
+            // ==========================================
+            if (parsedNumber.doubleValue() > this.maxValue) {
+                // Reducimos el número al límite del XML
+                parsedNumber = (double) this.maxValue;
+
+                // Colocamos el globo de alerta visual en la vista
+                this.editText.setError("El valor máximo permitido es " + (int) this.maxValue);
+
+                // Sobreescribimos la variable de texto limpio para que el formateador use el tope de 100
+                numberWithoutGroupingSeparator = String.valueOf((int) this.maxValue);
+            }
+
             int selectionStartIndex = this.editText.getSelectionStart();
             if (this.hasDecimalPoint) {
                 this.fractionDecimalFormat.applyPattern(FRACTION_FORMAT_PATTERN_PREFIX + getFormatSequenceAfterDecimalSeparator(numberWithoutGroupingSeparator));

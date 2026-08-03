@@ -124,10 +124,10 @@ public class SummaryAdapter extends BaseAdapter  {
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
         Double total = (clcPrice*item.saleCount);
-        holder.view2.setText("Disponible: " + Basic.formatDecimal(item.maxCount) +
-                "  -  Precio: " + Basic.getMaskConv(item.price, 0) +
+        holder.view2.setText("uds. " + Basic.formatDecimal(item.maxCount) +
+                "  -  precio: " + Basic.getMaskConv(item.price, 0) +
                 " / "+  Basic.getMaskConv(item.price, 1) +
-                "  -  Margen: " + Basic.formatDecimal(item.margen)+" %");
+                "  -  (" + Basic.formatDecimal(item.margen)+" %)");
 
         holder.view1.setTextColor(
                 ContextCompat.getColor(holder.view1.getContext(), R.color.alert_text)

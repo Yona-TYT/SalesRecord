@@ -49,15 +49,18 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- INPUT: MONTO (Decimal) -->
+    <!-- INPUT: MONTO (Contenedor de Material Design) -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilMonto"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Monto"
         android:layout_marginTop="4dp"
+        app:hintTextAppearance="@style/HintCompactSize"
         app:layout_constraintTop_toBottomOf="@+id/tilNombre"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toEndOf="@id/guideline2">
+        app:layout_constraintEnd_toStartOf="@+id/sw_bolivares"> <!-- Termina donde empieza el Switch -->
+
         <com.example.salesrecord.CurrencyEditText
             android:id="@+id/etMonto"
             android:layout_width="match_parent"
@@ -66,13 +69,28 @@
             android:imeOptions="actionDone"
             android:maxLines="1"
             android:enabled="false"
-
             app:localeTag="ES"
             app:maxNumberOfDecimalDigits="2"
             app:currencySymbol="$"
-            app:currencySymbolSuffix="true"
-            />
-    </com.google.android.material.textfield.TextInputLayout>
+            app:currencySymbolSuffix="true" />
+
+    </com.google.android.material.textfield.TextInputLayout> <!-- CIERRE CORRECTO AQUÍ -->
+
+    <!-- COMPONENTE INDEPENDIENTE: SWITCH BOLÍVARES -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/sw_bolivares"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Bolívares"
+        android:textStyle="bold"
+        android:textSize="@dimen/inner_text_2"
+        android:enabled="false"
+        android:checked="false"
+        app:layout_constraintTop_toTopOf="@id/tilMonto"
+        app:layout_constraintBottom_toBottomOf="@id/tilMonto"
+        app:layout_constraintStart_toEndOf="@id/tilMonto"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
 
     <!-- INPUT: REPONER (Decimal) -->
@@ -85,6 +103,7 @@
         android:hint="Reponer"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
+        app:hintTextAppearance="@style/HintCompactSize"
         app:layout_constraintTop_toBottomOf="@id/tilMonto"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toStartOf="@id/tilMargen">
@@ -94,15 +113,14 @@
             android:id="@+id/etReponer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:enabled="false"
             android:focusable="true"
             android:imeOptions="actionDone"
             android:maxLines="1"
-            android:enabled="false"
-
-            app:localeTag="EN"
-            app:maxNumberOfDecimalDigits="2"
+            app:currencySymbol="uds."
             app:currencySymbolSuffix="true"
-            app:currencySymbol="Uds"            />
+            app:localeTag="ES"
+            app:maxNumberOfDecimalDigits="2" />
 
 
 
@@ -116,6 +134,7 @@
         android:hint="Ganancia"
         android:layout_marginTop="4dp"
         android:layout_marginStart="4dp"
+        app:hintTextAppearance="@style/HintCompactSize"
         app:layout_constraintTop_toBottomOf="@+id/tilMonto"
         app:layout_constraintStart_toEndOf="@+id/tilReponer"
         app:layout_constraintEnd_toEndOf="@id/guideline2">
@@ -129,10 +148,11 @@
             android:maxLines="1"
             android:enabled="false"
 
-            app:localeTag="EN"
+            app:localeTag="ES"
             app:maxNumberOfDecimalDigits="2"
             app:currencySymbolSuffix="true"
             app:currencySymbol="%"
+            app:maxValue="100"
             />
 
     </com.google.android.material.textfield.TextInputLayout>

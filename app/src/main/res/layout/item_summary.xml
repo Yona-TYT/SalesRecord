@@ -22,14 +22,14 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:padding="2dp"
-            android:textSize="10sp" />
+            android:textSize="@dimen/inner_text_1" />
 
         <TextView
             android:id="@+id/summary_tex2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="2dp"
-            android:textSize="10sp" />
+            android:textSize="@dimen/inner_text_1" />
 
     </LinearLayout>
 
