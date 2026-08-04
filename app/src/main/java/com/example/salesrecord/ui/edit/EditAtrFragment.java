@@ -74,10 +74,7 @@ public class EditAtrFragment extends Fragment {
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        NotificationsViewModel notificationsViewModel =
-                new ViewModelProvider(this).get(NotificationsViewModel.class);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         binding = FragmentEditBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -146,6 +143,13 @@ public class EditAtrFragment extends Fragment {
 
     private void setViwes() {
         objListSal.clear();
+
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
+
         daoArt = StartVar.appDBall.daoAtr();
         mArtList = daoArt.getUsers();
 
@@ -356,7 +360,7 @@ public class EditAtrFragment extends Fragment {
                 crrArt.staus = (mSw2.isChecked() ? 1 : 0);
 
                 daoArt.update(crrArt);
-                
+
                 //Limpia y Desactiva los inputs
                 mInput1.setText("");
                 mInput2.setText("");

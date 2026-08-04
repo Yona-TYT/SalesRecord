@@ -58,10 +58,7 @@ public class AddAtrFragment extends Fragment {
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        DashboardViewModel dashboardViewModel =
-                new ViewModelProvider(this).get(DashboardViewModel.class);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         binding = FragmentAddBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -76,6 +73,13 @@ public class AddAtrFragment extends Fragment {
     }
 
     private void setViwes(){
+
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
+
         mInpList.add(binding.etNombre);
         mInpList.add(binding.etDescr);
 

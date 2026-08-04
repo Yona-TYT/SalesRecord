@@ -81,6 +81,12 @@ public class PayListFragment extends Fragment {
 
         contex = AppContextProvider.getContext();
 
+
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
         mSpinn1 = binding.paySelect1;
         mListView = binding.payViewList;
 
@@ -91,12 +97,16 @@ public class PayListFragment extends Fragment {
 
         List<Fecha> listFecha = dateOrderedList;
 
+
         mStrFecList.clear();
         long   currDate = 0;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             currDate = Instant.now().toEpochMilli();
         }
+        Basic.msg(CalendUtls.getDate(currDate));
         for (Fecha d : listFecha){
+            //
+            // Basic.msg(d.strdate+" "+dateOrderedList.size());
             if(CalendUtls.isSameDay(currDate, d.date)){
                 mStrFecList.add("Ventas de Hoy");
             }
@@ -151,7 +161,7 @@ public class PayListFragment extends Fragment {
                 String date = CalendUtls.getShortDate(fecha);
                 String time = CalendUtls.getTime(mPay.time);
 
-                if (CalendUtls.isSameMonth(fecha, selFecha.date)) {
+                if (CalendUtls.isSameDay(fecha, selFecha.date)) {
                     Object[] stList = new Object[7];
                     stList[0] = mPay.sale;
                     stList[1] = name;

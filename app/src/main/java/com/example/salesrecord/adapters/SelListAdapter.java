@@ -272,7 +272,6 @@ public class SelListAdapter extends BaseAdapter  {
                             }
                             else {
                                 inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
-                                Basic.msg("Valor EXCEDIDO!");
                             }
 
                             // 2. Ocultamos el input y regresamos al diseño del texto original

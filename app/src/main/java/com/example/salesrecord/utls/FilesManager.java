@@ -67,7 +67,7 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
     public String SavePhoto(Bitmap bmp, String fName, Uri oldFile, Context contex, ContentResolver resolver){
 
         //Creamos el directorio para los archivos
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/.accdata/");
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+ StartVar.dirAppName+"/");
         boolean isDiralloway = true;
         if(!path.exists()){
             isDiralloway = path.mkdir();
@@ -125,7 +125,7 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 currdate = LocalDate.now();
             }
-            String name = (currdate == null? "CowData_Save.csv" : "RegistroDatos_"+currdate.toString()+".csv" );
+            String name = (currdate == null? StartVar.csvAppName : "DataSave_"+currdate.toString()+".csv" );
             File file = new File(path, name);
             write.writeToCsvFile(list, file);
             return file;

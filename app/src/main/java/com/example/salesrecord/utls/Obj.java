@@ -52,6 +52,7 @@ public class Obj implements Serializable, Parcelable {
     }
 
     protected Obj(Parcel in) {
+        strId = in.readString();
         name = in.readString();
         desc = in.readString();
         img = in.readString();
@@ -89,6 +90,7 @@ public class Obj implements Serializable, Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeString(strId);
         dest.writeString(name);
         dest.writeString(desc);
         dest.writeString(img);

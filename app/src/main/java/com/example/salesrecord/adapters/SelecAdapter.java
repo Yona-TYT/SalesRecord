@@ -63,6 +63,7 @@ public class SelecAdapter extends BaseAdapter {
             // 1. OBTENEMOS EL ID DEL TEMA DE LA ACTIVIDAD (Tu estrategia)
             int mStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
 
+
             // 2. ENVOLVEMOS EL CONTEXTO CON EL TEMA DINÁMICO
             ContextThemeWrapper themedContext = new ContextThemeWrapper(mContex, mStyle);
 

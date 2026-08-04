@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -18,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -26,7 +28,6 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelListAdapter;
 import com.example.salesrecord.adapters.SaleAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
@@ -70,13 +71,14 @@ public class HomeFragment extends Fragment {
     private Button mButt1;
     private Button mButt2;
 
+    private EditText mInput2;
     private Spinner mSpinn1;
     private int currSel1 = 0;
 
     private Long currGrid = 0L;
 
-    private List<Obj> objListAll = new ArrayList<>();
-    private List<Obj> objListSal = new ArrayList<>();
+    private ArrayList<Obj> objListAll = new ArrayList<>();
+    private ArrayList<Obj> objListSal = new ArrayList<>();
 
     private Context contex;
 
@@ -84,46 +86,98 @@ public class HomeFragment extends Fragment {
 
     private Sale crrSale;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Almacenamiento directo sin rodeos de conversión
+        if (objListAll != null) {
+            outState.putParcelableArrayList("all_obj", objListAll);
+        }
+
+        if (objListSal != null) {
+            outState.putParcelableArrayList("sal_obj", objListSal);
+        }
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         contex = AppContextProvider.getContext();
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+        // Inicialización de tus componentes de la interfaz
         mInput1 = binding.inputHome1;
         gridView = binding.gcImg;
         mListView = binding.viewList;
         viewTotal = binding.homeText2;
-
         searchBar = binding.searchBar;
-
         mButt1 = binding.buttHome1;
         mButt2 = binding.buttHome2;
-
+        mInput2 = binding.inputClient;
         mSpinn1 = binding.homeSelect1;
 
-        AppContextProvider.runWithSafeActivity(new AppContextProvider.SafeActivityRunnable() {
-            @Override
-            public void onActivityReady(Activity activity) {
-                //Se obtiene el precio del dolar por primera vez
-                GetDollar mGet = new GetDollar( getActivity(), 0, mInput1);
-                try {
-                    GetDollar.urlRun();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+        // =========================================================================
+        // RECOLECCIÓN DE DATOS RESPALDADOS (savedInstanceState)
+        // =========================================================================
+
+        Msg.init(contex);
+        if (savedInstanceState != null) {
+            try {
+                // Intentamos recuperar los datos del Bundle de forma segura
+                objListAll = savedInstanceState.getParcelableArrayList("all_obj");
+                objListSal = savedInstanceState.getParcelableArrayList("sal_obj");
+            } catch (Exception e) {
+                android.util.Log.e("FragmentHome", "Error restaurando listas Parcelables corruptas", e);
+            }
+
+
+            // Si falló el empaquetado, inicializamos listas vacías seguras para evitar NullPointerException
+            if (objListAll == null) objListAll = new ArrayList<>();
+            if (objListSal == null) objListSal = new ArrayList<>();
+
+            //Msg.m(""+objListAll.size()+" "+objListSal.size());
+
+            // Reconstruir referencias compartidas
+            for (int i = 0; i < objListSal.size(); i++) {
+                Obj saleObj = objListSal.get(i);
+                for (int j = 0; j < objListAll.size(); j++) {
+                    if (Objects.equals(objListAll.get(j).id, saleObj.id)) {
+                        // Usar el de objListAll (o copiar valores)
+                        objListSal.set(i, objListAll.get(j));
+                        break;
+                    }
                 }
             }
-        });
+            setViwes(true);
 
+        }
+        else {
+            // SI NO HAY RESPALDO: Es la primera vez que se abre la pantalla, buscamos el dólar en internet
+            AppContextProvider.runWithSafeActivity(new AppContextProvider.SafeActivityRunnable() {
+                @Override
+                public void onActivityReady(Activity activity) {
+                    GetDollar mGet = new GetDollar(getActivity(), 0, mInput1);
+                    try {
+                        GetDollar.urlRun();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
 
+            setViwes(false);
 
-//        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
-        setViwes();
+        }
+
+        // homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
         return root;
     }
@@ -134,23 +188,14 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        // Guardamos el valor numérico actual
-//        outState.putDouble("monto", glMonto);
-//        outState.putBoolean("isEs", isEsFormat);
-        outState.putDoubleArray("doubList", glData.getDoubList());
-        outState.putLongArray("logList", glData.getLongList());
-
-    }
-
     @SuppressLint("SetTextI18n")
-    private void setViwes(){
+    private void setViwes(boolean isSave){
 
-        //Limpiamos las listas
-        objListAll.clear();
-        objListSal.clear();
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
 
         daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
@@ -215,16 +260,22 @@ public class HomeFragment extends Fragment {
         //----------------------------------------------------
 
         //Para la lista de todos los productos
-        for (Article obj : mArtList) {
-            if(obj.staus > 0) {
-                objListAll.add(setGalleryArray(obj));
+        if(!isSave) {
+            //Limpiamos las listas
+            objListAll.clear();
+            objListSal.clear();
+
+            for (Article obj : mArtList) {
+                if (obj.staus > 0) {
+                    objListAll.add(setGalleryArray(obj));
+                }
             }
         }
-        
+
         //Basic.msg(""+mArtList.get(0).totalcount);
 
         //Para la lista de ventas ----------------------------
-        mAdapter2 = new SaleAdapter(contex, objListSal);
+        mAdapter2 = new SaleAdapter(contex, objListSal, true);
         //-----------------------------------------------------
 
         mAdapter1 = new SelListAdapter(contex, objListAll);
@@ -262,17 +313,24 @@ public class HomeFragment extends Fragment {
 
                     if (item.currCount > 0 && item.maxCount > 0 && item.saleCount < item.maxCount) {
                         if((item.saleCount +1) > item.maxCount) {
-                            Basic.msg("Remanente no alcanza");
-                            return;
-                        }
+                            double minus = item.maxCount - item.saleCount;
 
-                        item.saleCount++;
-                        item.currCount--;
+                            item.saleCount += minus;
+                            item.currCount -= minus;
+//                            Basic.msg("Remanente no alcanza "+minus);
+//                            return;
+                        }
+                        else {
+                            item.saleCount++;
+                            item.currCount--;
+                        }
 
                         objListAll.set(position, item);
 
 
                         if (mAdapter1 != null) {
+                            //Basic.msg("currCount "+item.currCount+" > 0 && maxCount "+ item.maxCount +" > 0 && saleCount "+ item.saleCount +" < maxCount "+ item.maxCount, true);
+
                             mAdapter1.notifyDataSetChanged();
                         }
                     } else {
@@ -369,33 +427,14 @@ public class HomeFragment extends Fragment {
             }
         });
 
-
+        if(isSave) {
+            refreshAllUI();
+        }
     }
-
-    private double setTotal(List<Obj> list){
-        if (list.isEmpty()){
-            viewTotal.setVisibility(View.INVISIBLE);
-            mButt2.setEnabled(false);
-            mSpinn1.setEnabled(false);
-
-        }
-        else {
-            viewTotal.setVisibility(View.VISIBLE);
-            mButt2.setEnabled(true);
-            mSpinn1.setEnabled(true);
-        }
-
-        double total = 0.0;
-        for (Obj obj : list) {
-              double price = MathUtls.addPercentage(obj.price, obj.margen);
-            total = total + ( price * obj.saleCount);
-        }
-        return total;
-    }
-
 
     // Actualiza la lista de ventas (objListSal)
     private void updateSaleList(Obj item) {
+
         if (item.saleCount <= 0) {
             objListSal.removeIf(obj -> Objects.equals(obj.id, item.id));
         } else {
@@ -413,7 +452,6 @@ public class HomeFragment extends Fragment {
     @SuppressLint("SetTextI18n")
     private void refreshSaleListUI() {
         objListSal.removeIf(obj -> obj.saleCount <= 0);
-
         if (mAdapter2 != null) {
             Double total = setTotal(objListSal);
             viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
@@ -421,30 +459,38 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    @SuppressLint("SetTextI18n")
+    private void refreshAllUI() {
+        if (mAdapter1 != null && mAdapter2 != null) {
+            Double total = setTotal(objListSal);
+            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+            mAdapter1.notifyDataSetChanged();
+            mAdapter2.notifyDataSetChanged();
+        }
+    }
 
+    private double setTotal(List<Obj> list){
+        if (list.isEmpty()){
+            viewTotal.setVisibility(View.INVISIBLE);
+            mInput2.setVisibility(View.GONE);
+            mButt2.setEnabled(false);
+            mSpinn1.setEnabled(false);
 
-//    public void nextViewActivity(int pos){
-//        Intent mIntent = new Intent(this, ViewActivity.class);
-//        Bundle mBundle = new Bundle();
-//        //Log.d("PhotoPicker", "11100------------------------: " + dirList.size());
-//        mBundle.put("index", pos);
-//        mIntent.putExtras(mBundle);
-//        //Save gallery petition
-//        int firstVisiblePosition = gridView.getFirstVisiblePosition();
-//        Basic.msg("Primera posición visible: " + firstVisiblePosition);
-//
-//        // Opcional: Para más precisión, obtén el offset (píxeles desde el top del primer ítem)
-//        if (gridView.getChildCount() > 0) {
-//            int offset = gridView.getChildAt(0).getTop();
-//            Basic.msg("Offset: " + offset);
-//            // Guarda ambos: posición + offset
-//            myPrefernce.setGalleryPosition(firstVisiblePosition, offset);
-//        }
-//        else {
-//            myPrefernce.setGalleryPosition(firstVisiblePosition, 0);
-//        }
-//        startActivity(mIntent);
-//    }
+        }
+        else {
+            viewTotal.setVisibility(View.VISIBLE);
+            mInput2.setVisibility(View.VISIBLE);
+            mButt2.setEnabled(true);
+            mSpinn1.setEnabled(true);
+        }
+
+        double total = 0.0;
+        for (Obj obj : list) {
+            double price = MathUtls.addPercentage(obj.price, obj.margen);
+            total = total + ( price * obj.saleCount);
+        }
+        return total;
+    }
 
     private Obj setGalleryArray(Article art){
         double mPrice;
@@ -459,11 +505,10 @@ public class HomeFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen
-,                art.uid);
+                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen, art.uid
+        );
 
         return mObj;
-
     }
 
     private boolean saveSale(){
@@ -478,10 +523,27 @@ public class HomeFragment extends Fragment {
                 currTime = System.currentTimeMillis();
             }
 
+            String strClt = "";
+            int cltNr = 1;
+            for (Sale sal : daoSal.getUsers()) {
+                if (CalendUtls.isSameDay(sal.fecha, currDate)) {
+                    cltNr++;
+                }
+            }
+            String strNr = " nr"+cltNr + (" (" + CalendUtls.getShortDate(currDate) + ")");
+            strClt = "Cliente" + strNr ;
+
+            if(!mInput2.getText().toString().isEmpty()) {
+
+                strClt = mInput2.getText().toString()+strNr;
+            }
+
+
             String strId = DatabaseUtils.generateId("salID", daoSal);
-            String strClt = "Cliente "+strId.replaceAll("\\D","");
             StringBuilder strArtList = new StringBuilder();
             StringBuilder strCountList = new StringBuilder();
+            StringBuilder strPriceList = new StringBuilder();
+            StringBuilder strMargList = new StringBuilder();
 
             double total = 0.0;
 
@@ -492,6 +554,8 @@ public class HomeFragment extends Fragment {
                 total = total + ( price * o.saleCount);
                 strArtList.append("|").append(o.strId);
                 strCountList.append("|").append(o.saleCount);
+                strPriceList.append("|").append(o.price);
+                strMargList.append("|").append(o.margen);
 
                 Article art = daoArt.getUsers(o.id);
 
@@ -501,9 +565,15 @@ public class HomeFragment extends Fragment {
                 artList.add(art);
             }
             Sale mObj = new Sale(
-                    strId, strClt, strArtList.toString(),strCountList.toString(), total, StartVar.mDollar, currSel1,
-                    "", currTime, "@null", 0, "", currDate
+                    strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
+                    total, StartVar.mDollar, currSel1, "", currTime, "@null", 0, "", currDate
             );
+
+            //Se restauran los elementos
+            mInput2.setText("");
+            mInput2.setVisibility(View.GONE);
+            mButt2.setEnabled(false);
+            mSpinn1.setEnabled(false);
 
             //Se guarda la venta
             daoSal.insertUser(mObj);
@@ -512,7 +582,7 @@ public class HomeFragment extends Fragment {
             daoArt.updateUser(artList);
 
             //Se actualiza la lista de fechas si esta no existe
-            CalendUtls.addCurrentMonthIfAbsent(contex);
+            CalendUtls.addCurrentDate(contex, 0);
 
             return true;
 
@@ -521,5 +591,4 @@ public class HomeFragment extends Fragment {
         }
         return false;
     }
-
 }

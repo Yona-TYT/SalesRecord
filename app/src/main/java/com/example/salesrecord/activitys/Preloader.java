@@ -91,7 +91,7 @@ public class Preloader extends AppCompatActivity {
         //Se reinicia el cursor para el gallery adapter
         PreferenceHelper.getInstance().setGalleryPosition(0, 0);
 
-        //Se crea el directorio de .cowdate
+        //Se crea el directorio de la app
         FilesManager.directoryCreate();
 
         //Satrted variables

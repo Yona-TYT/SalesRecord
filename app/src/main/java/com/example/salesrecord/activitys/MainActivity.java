@@ -398,9 +398,7 @@ public class MainActivity extends AppCompatActivity {
                 mTry--;
                 if(reTry) {
                     StartVar startVar = new StartVar();
-
                     //Basic.msg("Delay... " + StartVar.mDollar);
-
                     if (StartVar.mDollar == 0.0) {
                         if (mTry > 0) {
                             startMainDelayTry(mTime);
@@ -419,10 +417,7 @@ public class MainActivity extends AppCompatActivity {
                         mCfg.datetasa = CalendUtls.getShortDate(date);
                         mDaoCfg.insertUser(mCfg);
                         startVar.setShortDate(mCfg.datetasa);
-
-                        Basic.msg("Precio Dolar Guardado "+mCfg.datetasa);
-
-
+                        //Basic.msg("Precio Dolar Guardado "+mCfg.datetasa);
                         reTry = false;
                     }
                 }

@@ -67,11 +67,11 @@
             android:name=".activitys.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustResize"></activity>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activitys.ReloadActivity"
             android:exported="true"
-            android:theme="@style/Theme.SalesRecord.NoActionBar"></activity>
+            android:theme="@style/Theme.SalesRecord.NoActionBar" />
         <activity
             android:name=".activitys.SettingsActivity"
             android:exported="false"

@@ -67,11 +67,12 @@
         android:layout_height="0dp"
         android:columnWidth="90dp"
         android:gravity="center"
-        android:horizontalSpacing="10dp"
+        android:horizontalSpacing="0dp"
+        android:verticalSpacing="1dp"
         android:numColumns="1"
-        android:padding="8dp"
+        android:padding="0dp"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="12dp"
+        android:clipToPadding="false"
 
         app:layout_constraintTop_toBottomOf="@id/searchBar"
         app:layout_constraintBottom_toTopOf="@id/lineVertical1"
@@ -85,7 +86,7 @@
         android:textStyle="bold"
         android:padding="2dp"
         android:text="Total:"
-        android:textSize="20sp"
+        android:textSize="@dimen/inner_text_3"
         android:visibility="invisible"
         app:layout_constraintTop_toBottomOf="@id/lineVertical1"
         app:layout_constraintStart_toStartOf="@id/guideline"
@@ -98,11 +99,30 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/homeText2"
-        app:layout_constraintBottom_toTopOf="@id/butt_home2"
+        app:layout_constraintBottom_toTopOf="@id/input_client"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
-    <!-- 2. MODIFICA EL BOTÓN -->
+    <!-- Input nombre del cliente -->
+    <EditText
+        android:id="@+id/input_client"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:layout_marginBottom="6dp"
+        android:hint="Nombre (Opcional)"
+        android:inputType="textPersonName|textCapWords"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        android:padding="10dp"
+        android:textSize="@dimen/inner_text_1"
+        android:background="@color/text_background"
+        android:visibility="gone"
+        android:windowSoftInputMode="adjustPan"
+        app:layout_constraintBottom_toTopOf="@id/home_select1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- BOTÓN PROCESAR -->
     <Button
         android:id="@+id/butt_home2"
         android:layout_width="0dp"
@@ -117,7 +137,7 @@
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintHorizontal_weight="1" />
 
-    <!-- SPINNER SELECT1 (CORREGIDO: Mismo ancho, altura simétrica y restricciones limpias) -->
+    <!-- SPINNER -->
     <Spinner
         android:id="@+id/home_select1"
         android:layout_width="0dp"
@@ -150,6 +170,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.55" />
+        app:layout_constraintGuide_percent="0.4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

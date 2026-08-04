@@ -119,49 +119,82 @@ public class CalendUtls {
         return text;
     }
 
-    public static void addCurrentMonthIfAbsent(Context mContext) {
+    // Constantes para identificar el tipo de comparación de forma clara
+    public static final int COMPARE_BY_DAY = 0;
+    public static final int COMPARE_BY_MONTH = 1;
+    public static final int COMPARE_BY_YEAR = 2;
+
+    /**
+     * Inserta la fecha actual en la base de datos si no existe previa coincidencia
+     * según el tipo de comparación solicitado.
+     *
+     * @param mContext Contexto de la aplicación.
+     * @param compareMode Modo de comparación: COMPARE_BY_DAY_MONTH_YEAR, COMPARE_BY_MONTH_YEAR o COMPARE_BY_YEAR.
+     */
+    public static void addCurrentDate(Context mContext, int compareMode) {
         DaoDat daoFecha = StartVar.appDBall.daoDat();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            // Inicia la fecha actual
-            LocalDate currdate = LocalDate.now();
-            List<Fecha> listFecha = daoFecha.getUsers();
-            boolean exists = false;
+        List<Fecha> listFecha = daoFecha.getUsers();
+        boolean exists = false;
 
-            // Forzamos la zona horaria a UTC para garantizar consistencia global
-            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+        // Forzamos la zona horaria a UTC para garantizar consistencia global
+        TimeZone localZone = TimeZone.getDefault();
 
-            // 1. Instancia de la fecha actual en UTC
-            Calendar calCurr = Calendar.getInstance(utcZone);
-            int currMonth = calCurr.get(Calendar.MONTH);
-            int currYear = calCurr.get(Calendar.YEAR);
+        // 1. Instancia de la fecha actual en UTC y extracción de sus partes
+        Calendar calCurr = Calendar.getInstance(localZone);
+        int currDay = calCurr.get(Calendar.DAY_OF_MONTH);
+        int currMonth = calCurr.get(Calendar.MONTH);
+        int currYear = calCurr.get(Calendar.YEAR);
 
-            // 2. Instancia reutilizable en UTC para el bucle
-            Calendar calItem = Calendar.getInstance(utcZone);
+        // 2. Instancia reutilizable en UTC para el bucle
+        Calendar calItem = Calendar.getInstance(localZone);
 
-            for (Fecha d : listFecha) {
-                calItem.setTimeInMillis(d.date);
+        for (Fecha d : listFecha) {
+            calItem.setTimeInMillis(d.date);
 
-                if (currMonth == calItem.get(Calendar.MONTH) && currYear == calItem.get(Calendar.YEAR)) {
+            int itemDay = calItem.get(Calendar.DAY_OF_MONTH);
+            int itemMonth = calItem.get(Calendar.MONTH);
+            int itemYear = calItem.get(Calendar.YEAR);
+
+            // Evaluación en cascada basada en el parámetro compareMode
+            if (compareMode == COMPARE_BY_DAY) {
+                // Compara DÍA, MES y AÑO
+
+                //Basic.msg(""+currYear +"=="+ itemYear +" :: "+ currMonth +"=="+ itemMonth +" :: "+ currDay +"=="+ itemDay,true);
+
+                if (currYear == itemYear && currMonth == itemMonth && currDay == itemDay) {
+                    exists = true;
+                    break;
+                }
+            } else if (compareMode == COMPARE_BY_MONTH) {
+                // Compara MES y AÑO (Tu lógica original)
+                if (currYear == itemYear && currMonth == itemMonth) {
+                    exists = true;
+                    break;
+                }
+            } else if (compareMode == COMPARE_BY_YEAR) {
+                // Compara SOLO AÑO
+                if (currYear == itemYear) {
                     exists = true;
                     break;
                 }
             }
-            if (exists) {
-                return;
-            }
-
-            long   currDate = java.time.Instant.now().toEpochMilli();
-            long   currTime = System.currentTimeMillis();
-
-
-
-            Fecha obj = new Fecha("dateID" + listFecha.size(), getShortDateYear(currDate), currDate, currTime);
-            daoFecha.insertUser(obj);
-            // Recarga la lista de la DB ----------------------------
-            StartVar var = new StartVar();
-            var.getFecListDB();
-            // -------------------------------------------------------
         }
+
+        // Si ya existe registro bajo ese criterio, detenemos la inserción
+        if (exists) {
+            return;
+        }
+
+        // Registro de la nueva fecha si no hubo coincidencias
+        long currDate = System.currentTimeMillis();
+        long currTime = System.currentTimeMillis();
+
+        Fecha obj = new Fecha("dateID" + listFecha.size(), getShortDateYear(currDate), currDate, currTime);
+        daoFecha.insertUser(obj);
+
+        // Recarga la lista de la DB
+        StartVar var = new StartVar();
+        var.getFecListDB();
     }
 
     public static boolean isSameMonth(long date1, long date2) {
@@ -171,16 +204,16 @@ public class CalendUtls {
         }
 
         // Usamos la zona horaria UTC para una consistencia absoluta
-        TimeZone utcZone = TimeZone.getTimeZone("UTC");
+        TimeZone localZone = TimeZone.getDefault();
 
         // Instancia para procesar el primer long
-        Calendar cal1 = Calendar.getInstance(utcZone);
+        Calendar cal1 = Calendar.getInstance(localZone);
         cal1.setTimeInMillis(date1);
         int month1 = cal1.get(Calendar.MONTH);
         int year1 = cal1.get(Calendar.YEAR);
 
         // Instancia para procesar el segundo long
-        Calendar cal2 = Calendar.getInstance(utcZone);
+        Calendar cal2 = Calendar.getInstance(localZone);
         cal2.setTimeInMillis(date2);
 
         // Comparación en cascada: si el año no coincide, se descarta de inmediato sin evaluar el mes
@@ -194,17 +227,17 @@ public class CalendUtls {
         }
 
         // Usamos la zona horaria UTC para una consistencia absoluta
-        TimeZone utcZone = TimeZone.getTimeZone("UTC");
+        TimeZone localZone = TimeZone.getDefault();
 
         // Instancia para procesar el primer long
-        Calendar cal1 = Calendar.getInstance(utcZone);
+        Calendar cal1 = Calendar.getInstance(localZone);
         cal1.setTimeInMillis(date1);
         int day1 = cal1.get(Calendar.DAY_OF_MONTH);
         int month1 = cal1.get(Calendar.MONTH);
         int year1 = cal1.get(Calendar.YEAR);
 
         // Instancia para procesar el segundo long
-        Calendar cal2 = Calendar.getInstance(utcZone);
+        Calendar cal2 = Calendar.getInstance(localZone);
         cal2.setTimeInMillis(date2);
 
         // Comparación en cascada: el procesador descarta la operación de golpe si el año

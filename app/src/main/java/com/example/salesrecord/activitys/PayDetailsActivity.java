@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.adapters.SaleAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Sale;
@@ -37,6 +39,8 @@ import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
+import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.Obj;
 
 
 import java.util.ArrayList;
@@ -51,12 +55,16 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private DaoSal daoSal;
     //--------------------------------------------------------------------
 
+    private ListView mListView;
+
     //Todos los View
     private TextView mText1;
     private TextView mText2;
     private TextView mText3;
     private TextView mText4;
     private TextView mText5;
+    private TextView mText6;
+
     private List<TextView> mTextList = new ArrayList<>();
     //---------------------------------------------------------------------
 
@@ -121,13 +129,16 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         myToolbar.setTitleTextColor(ContextCompat.getColor(myToolbar.getContext(), R.color.inner_button));
         //------------------------------------------------------------------------------------------
 
-        mImage1 = findViewById(R.id.image_dts1);
+        //mImage1 = findViewById(R.id.image_dts1);
+        mListView = findViewById(R.id.pay_dts_viewList);
 
-        mText1 = findViewById(R.id.txview_dts1);
+        mText1 = findViewById(R.id.txview_dts1); //TOTAL
+
         mText2 = findViewById(R.id.txview_dts2);
         mText3 = findViewById(R.id.txview_dts3);
         mText4 = findViewById(R.id.txview_dts4);
         mText5 = findViewById(R.id.txview_dts5);
+        mText6 = findViewById(R.id.txview_dts6);
 
         mBtton1 = findViewById(R.id.butt_dts1);
         mBtton2  = findViewById(R.id.butt_dts2);
@@ -137,14 +148,14 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         mBtton1.setOnClickListener(this);
         mBtton2.setOnClickListener(this);
-        mImage1.setOnClickListener(this);
+        //mImage1.setOnClickListener(this);
         mSw.setOnClickListener(this);
 
-        mTextList.add(mText1);
         mTextList.add(mText2);
         mTextList.add(mText3);
         mTextList.add(mText4);
         mTextList.add(mText5);
+        mTextList.add(mText6);
 
         // Se llenan los textView
         setTextViewList();
@@ -174,6 +185,12 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     @SuppressLint("SetTextI18n")
     public void setTextViewList(){
 
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
+
         mSale = daoSal.getUsers(glData.getCurrSalId());
 
         if(mSale != null) {
@@ -192,27 +209,40 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
             });
 
+            List<Obj> objListSal = new ArrayList<>();
+
             String[] artcList = mSale.artclist.split("\\|");
             String[] countList = mSale.countlist.split("\\|");
+            String[] priceList = mSale.pricelist.split("\\|");
+            String[] margList = mSale.marglist.split("\\|");
 
             DaoArt daoArt = StartVar.appDBall.daoAtr();
-            StringBuilder strNames = new StringBuilder();
+
+            double total = 0.0;
+
             for(int i = 0; i < artcList.length; i++ ){
                 Article crrArt = daoArt.getUsers(artcList[i]);
 
                 if(crrArt != null) {
                     double count = Double.parseDouble(countList[i]);
-                    String txCount = "x"+Basic.setFormatter(count);
+                    double price = Double.parseDouble(priceList[i]);
+                    double marge = Double.parseDouble(margList[i]);
 
-                    String shortName = (crrArt.nombre.length() > 5) ?
-                            crrArt.nombre.substring(0, 5)+". " : crrArt.nombre;
-                    strNames.append(shortName).append(txCount).append(" , ");
+                    double calc = MathUtls.addPercentage(price, marge);
+                    total = total + ( calc * count);
+
+                    //Basic.msg(""+price+" "+count+" "+marge, true);
+                    objListSal.add(setObjects(crrArt, price, count, marge));
                 }
             }
 
-            CalendUtls cale = new CalendUtls();
+            SaleAdapter mAdapter = new SaleAdapter(contex, objListSal, false);
+            mListView.setAdapter(mAdapter);
+
+            mText1.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+
             mUser = mSale.sale;
-            String txName = "";
+            String txName = mSale.cliente;
             String txAlias = "";
 
             String txConc = "Pagado";
@@ -224,7 +254,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             String txHora = CalendUtls.getTime(mSale.time);
 
             int i = 0;
-            mTextList.get(i).setText("Lista: "+ strNames);
+            mTextList.get(i).setText("Alias: "+ txName);
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;
@@ -236,6 +266,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             currDir = mFileM.getImage(mSale.imagen, mImage1);
         }
+    }
+
+    private Obj setObjects(Article art, double mPrice, double count, double margen) {
+
+        Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
+                art.staus, art.currcount, count, count, mPrice, margen
+                , art.uid);
+
+        return mObj;
     }
 
     @Override
@@ -283,9 +322,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 finish(); //Finaliza la actividad y ya no se accede mas
             }
         }
-        if(itemId == R.id.image_dts1) {
-//            Intent mIntent = new Intent(this, ImageActivity.class);
-//            startActivity(mIntent);
-        }
+//        if(itemId == R.id.image_dts1) {
+////            Intent mIntent = new Intent(this, ImageActivity.class);
+////            startActivity(mIntent);
+//        }
     }
 }

@@ -39,10 +39,8 @@ public class AppContextProvider extends Application {
 
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
-                // Solo limpiar si la actividad que se pausa es la que tenemos guardada
-                if (currentActivity == activity) {
-                    currentActivity = null;
-                }
+                currentActivity = activity;
+
             }
 
             @Override

@@ -27,6 +27,7 @@ public class SaleAdapter extends BaseAdapter  {
     //Test------------------------------------------------------------
     private Context mContex;
     private List<Obj> objList = new ArrayList<>();
+    private boolean isButt = false;
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
@@ -37,9 +38,10 @@ public class SaleAdapter extends BaseAdapter  {
         Button mButt;
     }
 
-    public  SaleAdapter(Context mContex, List<Obj> objList){
+    public  SaleAdapter(Context mContex, List<Obj> objList, boolean isButt){
         this.mContex = mContex;
         this.objList = objList;
+        this.isButt = isButt;
     }
 
     @Override
@@ -86,76 +88,80 @@ public class SaleAdapter extends BaseAdapter  {
         TextView button = holder.mButt;
 
         double count = item.saleCount;
-        if (count > 0) {
+        if(isButt) {
+            if (count > 0) {
 
-            button.setVisibility(View.VISIBLE);
-            button.setClickable(false);      // Evita que bloquee el click del item
-            button.setFocusable(false);
+                button.setVisibility(View.VISIBLE);
+                button.setClickable(false);      // Evita que bloquee el click del item
+                button.setFocusable(false);
 
-            button.setOnClickListener(v -> {
-                Object tag = v.getTag();
-                if (tag == null) return;
+                button.setOnClickListener(v -> {
+                    Object tag = v.getTag();
+                    if (tag == null) return;
 
-                int idx = (int) tag;
+                    int idx = (int) tag;
 
-                Obj mitem = objList.get(idx);
-                double num = mitem.saleCount;
+                    Obj mitem = objList.get(idx);
+                    double num = mitem.saleCount;
 
-                if(num >= 1) {
-                    mitem.saleCount = num - 1; //Decrementa si es el Button X
+                    if (num >= 1) {
+                        mitem.saleCount = num - 1; //Decrementa si es el Button X
 
-                    mitem.currCount++;
-                }
-                else {
-                    mitem.saleCount -= num;
-                    mitem.currCount += num;
+                        mitem.currCount++;
+                    } else {
+                        mitem.saleCount -= num;
+                        mitem.currCount += num;
 
-                }
+                    }
 
-                //Actualiza datos en el Objeto
+                    //Actualiza datos en el Objeto
 
-                mitem.click = 0;
+                    mitem.click = 0;
 
-                if(mitem.currCount > mitem.maxCount){
-                    return;
-                }
-                objList.set(idx, mitem);
-                //------------------------------------
+                    if (mitem.currCount > mitem.maxCount) {
+                        return;
+                    }
+                    objList.set(idx, mitem);
+                    //------------------------------------
 
-                notifyDataSetChanged();
+                    notifyDataSetChanged();
 
-                // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                if (parent instanceof ListView) {
-                    ((ListView) parent).performItemClick(v, idx, idx);
-                }
-            });
+                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
+                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
+                    if (parent instanceof ListView) {
+                        ((ListView) parent).performItemClick(v, idx, idx);
+                    }
+                });
 
-            button.setOnLongClickListener(v -> {
-                Object tag = v.getTag();
+                button.setOnLongClickListener(v -> {
+                    Object tag = v.getTag();
 
-                if (tag == null) return false;
-                int idx = (int) tag;
-                Obj mitem = objList.get(idx);
-                mitem.saleCount = 0;
-                mitem.currCount = mitem.maxCount;
-                mitem.click = 1;
-                objList.set(idx, mitem);
-                //------------------------------------
+                    if (tag == null) return false;
+                    int idx = (int) tag;
+                    Obj mitem = objList.get(idx);
+                    mitem.saleCount = 0;
+                    mitem.currCount = mitem.maxCount;
+                    mitem.click = 1;
+                    objList.set(idx, mitem);
+                    //------------------------------------
 
-                notifyDataSetChanged();
+                    notifyDataSetChanged();
 
-                // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                if (parent instanceof ListView) {
-                    ((ListView) parent).performItemClick(v, idx, idx);
-                }
+                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
+                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
+                    if (parent instanceof ListView) {
+                        ((ListView) parent).performItemClick(v, idx, idx);
+                    }
 
-                return true;
-            });
+                    return true;
+                });
 
 
-        } else {
+            } else {
+                button.setVisibility(View.INVISIBLE);
+            }
+        }
+        else {
             button.setVisibility(View.INVISIBLE);
         }
 

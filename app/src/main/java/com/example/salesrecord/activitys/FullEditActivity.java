@@ -84,8 +84,13 @@ public class FullEditActivity extends AppCompatActivity {
     @SuppressLint("WrongViewCast")
     private void setViwes() {
 
-        daoArt = StartVar.appDBall.daoAtr();
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar startVar = new StartVar();
+            startVar.setAllListDB();
+        }
 
+        daoArt = StartVar.appDBall.daoAtr();
 
         mInput1 = findViewById(R.id.full_et_nombre);
         mInput2 = findViewById(R.id.full_et_descr);
