@@ -103,7 +103,6 @@ public class PayListFragment extends Fragment {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             currDate = Instant.now().toEpochMilli();
         }
-        Basic.msg(CalendUtls.getDate(currDate));
         for (Fecha d : listFecha){
             //
             // Basic.msg(d.strdate+" "+dateOrderedList.size());
