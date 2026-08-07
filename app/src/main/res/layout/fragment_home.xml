@@ -8,56 +8,76 @@
     tools:context=".ui.home.HomeFragment">
 
 
-    <!-- CORREGIDO: Se eliminó el constraintEnd duplicado hacia guideline2 -->
-    <com.example.salesrecord.CurrencyEditText
-        android:id="@+id/input_home1"
+    <!-- Fila horizontal: TextInput + Button -->
+    <LinearLayout
+        android:id="@+id/top_panel"
         android:layout_width="0dp"
-        android:layout_height="@dimen/input_h1"
-        android:ems="10"
-        android:hint="Error obteniendo precio DOLAR"
-        android:imeOptions="actionDone"
-        android:maxLength="50"
-        android:padding="10dp"
-        android:textSize="@dimen/inner_text_2"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:cursorVisible="false"
-        android:clickable="false"
-        app:localeTag="ES"
-        app:currencySymbol="Bs  Dolar BCV"
-        app:currencySymbolSuffix="true"
-
-        app:maxNumberOfDecimalDigits="2"
-        app:keepFocusOnKeyboardClose="false"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toStartOf="@id/butt_home1" />
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        tools:ignore="MissingConstraints">
+
+        <com.example.salesrecord.CurrencyEditText
+            android:id="@+id/input_home1"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/input_hs"
+            android:layout_weight="1"
+
+            android:ems="10"
+            android:maxLength="50"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:cursorVisible="false"
+            android:clickable="false"
+
+            android:background="@color/text_background"
+            android:hint="Error obteniendo precio DOLAR"
+            android:imeOptions="actionDone"
+            android:inputType="textPersonName|textCapWords"
+            android:maxLines="1"
+            android:padding="5dp"
+            android:textSize="@dimen/inner_text_2"
+            android:visibility="visible"
 
 
-    <!-- CORREGIDO: Top y Bottom ahora se amarran simétricamente a input_home1 -->
-    <Button
-        android:id="@+id/butt_home1"
-        android:layout_width="@dimen/button_ws"
-        android:layout_height="@dimen/button_h1"
-        android:padding="2dp"
-        android:text="Recargar"
-        android:textSize="@dimen/inner_text_2"
-        app:layout_constraintTop_toTopOf="@id/input_home1"
-        app:layout_constraintBottom_toBottomOf="@id/input_home1"
-        app:layout_constraintStart_toEndOf="@id/input_home1"
-        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+            app:localeTag="ES"
+            app:currencySymbol="Bs  Dolar BCV"
+            app:currencySymbolSuffix="true"
+
+            app:maxNumberOfDecimalDigits="2"
+            app:keepFocusOnKeyboardClose="false"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline"
+            app:layout_constraintEnd_toStartOf="@id/butt_home1" />
+
+
+        <Button
+            android:id="@+id/butt_home1"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_h1"
+            android:layout_marginStart="10dp"
+            android:layout_weight="0.5"
+
+            android:enabled="true"
+            android:text="Recargar"
+            android:visibility="visible"/>
+    </LinearLayout>
 
     <android.widget.SearchView
         android:id="@+id/searchBar"
         android:layout_width="0dp"
-        android:layout_height="@dimen/input_h1"
+        android:layout_height="@dimen/input_hs"
         android:background="@color/text_background"
         android:iconifiedByDefault="false"
         android:queryHint="Buscar Lista"
         android:translationZ="5dp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/input_home1"
+        app:layout_constraintTop_toBottomOf="@+id/top_panel"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
@@ -124,7 +144,7 @@
                 android:imeOptions="actionDone"
                 android:inputType="textPersonName|textCapWords"
                 android:maxLines="1"
-                android:padding="10dp"
+                android:padding="5dp"
                 android:textSize="@dimen/inner_text_1"
                 android:visibility="visible" />
 
@@ -287,6 +307,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.4" />
+        app:layout_constraintGuide_percent="0.45" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

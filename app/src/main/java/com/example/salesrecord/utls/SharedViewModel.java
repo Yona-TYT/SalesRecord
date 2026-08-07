@@ -7,9 +7,14 @@ import androidx.lifecycle.ViewModel;
 public class SharedViewModel extends ViewModel {
 
     private final MutableLiveData<Boolean> calcToggle = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> srchToggle = new MutableLiveData<>(false);
 
     public LiveData<Boolean> getCalcToggle() {
         return calcToggle;
+    }
+
+    public LiveData<Boolean> getSrchToggle() {
+        return srchToggle;
     }
 
     /** Alterna el estado de la calculadora */
@@ -21,4 +26,15 @@ public class SharedViewModel extends ViewModel {
     public void setCalcVisible(boolean visible) {
         calcToggle.setValue(visible);
     }
+
+    /** Alterna el estado del buscador */
+    public void toggleSrch() {
+        Boolean current = srchToggle.getValue();
+        srchToggle.setValue(current == null || !current);
+    }
+
+    public void setSrchVisible(boolean visible) {
+        srchToggle.setValue(visible);
+    }
+
 }

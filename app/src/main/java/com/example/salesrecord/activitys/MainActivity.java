@@ -134,27 +134,22 @@ public class MainActivity extends AppCompatActivity {
                 binding.navView.setVisibility(View.VISIBLE);
             }
 
-            // 2. CALCULAR EL ESPACIO SUPERIOR TOTAL (Barra de estado + Barra de título)
+            // 2. CALCULAR EL ESPACIO SUPERIOR TOTAL
             View navHostFragment = findViewById(R.id.nav_host_fragment_activity_main);
             if (navHostFragment != null) {
-                // A. Obtener la altura de la barra de estado (reloj, batería)
+
+                // A. Altura de la barra de estado
                 int statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
 
-                // B. Obtener el tamaño de la Barra de Título (Action Bar) del tema actual de la app
-                int actionBarHeight = 0;
-                android.util.TypedValue tv = new android.util.TypedValue();
-                if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-                    actionBarHeight = android.util.TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
-                }
+                int actionBarHeight = getResources().getDimensionPixelSize(R.dimen.action_bar_size);
 
-                // C. La suma de ambas es el espacio real que debemos respetar
+                // C. Suma total
                 int totalTopPadding = statusBarHeight + actionBarHeight;
 
-                // D. Controlar el espacio inferior (barra de navegación por gestos de Android)
+                // D. Espacio inferior
                 int navigationBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
                 int bottomPadding = isKeyboardVisible ? 0 : navigationBarHeight;
 
-                // Aplicamos el padding al contenedor de fragmentos
                 navHostFragment.setPadding(0, totalTopPadding, 0, bottomPadding);
             }
 
@@ -173,8 +168,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // 💡 CASO 1: Si estás en la pestaña de INICIO (Home)
                 if (currentDestinationId == R.id.navigation_home) {
+                    menuInflater.inflate(R.menu.srch, menu);
                     menuInflater.inflate(R.menu.calc, menu);
-                    menuInflater.inflate(R.menu.summary, menu);
+
 
                 }
 //[                // 💡 CASO 2: Si estás en la pestaña de AGREGAR (Add)
@@ -206,7 +202,12 @@ public class MainActivity extends AppCompatActivity {
                 if (id == R.id.calc) {
                     sharedViewModel.toggleCalc();
                     return true;
-                } else if (id == R.id.summary) {
+                } else if (id == R.id.srch) {
+                    //Basic.msg("Mostrando resumen...");
+                    sharedViewModel.toggleSrch();
+                    return true;
+                }
+                else if (id == R.id.summary) {
                     //Basic.msg("Mostrando resumen...");
                     return true;
                 }

@@ -11,6 +11,7 @@
         android:id="@+id/pay_select1"
         android:layout_width="0dp"
         android:layout_height="@dimen/spinner_hs"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@id/guideline"

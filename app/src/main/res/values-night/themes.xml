@@ -12,6 +12,8 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <item name="actionBarSize">@dimen/action_bar_size</item>
+
     </style>
 
     <style name="Theme.SalesRecord.NoActionBar" parent="Theme.SalesRecord">

@@ -94,6 +94,8 @@ public class HomeFragment extends Fragment {
     private double calcCount = 0;
     private SharedViewModel sharedViewModel;
 
+    private boolean isSrch = false;
+
     private EditText mInput3;
 
     private ArrayList<Obj> objListAll = new ArrayList<>();
@@ -248,6 +250,22 @@ public class HomeFragment extends Fragment {
             isCalc = false;
             binding.panelCalc.setVisibility(View.GONE);
             binding.bottomPanel.setVisibility(View.VISIBLE);
+        });
+
+        sharedViewModel.getSrchToggle().observe(getViewLifecycleOwner(), visible -> {
+            if (visible == null) return;
+
+            if (visible) {
+                isSrch = true;
+                binding.topPanel.setVisibility(View.GONE);
+                searchBar.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            // Quiere cerrar (visible == false)
+            isSrch = false;
+            searchBar.setVisibility(View.GONE);
+            binding.topPanel.setVisibility(View.VISIBLE);
         });
 
 

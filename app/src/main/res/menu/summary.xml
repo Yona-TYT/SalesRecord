@@ -4,7 +4,7 @@
     <item
         android:id="@+id/summary"
         android:icon="@drawable/summary"
-        android:title="Resumen"
+        android:title="Inventario"
         app:showAsAction="always"
         />
 
