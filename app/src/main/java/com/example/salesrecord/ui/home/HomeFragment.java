@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -98,6 +99,14 @@ public class HomeFragment extends Fragment {
 
     private EditText mInput3;
 
+    // Almacenamiento real (3 cajas independientes)
+    private final ArrayList<Obj>[] allSlots = new ArrayList[3];
+    private final ArrayList<Obj>[] salSlots = new ArrayList[3];
+
+    // Índice activo: 0, 1 o 2
+    private int currSlot = 0;
+
+    // Referencias de trabajo (apuntan al slot activo)
     private ArrayList<Obj> objListAll = new ArrayList<>();
     private ArrayList<Obj> objListSal = new ArrayList<>();
 
@@ -116,13 +125,15 @@ public class HomeFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        // Almacenamiento directo sin rodeos de conversión
-        if (objListAll != null) {
-            outState.putParcelableArrayList("all_obj", objListAll);
-        }
+        outState.putInt("curr_slot", currSlot);
 
-        if (objListSal != null) {
-            outState.putParcelableArrayList("sal_obj", objListSal);
+        for (int i = 0; i < 3; i++) {
+            if (allSlots[i] != null) {
+                outState.putParcelableArrayList("all_obj_" + i, allSlots[i]);
+            }
+            if (salSlots[i] != null) {
+                outState.putParcelableArrayList("sal_obj_" + i, salSlots[i]);
+            }
         }
     }
 
@@ -156,31 +167,35 @@ public class HomeFragment extends Fragment {
 
         Msg.init(contex);
         if (savedInstanceState != null) {
+            initSlots(); // listas vacías base
+
+            currSlot = savedInstanceState.getInt("curr_slot", 0);
+            if (currSlot < 0 || currSlot > 2) currSlot = 0;
+
             try {
-                // Intentamos recuperar los datos del Bundle de forma segura
-                objListAll = savedInstanceState.getParcelableArrayList("all_obj");
-                objListSal = savedInstanceState.getParcelableArrayList("sal_obj");
-            } catch (Exception e) {
-                android.util.Log.e("FragmentHome", "Error restaurando listas Parcelables corruptas", e);
-            }
+                for (int i = 0; i < 3; i++) {
+                    ArrayList<Obj> all = savedInstanceState.getParcelableArrayList("all_obj_" + i);
+                    ArrayList<Obj> sal = savedInstanceState.getParcelableArrayList("sal_obj_" + i);
+                    allSlots[i] = all != null ? all : new ArrayList<>();
+                    salSlots[i] = sal != null ? sal : new ArrayList<>();
 
-            // Si falló el empaquetado, inicializamos listas vacías seguras para evitar NullPointerException
-            if (objListAll == null) objListAll = new ArrayList<>();
-            if (objListSal == null) objListSal = new ArrayList<>();
-
-            //Msg.m(""+objListAll.size()+" "+objListSal.size());
-
-            // Reconstruir referencias compartidas
-            for (int i = 0; i < objListSal.size(); i++) {
-                Obj saleObj = objListSal.get(i);
-                for (int j = 0; j < objListAll.size(); j++) {
-                    if (Objects.equals(objListAll.get(j).id, saleObj.id)) {
-                        // Usar el de objListAll (o copiar valores)
-                        objListSal.set(i, objListAll.get(j));
-                        break;
+                    // Referencias compartidas dentro de cada slot
+                    for (int s = 0; s < salSlots[i].size(); s++) {
+                        Obj saleObj = salSlots[i].get(s);
+                        for (int a = 0; a < allSlots[i].size(); a++) {
+                            if (Objects.equals(allSlots[i].get(a).id, saleObj.id)) {
+                                salSlots[i].set(s, allSlots[i].get(a));
+                                break;
+                            }
+                        }
                     }
                 }
+            } catch (Exception e) {
+                Log.e("FragmentHome", "Error restaurando slots", e);
+                initSlots();
             }
+
+            bindWorkingLists();
             setViwes(true);
         }
         else {
@@ -197,6 +212,7 @@ public class HomeFragment extends Fragment {
                 }
             });
 
+            initSlots();
             setViwes(false);
         }
 
@@ -405,11 +421,9 @@ public class HomeFragment extends Fragment {
                 //Para la lista de todos los productos
 
                 mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
-
-                for (Article obj : mArtList) {
-                    objListAll.add(setGalleryArray(obj));
-                }
-
+                loadCatalogIntoSlot(currSlot);
+                bindWorkingLists();
+                
                 if (mAdapter1 != null && mAdapter2 != null) {
 
                     Double total = setTotal(objListSal);
@@ -459,16 +473,12 @@ public class HomeFragment extends Fragment {
 
         //Para la lista de todos los productos
         if(!isSave) {
-            //Limpiamos las listas
-            objListAll.clear();
-            objListSal.clear();
-
-            for (Article obj : mArtList) {
-                if (obj.staus > 0) {
-                    objListAll.add(setGalleryArray(obj));
-                }
+            for (int i = 0; i < 3; i++) {
+                loadCatalogIntoSlot(i);  // cada caja: listas propias e independientes
             }
+            bindWorkingLists();
         }
+
 
         //Basic.msg(""+mArtList.get(0).totalcount);
 
@@ -669,7 +679,7 @@ public class HomeFragment extends Fragment {
 
     private void setCalcResult(){
         if (currObj != null && calcCount > 0 && calcCount <= currObj.maxCount){
-            Basic.msg("Aqui hay NARIZ ! \uD83D\uDC43\uD83D\uDC3D\uD83E\uDD25\uD83E\uDD78 ");
+           // Basic.msg("Aqui hay NARIZ ! \uD83D\uDC43\uD83D\uDC3D\uD83E\uDD25\uD83E\uDD78 ");
 
             currObj.saleCount = calcCount;
             currObj.currCount =  currObj.maxCount - calcCount;
@@ -806,7 +816,6 @@ public class HomeFragment extends Fragment {
                 strClt = mInput3.getText().toString()+strNr;
             }
 
-
             String strId = DatabaseUtils.generateId("salID", daoSal);
             StringBuilder strArtList = new StringBuilder();
             StringBuilder strCountList = new StringBuilder();
@@ -860,4 +869,58 @@ public class HomeFragment extends Fragment {
         }
         return false;
     }
+
+
+    private void initSlots() {
+        for (int i = 0; i < 3; i++) {
+            allSlots[i] = new ArrayList<>();
+            salSlots[i] = new ArrayList<>();
+        }
+        bindWorkingLists(); // objListAll / objListSal → slot 0
+    }
+
+    /** Hace que objListAll y objListSal apunten al slot actual */
+    private void bindWorkingLists() {
+        objListAll = allSlots[currSlot];
+        objListSal = salSlots[currSlot];
+    }
+
+    private void selectSlot(int slot) {
+        if (slot < 0 || slot > 2) return;
+        if (slot == currSlot) return;
+
+        currSlot = slot;
+        bindWorkingLists(); // ahora lees/escribes otro par
+
+        // Re-sincronizar adapters con las listas nuevas
+        if (mAdapter1 != null) {
+            // Si el adapter guarda la lista internamente, recréalo o pásale la nueva:
+            mAdapter1 = new SaleMainAdapter(requireContext(), objListAll);
+            gridView.setAdapter(mAdapter1);
+        }
+        if (mAdapter2 != null) {
+            mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
+            mListView.setAdapter(mAdapter2);
+        }
+
+        refreshAllUI();
+    }
+
+    private void loadCatalogIntoSlot(int slot) {
+        if (slot < 0 || slot > 2) return;
+        if (allSlots[slot] == null) allSlots[slot] = new ArrayList<>();
+        if (salSlots[slot] == null) salSlots[slot] = new ArrayList<>();
+
+        allSlots[slot].clear();
+        salSlots[slot].clear();
+
+        if (mArtList == null) return;
+
+        for (Article obj : mArtList) {
+            if (obj.staus > 0) {
+                allSlots[slot].add(setGalleryArray(obj));
+            }
+        }
+    }
+
 }
