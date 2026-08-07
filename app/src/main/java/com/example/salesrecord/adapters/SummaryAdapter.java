@@ -111,7 +111,7 @@ public class SummaryAdapter extends BaseAdapter  {
             }
             else {
                 holder.layout1.setBackgroundColor(
-                        ContextCompat.getColor(holder.layout1.getContext(), R.color.text_background2)
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.normal_background)
                 );
             }
         }

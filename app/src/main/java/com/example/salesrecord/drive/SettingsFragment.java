@@ -30,6 +30,7 @@ import androidx.preference.SwitchPreferenceCompat;
 
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
@@ -76,6 +77,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         SimpleDialog.OnDialogResultListener,
         Preference.OnPreferenceChangeListener,
         Preference.OnPreferenceClickListener {
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private static final Logger LOG = Logs.of(SettingsFragment.class);
 
@@ -495,7 +498,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         }
     }
 
-    public static File createTestFile() throws IOException {
+    public File createTestFile() throws IOException {
         File gpxFolder = new File(PreferenceHelper.getInstance().getGpsLoggerFolder());
         if (!gpxFolder.exists()) {
             gpxFolder.mkdirs();

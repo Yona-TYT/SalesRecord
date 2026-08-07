@@ -13,6 +13,8 @@ import android.widget.Spinner;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
@@ -23,6 +25,7 @@ import java.util.List;
 
 public class BoxAdapter extends BaseAdapter implements View.OnClickListener{
     private Context mContex;
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private List<Object[]> textList = new ArrayList<>();
 

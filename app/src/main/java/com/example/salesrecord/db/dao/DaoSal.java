@@ -12,7 +12,7 @@ import java.util.List;
 
 @Dao
 public interface DaoSal extends GenericDao<Sale>{
-    @Query("SELECT * FROM Article WHERE uid = :uid LIMIT 1")
+    @Query("SELECT * FROM Sale WHERE uid = :uid LIMIT 1")
     Sale getUsers(long uid);
 
     @Query("SELECT * FROM Sale")

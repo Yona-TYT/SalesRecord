@@ -138,4 +138,8 @@ public class MoneyUtls {
         df.applyPattern("#,##0.00");
         return df.format(value);
     }
+
+    public static double getQuantity(double price, double currPrice ){
+        return price == 0? 0 : currPrice/price;
+    }
 }

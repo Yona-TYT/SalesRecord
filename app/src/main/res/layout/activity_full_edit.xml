@@ -97,24 +97,48 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
-            <com.example.salesrecord.CurrencyEditText
-                android:id="@+id/full_et_precio"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
-                android:imeOptions="actionDone"
-                android:maxLines="1"
-                android:layout_marginBottom="16dp"
-                android:hint="0,00 $"
-                android:tag="Este valor debe ser mayor a 0"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                app:localeTag="ES"
-                app:maxNumberOfDecimalDigits="2"
-                app:currencySymbol="$"
-                app:currencySymbolSuffix="true"
+                <com.example.salesrecord.CurrencyEditText
+                    android:id="@+id/full_et_precio"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_h1"
+                    android:focusable="true"
+                    android:imeOptions="actionDone"
+                    android:maxLines="1"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="0dp"
+                    android:hint="0,00 $"
+                    android:inputType="numberDecimal"
+                    android:tag="Este valor debe ser mayor a 0"
 
-                />
+                    app:localeTag="ES"
+                    app:maxNumberOfDecimalDigits="2"
+                    app:currencySymbol="$"
+                    app:currencySymbolSuffix="true"
 
+                    />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/edit_sw_bs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+
+                        android:text="Bolívares"
+                        android:checked="false" />
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- margen -->
             <TextView
@@ -222,6 +246,45 @@
                 android:hint="0"
                 android:text="0"
                 android:layout_marginBottom="32dp" />
+
+            <!-- Imagen del artículo (desplazable con el formulario) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Imagen del Artículo"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+
+            <ImageButton
+                android:id="@+id/full_btn_image"
+                android:layout_width="match_parent"
+                android:layout_gravity="center_vertical"
+
+                android:layout_height="40dp"
+                android:backgroundTint="@color/float_button"
+                android:padding="10dp"
+                app:srcCompat="@android:drawable/ic_menu_gallery" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="32dp">
+
+                <ImageView
+                    android:id="@+id/full_img_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:scaleType="centerCrop"
+                    android:background="@color/text_background"
+                    android:contentDescription="Vista previa de la imagen"
+                    tools:srcCompat="@tools:sample/backgrounds/scenic"/>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

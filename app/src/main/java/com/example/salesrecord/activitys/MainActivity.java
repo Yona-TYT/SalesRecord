@@ -16,7 +16,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.DBListCreator;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Conf;
@@ -24,6 +26,7 @@ import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
+import com.example.salesrecord.utls.SharedViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -34,6 +37,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.ViewCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -67,9 +71,14 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean reTry = true;
 
+    private SharedViewModel sharedViewModel;
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -90,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         StartVar startVar = new StartVar();
         Basic mBasic = new Basic(getApplicationContext());
 
-        startVar.setmActivity(this);
+        StartVar.setmActivity(this);
 
 
         mDaoCfg = StartVar.appDBall.daoCfg();
@@ -195,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // IDs de ejemplo (Reemplázalos por los IDs reales de tus archivos XML)
                 if (id == R.id.calc) {
-                    //Basic.msg("Abriendo calculadora...");
+                    sharedViewModel.toggleCalc();
                     return true;
                 } else if (id == R.id.summary) {
                     //Basic.msg("Mostrando resumen...");
@@ -203,6 +212,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 //Para Exportar archivo CSV
                 else if (id == R.id.save) {
+                    DBListCreator mListCreator = new DBListCreator(getApplicationContext());
+                    mListCreator.createDbLists(); //Actualiza la lista para exportar csv
 
                     try {
                         File file = mFile.csvExport(StartVar.csvList);
@@ -328,19 +339,20 @@ public class MainActivity extends AppCompatActivity {
 
     //Para importar archivos CSV
     private final ActivityResultLauncher<String[]> mCsvRequest = registerForActivityResult(
-            new ActivityResultContracts.OpenDocument(),
-            uri -> {
-                if (uri != null) {
-                    StartVar mImpVar = new StartVar();
-                    // call this to persist permission across decice reboots
-                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        new ActivityResultContracts.OpenDocument(),
+        uri -> {
+            if (uri != null) {
+                StartVar mImpVar = new StartVar();
+                // call this to persist permission across decice reboots
+                getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                    DBListCreator.cvsToDB(StartVar.reloadActivity, uri, 1, "");
-                }
-                else {
-                    Basic.msg("Solicitud Denegada!");
-                }
+                DBListCreator mListCreator = new DBListCreator(this);
+                mListCreator.cvsToDB(StartVar.reloadActivity, uri, 1, "");
             }
+            else {
+                Basic.msg("Solicitud Denegada!");
+            }
+        }
     );
 
     private ActivityResultLauncher<Intent> storageActivityResultLauncher =

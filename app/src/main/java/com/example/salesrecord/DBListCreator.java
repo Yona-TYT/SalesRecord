@@ -2,8 +2,10 @@ package com.example.salesrecord;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -38,20 +40,30 @@ public class DBListCreator extends AppCompatActivity {
     // Classs para la gestion de archivos
     private FilesManager fmang = new FilesManager();
 
-    private static DaoCfg daoConf = StartVar.appDBall.daoCfg();
-    private static DaoArt daoArt = StartVar.appDBall.daoAtr();
-    private static DaoClt daoCliente = StartVar.appDBall.daoClt();
-    private static DaoDeb daoDeuda = StartVar.appDBall.daoDeb();
-    private static DaoDat daoFecha = StartVar.appDBall.daoDat();
-    private static DaoSal daoPagos = StartVar.appDBall.daoSal();
 
 
-    public DBListCreator(){}
+    private GlobalData glData ;
+
+    private final Context context;
+
+    // Constructor para forzar el uso del contexto correcto
+    public DBListCreator(Context context) {
+        this.context = context.getApplicationContext();
+        this.glData = GlobalData.getInstance(this.context);
+    }
 
     public static HashMap<String, HashMap<String, ArrayList<Object>>> createDbLists(){
 
+        DaoCfg daoConf = StartVar.appDBall.daoCfg();
+        DaoArt daoArt = StartVar.appDBall.daoAtr();
+        DaoClt daoCliente = StartVar.appDBall.daoClt();
+        DaoDeb daoDeuda = StartVar.appDBall.daoDeb();
+        DaoDat daoFecha = StartVar.appDBall.daoDat();
+        DaoSal daoSales = StartVar.appDBall.daoSal();
+
         //Lista general de todos los objetos db
         List<String[]> mList = new ArrayList<>();
+
 
         //=================================== Config DB Lista =====================================================
         mList.add(new String[]{"<0>"});// Etiqueta para config
@@ -60,78 +72,78 @@ public class DBListCreator extends AppCompatActivity {
         mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.datetasa,
                 String.valueOf(mConf.dolar), String.valueOf(mConf.date),
                 String.valueOf(mConf.time), mConf.curr.toString(), mConf.moneda.toString(),
-                mConf.mes.toString(), mConf.show.toString()
+                mConf.mes.toString(), mConf.show.toString(), mConf.dbg
         });
 
         //=================================== Cuenta DB Lista =====================================================
 
         mList.add(new String[]{"<1>"});// Etiqueta para cuenta
 
-        HashMap<String, ArrayList<Object>> mapAcc = new HashMap<>();
-        mapAcc.put("mA", new ArrayList<>());
-        mapAcc.put("mB", new ArrayList<>());
-        mapAcc.put("mC", new ArrayList<>());
-        mapAcc.put("mD", new ArrayList<>());
-        mapAcc.put("mE", new ArrayList<>());
-        mapAcc.put("mF", new ArrayList<>());
-        mapAcc.put("mG", new ArrayList<>());
-        mapAcc.put("mH", new ArrayList<>());
-        mapAcc.put("mI", new ArrayList<>());
-        mapAcc.put("mJ", new ArrayList<>());
+        HashMap<String, ArrayList<Object>> mapAtr = new HashMap<>();
+        mapAtr.put("mA", new ArrayList<>());
+        mapAtr.put("mB", new ArrayList<>());
+        mapAtr.put("mC", new ArrayList<>());
+        mapAtr.put("mD", new ArrayList<>());
+        mapAtr.put("mE", new ArrayList<>());
+        mapAtr.put("mF", new ArrayList<>());
+        mapAtr.put("mG", new ArrayList<>());
+        mapAtr.put("mH", new ArrayList<>());
+        mapAtr.put("mI", new ArrayList<>());
+        mapAtr.put("mJ", new ArrayList<>());
 
-        ArrayList<Object> accLmA = mapAcc.get("mA");
-        ArrayList<Object> accLmB = mapAcc.get("mB");
-        ArrayList<Object> accLmC = mapAcc.get("mC");
-        ArrayList<Object> accLmD = mapAcc.get("mD");
-        ArrayList<Object> accLmE = mapAcc.get("mE");
-        ArrayList<Object> accLmF = mapAcc.get("mF");
-        ArrayList<Object> accLmG = mapAcc.get("mG");
-        ArrayList<Object> accLmH = mapAcc.get("mH");
-        ArrayList<Object> accLmI = mapAcc.get("mI");
-        ArrayList<Object> accLmJ = mapAcc.get("mJ");
+        ArrayList<Object> atrLmA = mapAtr.get("mA");
+        ArrayList<Object> atrLmB = mapAtr.get("mB");
+        ArrayList<Object> atrLmC = mapAtr.get("mC");
+        ArrayList<Object> atrLmD = mapAtr.get("mD");
+        ArrayList<Object> atrLmE = mapAtr.get("mE");
+        ArrayList<Object> atrLmF = mapAtr.get("mF");
+        ArrayList<Object> atrLmG = mapAtr.get("mG");
+        ArrayList<Object> atrLmH = mapAtr.get("mH");
+        ArrayList<Object> atrLmI = mapAtr.get("mI");
+        ArrayList<Object> atrLmJ = mapAtr.get("mJ");
 
-// Instancia de la base de datos
+        // Instancia de la base de datos
         List<Article> listAtr = daoArt.getUsers();
 
-        for (Article myAcc : listAtr) {
+        for (Article myAtr : listAtr) {
 
             // 1. Lista para exportar a CSV (Ajustada a 14 campos según tu clase)
             String[] txList = new String[18];
 
-            txList[0] = myAcc.article;
-            txList[1] = myAcc.nombre;
-            txList[2] = myAcc.descr;
-            txList[3] = (myAcc.iddesde != null) ? myAcc.iddesde : "";
-            txList[4] = myAcc.image;
+            txList[0] = myAtr.article;
+            txList[1] = myAtr.nombre;
+            txList[2] = myAtr.descr;
+            txList[3] = (myAtr.iddesde != null) ? myAtr.iddesde : "";
+            txList[4] = myAtr.image;
 
-            txList[5] = String.valueOf(myAcc.precund);
-            txList[6] = String.valueOf(myAcc.precpq);
-            txList[7] = String.valueOf(myAcc.preccj);
-            txList[8] = String.valueOf(myAcc.margen);
+            txList[5] = String.valueOf(myAtr.precund);
+            txList[6] = String.valueOf(myAtr.precpq);
+            txList[7] = String.valueOf(myAtr.preccj);
+            txList[8] = String.valueOf(myAtr.margen);
 
-            txList[9] = String.valueOf(myAcc.totalcount);
-            txList[10] = String.valueOf(myAcc.currcount);
-            txList[11] = String.valueOf(myAcc.isopen);
-            txList[12] = String.valueOf(myAcc.artipo);
-            txList[13] = String.valueOf(myAcc.metrica);
-            txList[14] = String.valueOf(myAcc.caduca);
-            txList[15] = String.valueOf(myAcc.staus);
-            txList[16] = String.valueOf(myAcc.ultfec); // Se guarda como Long (Timestamp)
-            txList[17] = String.valueOf(myAcc.fecha);
+            txList[9] = String.valueOf(myAtr.totalcount);
+            txList[10] = String.valueOf(myAtr.currcount);
+            txList[11] = String.valueOf(myAtr.isopen);
+            txList[12] = String.valueOf(myAtr.artipo);
+            txList[13] = String.valueOf(myAtr.metrica);
+            txList[14] = String.valueOf(myAtr.caduca);
+            txList[15] = String.valueOf(myAtr.staus);
+            txList[16] = String.valueOf(myAtr.ultfec); // Se guarda como Long (Timestamp)
+            txList[17] = String.valueOf(myAtr.fecha);
 
             mList.add(txList);
 
-            // 2. Listas individuales (Asegúrate de haber declarado accLmK, accLmL, etc.)
-            accLmA.add(myAcc.article);
-            accLmB.add(myAcc.nombre);
-            accLmC.add(myAcc.descr);
-            accLmD.add(String.valueOf(myAcc.precund));
-            accLmE.add(myAcc.totalcount);
-            accLmF.add(myAcc.currcount);
-            accLmG.add(myAcc.artipo);
-            accLmH.add(myAcc.metrica);
-            accLmI.add(myAcc.ultfec);
-            accLmJ.add(myAcc.fecha);
+            // 2. Listas individuales (Asegúrate de haber declarado atrLmK, atrLmL, etc.)
+            atrLmA.add(myAtr.article);
+            atrLmB.add(myAtr.nombre);
+            atrLmC.add(myAtr.descr);
+            atrLmD.add(String.valueOf(myAtr.precund));
+            atrLmE.add(String.valueOf(myAtr.totalcount));
+            atrLmF.add(String.valueOf(myAtr.currcount));
+            atrLmG.add(String.valueOf(myAtr.artipo));
+            atrLmH.add(String.valueOf(myAtr.metrica));
+            atrLmI.add(String.valueOf(myAtr.ultfec));
+            atrLmJ.add(String.valueOf(myAtr.fecha));
         }
 
         //=================================== Cliente DB Lista =====================================================
@@ -301,13 +313,14 @@ public class DBListCreator extends AppCompatActivity {
 
             //--------------------------------------------------------
             datLmA.add(myDat.fecha);
-            datLmB.add(myDat.date);
-            datLmC.add(myDat.time);
+            datLmB.add(myDat.strdate);
+            datLmC.add(String.valueOf(myDat.date));
+            datLmD.add(String.valueOf(myDat.time));
 
             //------------------------------------------
         }
 
-        //=================================== Pagos DB Lista =====================================================
+        //=================================== Sales DB Lista =====================================================
 
         mList.add(new String[]{"<5>"});// Etiqueta para cliente
 
@@ -325,6 +338,9 @@ public class DBListCreator extends AppCompatActivity {
         mapSal.put("mK", new ArrayList<>());
         mapSal.put("mL", new ArrayList<>());
         mapSal.put("mM", new ArrayList<>());
+        mapSal.put("mN", new ArrayList<>());
+        mapSal.put("mO", new ArrayList<>());
+
 
         ArrayList<Object> salLmA = mapSal.get("mA");
         ArrayList<Object> salLmB = mapSal.get("mB");
@@ -339,12 +355,16 @@ public class DBListCreator extends AppCompatActivity {
         ArrayList<Object> salLmK = mapSal.get("mK");
         ArrayList<Object> salLmL = mapSal.get("mL");
         ArrayList<Object> salLmM = mapSal.get("mM");
+        ArrayList<Object> salLmN = mapSal.get("mN");
+        ArrayList<Object> salLmO = mapSal.get("mO");
 
         //Instancia de la base de datos
-        List<Sale> listSal = daoPagos.getUsers();
+        List<Sale> listSal = daoSales.getUsers();
 
         for (Sale mySal : listSal) {
-
+            if(mySal == null) {
+                continue;
+            }
             //------------------------------------------------------
             // Se crea la lista para esportar a csv  ---------------
             String[] txList = new String[15];
@@ -355,9 +375,11 @@ public class DBListCreator extends AppCompatActivity {
             txList[3] = mySal.countlist;
             txList[4] = mySal.pricelist;
             txList[5] = mySal.marglist;
+
             txList[6] = String.valueOf(mySal.monto);
             txList[7] = String.valueOf(mySal.tasa);
             txList[8] = String.valueOf(mySal.status);
+
             txList[9] = mySal.imagen;
             txList[10] = String.valueOf(mySal.time);
             txList[11] = mySal.cltid;
@@ -371,40 +393,58 @@ public class DBListCreator extends AppCompatActivity {
             salLmA.add(mySal.sale);
             salLmB.add(mySal.cliente);
             salLmC.add(mySal.artclist);
-            salLmD.add(mySal.monto);
-            salLmE.add(mySal.tasa);
-            salLmF.add(mySal.status);
-            salLmG.add(mySal.imagen);
-            salLmH.add(mySal.fecha);
-            salLmI.add(mySal.time);
-            salLmJ.add(mySal.cltid);
-            salLmL.add(mySal.more4);
-            salLmM.add(mySal.more5);
+            salLmD.add(mySal.countlist);
+            salLmE.add(mySal.pricelist);
+            salLmF.add(mySal.marglist);
+
+            salLmG.add(String.valueOf(mySal.monto));
+            salLmH.add(String.valueOf(mySal.tasa));
+            salLmI.add(String.valueOf(mySal.status));
+
+            salLmJ.add(mySal.imagen);
+            salLmK.add(String.valueOf(mySal.time));
+            salLmM.add(String.valueOf(mySal.more4));
+            salLmN.add(mySal.more5);
+            salLmL.add(String.valueOf(mySal.fecha));
+
             //------------------------------------------
         }
+
+        //Log.d("DB_INSTANCE", "Hash: " + System.identityHashCode(StartVar.appDBall));
+        //Basic.msg("uploadDataBase.. " +mList.get(5)[1], true);
 
         StartVar.setCsvList(mList);
 
         HashMap<String, HashMap<String, ArrayList<Object>>> allMaps = new HashMap<>();
-        allMaps.put("acc", mapAcc);
+        allMaps.put("acc", mapAtr);
         allMaps.put("clt", mapClt);
         allMaps.put("deb", mapDeb);
         allMaps.put("dat", mapDat);
         allMaps.put("pay", mapSal);
 
+        //Basic.msg("csvlist "+mList.size(), true);
+
         return allMaps;
     }
 
-    public static void cvsToDB(Activity mActivity, Uri uri, int importType, String mMsg) {
+    public void cvsToDB(Activity mActivity, Uri uri, int importType, String mMsg) {
         cvsToDBInternal(mActivity, uri, importType, mMsg, true);
     }
 
-    public static void cvsToDbNotFinish(Activity mActivity, Uri uri, int importType, String mMsg) {
+    public void cvsToDbNotFinish(Activity mActivity, Uri uri, int importType, String mMsg) {
         cvsToDBInternal(mActivity, uri, importType, mMsg,false);
     }
 
-    public static void cvsToDBInternal(Activity mActivity, Uri uri, int importType, String mMsg, boolean finish){
+    public void cvsToDBInternal(Activity mActivity, Uri uri, int importType, String mMsg, boolean finish){
         StringBuilder stringBuilder = new StringBuilder();
+
+        DaoCfg daoConf = StartVar.appDBall.daoCfg();
+        DaoArt daoArt = StartVar.appDBall.daoAtr();
+        DaoClt daoCliente = StartVar.appDBall.daoClt();
+        DaoDeb daoDeuda = StartVar.appDBall.daoDeb();
+        DaoDat daoFecha = StartVar.appDBall.daoDat();
+        DaoSal daoSales = StartVar.appDBall.daoSal();
+
         try {
 
             //Limpia todas las DB
@@ -420,8 +460,8 @@ public class DBListCreator extends AppCompatActivity {
             for (Fecha obj : daoFecha.getUsers()){
                 daoFecha.removerUser(obj.fecha);
             }
-            for (Sale obj : daoPagos.getUsers()){
-                daoPagos.removerUser(obj.sale);
+            for (Sale obj : daoSales.getUsers()){
+                daoSales.removerUser(obj.sale);
             }
 
             InputStream inputStream = AppContextProvider.getContext().getContentResolver().openInputStream(uri);
@@ -477,7 +517,7 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 if(opt==0) {
                     version = spl[1];
-                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]));
+                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]), version.equals("1")? spl[11]:"csv Version Vieja");
                 }
                 else if(opt==1){
                     Article obj = new Article(
@@ -515,7 +555,7 @@ public class DBListCreator extends AppCompatActivity {
                             spl[0], spl[1], spl[2], spl[3], spl[4], spl[5], Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
                             Integer.parseInt(spl[8]), spl[9], Long.parseLong(spl[10]), spl[11], Integer.parseInt(spl[12]), spl[13], Long.parseLong(spl[14])
                     );
-                    daoPagos.insertUser(obj);
+                    daoSales.insertUser(obj);
                 }
                 stringBuilder.append(line);
             }

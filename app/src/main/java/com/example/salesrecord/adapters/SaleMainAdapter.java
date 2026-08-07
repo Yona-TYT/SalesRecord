@@ -5,7 +5,6 @@ import static android.widget.GridLayout.spec;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
-import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -15,7 +14,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,10 +31,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SelListAdapter extends BaseAdapter  {
+public class SaleMainAdapter extends BaseAdapter  {
     //Test------------------------------------------------------------
     private Context mContex;
     private List<Obj> objList = new ArrayList<>();
+    private int currPos = -1;
 
     private static class ViewHolder {
         LinearLayout layout1;
@@ -51,9 +50,18 @@ public class SelListAdapter extends BaseAdapter  {
 
     }
 
-    public SelListAdapter(Context mContex, List<Obj> objList){
+    public SaleMainAdapter(Context mContex, List<Obj> objList){
         this.mContex = mContex;
         this.objList = objList;
+    }
+
+    public void setSelectedPos(int pos) {
+        this.currPos = pos;
+        notifyDataSetChanged();
+    }
+
+    public int getSelectedPos() {
+        return currPos;
     }
 
     @Override
@@ -81,7 +89,7 @@ public class SelListAdapter extends BaseAdapter  {
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = LayoutInflater.from(mContex).inflate(R.layout.item_gallery, parent, false);
+            convertView = LayoutInflater.from(mContex).inflate(R.layout.item_main_sale, parent, false);
 
             holder = new ViewHolder();
             holder.layout1 = convertView.findViewById(R.id.list1Layout);
@@ -101,14 +109,21 @@ public class SelListAdapter extends BaseAdapter  {
         Obj item = objList.get(pos);
 
         // Layout
+
         if (item.currCount <= 0 || item.maxCount <= 0){
             holder.layout1.setBackgroundColor(
                     ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
             );
         }
+        else if (pos == currPos) {
+
+            holder.layout1.setBackgroundColor(
+                    ContextCompat.getColor(holder.layout1.getContext(), R.color.selected_background)
+            );
+        }
         else {
             holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.text_background2)
+                    ContextCompat.getColor(holder.layout1.getContext(), R.color.normal_background)
             );
         }
 

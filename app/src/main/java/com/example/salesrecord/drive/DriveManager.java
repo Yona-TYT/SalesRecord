@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.StartVar;
@@ -41,6 +42,8 @@ public class DriveManager {
     private static Context mContext;
 
     private java.io.File file;
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     public static synchronized DriveManager getInstance() {
         if (instance == null) {
@@ -196,6 +199,7 @@ public class DriveManager {
     }
 
     public void uploadDataBase() {
+
         //Dialogs.progress((FragmentActivity) getActivity(), "getString(R.string.please_wait)");
         //Basic.msg("StartVar.csvList: "+StartVar.csvList.get(1)[1]);
         Context context = AppContextProvider.getContext();
@@ -206,6 +210,9 @@ public class DriveManager {
                 FilesManager fMang = new FilesManager();
                 File file;
                 String name = StartVar.exportName;
+
+               // Basic.msg("uploadDataBase " +StartVar.csvList.get(5)[1], true);
+
                 try {
                     file = fMang.csvExport(StartVar.csvList, name);
                 } catch (IOException e) {
@@ -263,7 +270,7 @@ public class DriveManager {
                 }
                 // 3. Encolar el trabajo solo si hay archivos
                 if (!mFileList.isEmpty()) {
-                    //Basic.msg("Siz img: "+mFileList.size());
+                   // Basic.msg("Siz img: "+mFileList.size());
                     // Llamamos a ImportDataToDrive directamente desde este hilo
                     ImportDataToDrive( mFileList, true);
                     android.util.Log.i("DriveSync", "✅ Lista preparada: " + mFileList.size() + " imágenes.");

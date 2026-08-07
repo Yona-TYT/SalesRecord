@@ -3,12 +3,16 @@ package com.example.salesrecord.ui.home;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +24,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -28,8 +33,9 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.adapters.SelListAdapter;
-import com.example.salesrecord.adapters.SaleAdapter;
+import com.example.salesrecord.activitys.ReloadActivity;
+import com.example.salesrecord.adapters.SaleMainAdapter;
+import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentHomeBinding;
 import com.example.salesrecord.db.Article;
@@ -40,9 +46,11 @@ import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.R;
+import com.example.salesrecord.utls.SharedViewModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,18 +72,29 @@ public class HomeFragment extends Fragment {
     private GridView gridView;
     private TextView viewTotal;
 
-    private SelListAdapter mAdapter1;
-    private SaleAdapter mAdapter2;
+    private SaleMainAdapter mAdapter1;
+    private SaleResultAdapter mAdapter2;
     private ListView mListView;
 
     private Button mButt1;
     private Button mButt2;
+    private Button mButt3;
+    private Button mButt4;
 
-    private EditText mInput2;
     private Spinner mSpinn1;
     private int currSel1 = 0;
 
-    private Long currGrid = 0L;
+    private CurrencyEditText mInput2;
+    private int currGrid = 0;
+    private Obj currObj = null;
+    private TextView viewResult;
+    private SwitchCompat mSw1;
+    private boolean swCurrency = false;
+    private boolean isCalc = false;
+    private double calcCount = 0;
+    private SharedViewModel sharedViewModel;
+
+    private EditText mInput3;
 
     private ArrayList<Obj> objListAll = new ArrayList<>();
     private ArrayList<Obj> objListSal = new ArrayList<>();
@@ -118,11 +137,16 @@ public class HomeFragment extends Fragment {
         gridView = binding.gcImg;
         mListView = binding.viewList;
         viewTotal = binding.homeText2;
+        viewResult = binding.calcResult;
         searchBar = binding.searchBar;
         mButt1 = binding.buttHome1;
         mButt2 = binding.buttHome2;
-        mInput2 = binding.inputClient;
+        mButt3 = binding.buttHome3;
+        mButt4 = binding.buttHome4;
+        mInput2 = binding.calcInput;
+        mInput3 = binding.inputClient;
         mSpinn1 = binding.homeSelect1;
+        mSw1 = binding.calcSwBs;
 
         // =========================================================================
         // RECOLECCIÓN DE DATOS RESPALDADOS (savedInstanceState)
@@ -137,7 +161,6 @@ public class HomeFragment extends Fragment {
             } catch (Exception e) {
                 android.util.Log.e("FragmentHome", "Error restaurando listas Parcelables corruptas", e);
             }
-
 
             // Si falló el empaquetado, inicializamos listas vacías seguras para evitar NullPointerException
             if (objListAll == null) objListAll = new ArrayList<>();
@@ -157,7 +180,6 @@ public class HomeFragment extends Fragment {
                 }
             }
             setViwes(true);
-
         }
         else {
             // SI NO HAY RESPALDO: Es la primera vez que se abre la pantalla, buscamos el dólar en internet
@@ -174,7 +196,6 @@ public class HomeFragment extends Fragment {
             });
 
             setViwes(false);
-
         }
 
         // homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
@@ -194,12 +215,41 @@ public class HomeFragment extends Fragment {
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
 
         daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
         mArtList = daoArt.getUsers();
+
+
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getCalcToggle().observe(getViewLifecycleOwner(), visible -> {
+            if (visible == null) return;
+
+            // Quiere abrir la calculadora
+            if (visible) {
+                if (currObj == null) {
+                    Basic.msg("Debe seleccionar un producto primero!.");
+                    // solo cerrar si estaba en true
+                    sharedViewModel.setCalcVisible(false);
+                    return;
+                }
+
+                isCalc = true;
+                binding.bottomPanel.setVisibility(View.GONE);
+                binding.panelCalc.setVisibility(View.VISIBLE);
+                // opcional: rellenar nombre del producto
+                // binding.calcProductName.setText(currObj.name);
+                return;
+            }
+
+            // Quiere cerrar (visible == false)
+            isCalc = false;
+            binding.panelCalc.setVisibility(View.GONE);
+            binding.bottomPanel.setVisibility(View.VISIBLE);
+        });
+
 
         // Boton Recargar
         mButt1.setOnClickListener(new View.OnClickListener() {
@@ -236,6 +286,136 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // Para el input de la calculadora
+        mInput2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if(currObj != null) {
+                    if (currObj.maxCount > 0) {
+                        mInput2.setError(null);
+                        double price = MathUtls.addPercentage(currObj.price, currObj.margen);
+                        double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+
+                        double quant = MoneyUtls.getQuantity(price, cueePrice);
+                        calcCount = quant;
+                        viewResult.setText("Cantidad: " + MoneyUtls.setFormatterEs(quant) + " / " +MoneyUtls.setFormatterEs(currObj.maxCount)+" "+glData.unitList.get(currObj.unit));
+                        if(quant <= currObj.maxCount){
+                            mButt2.setEnabled(true);
+                        }
+                        else {
+                            mInput2.setError("El Monto es mayor a la cantidad MAXIMA DISPONIBLE!");
+                            mButt2.setEnabled(false);
+                        }
+                    }
+                    else {
+                        mInput2.setError("Producto AGOTADO!.");
+                        mButt2.setEnabled(false);
+                    }
+                }
+                else {
+                    mInput2.setError("Debe seleccionar un Producto primero !.");
+                    mButt2.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        // Configuramos el listener para capturar el botón "Listo" / "Enter" del teclado
+        mInput2.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                // Detecta el botón 'Listo' (actionDone) o la presión física de la tecla Enter
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                        (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+
+
+                    // 3. Ocultamos el teclado de la pantalla
+                    InputMethodManager imm = (InputMethodManager) mInput2.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(mInput2.getWindowToken(), 0);
+                    }
+
+                    setCalcResult();
+
+                    return true;
+
+                }
+                return false; // Pasa el evento al sistema si no es la tecla Enter
+            }
+        });
+
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                swCurrency = !swCurrency;
+                if(swCurrency) {
+                    mInput2.setCurrencySymbol("Bs");
+                    mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 1, false));
+                }
+                else{
+                    mInput2.setCurrencySymbol("$");
+                    mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 0, false));
+                }
+            }
+        });
+
+        // Para el boton de procesar la calculadora
+        mButt2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCalcResult();
+            }
+        });
+
+        // Para el boton de limpiar la lista
+        mButt3.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                objListAll.clear();
+                objListSal.clear();
+
+                //Para la lista de todos los productos
+
+                mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
+
+                for (Article obj : mArtList) {
+                    objListAll.add(setGalleryArray(obj));
+                }
+
+                if (mAdapter1 != null && mAdapter2 != null) {
+
+                    Double total = setTotal(objListSal);
+                    viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+
+                    mAdapter1.setSelectedPos(-1);
+
+                    mAdapter1.notifyDataSetChanged();
+                    mAdapter2.notifyDataSetChanged();
+                }
+                else {
+                    Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2, true);
+                }
+
+                currObj = null;
+                return false;
+            }
+        });
+        mButt3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Basic.msg("Mantegan precionado para limpiar la lista.");
+            }
+        });
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -275,10 +455,10 @@ public class HomeFragment extends Fragment {
         //Basic.msg(""+mArtList.get(0).totalcount);
 
         //Para la lista de ventas ----------------------------
-        mAdapter2 = new SaleAdapter(contex, objListSal, true);
+        mAdapter2 = new SaleResultAdapter(contex, objListSal, true);
         //-----------------------------------------------------
 
-        mAdapter1 = new SelListAdapter(contex, objListAll);
+        mAdapter1 = new SaleMainAdapter(contex, objListAll);
         //------------------------------------------------------
 
         gridView.setAdapter(mAdapter1);
@@ -288,6 +468,30 @@ public class HomeFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Obj item = objListAll.get(position);
+
+                //Para las calculadora
+                binding.calcProductName.setText(item.name);
+                currGrid = position;
+                currObj = item;
+                mInput2.setText("");
+                if(item.maxCount > 0) {
+                    mInput2.setError(null);
+                }
+                else {
+                    mInput2.setError("Producto AGOTADO!.");
+                }
+
+                if (mAdapter1 != null) {
+                    mAdapter1.setSelectedPos(position);
+                }
+
+                //Termina aqui si la calculadora esta activa
+                if (isCalc){
+                    updateSaleList(item);
+                    return;
+                }
+
+                //--------------------------------------------
 
                 // ==================== LONG CLICK (Reset) ====================
                 if (item.click == 1 ) {
@@ -392,7 +596,7 @@ public class HomeFragment extends Fragment {
         });
 
         // Para el Boton de Precesar PAgos
-        mButt2.setOnClickListener(v -> {
+        mButt4.setOnClickListener(v -> {
             if(!objListSal.isEmpty()){
                 //Procesa la venta y guarda el registro
                 if(saveSale()){
@@ -413,6 +617,8 @@ public class HomeFragment extends Fragment {
                         Double total = setTotal(objListSal);
                         viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
 
+                        mAdapter1.setSelectedPos(-1);
+
                         mAdapter1.notifyDataSetChanged();
                         mAdapter2.notifyDataSetChanged();
                     }
@@ -420,6 +626,17 @@ public class HomeFragment extends Fragment {
                         Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2, true);
                     }
 
+                    currObj = null;
+
+                    // sync envia una actualizacion por red
+                    Bundle mBundle = new Bundle();
+                    mBundle.putBoolean("sync", true);
+                    Intent mIntent = new Intent(contex, ReloadActivity.class);
+                    mIntent.putExtras(mBundle);
+                    //Esto inicia las actividad Reload
+
+                    startActivity(mIntent);
+                    //-------------------------------------
                 }
             }
             else {
@@ -429,6 +646,37 @@ public class HomeFragment extends Fragment {
 
         if(isSave) {
             refreshAllUI();
+        }
+    }
+
+    private void setCalcResult(){
+        if (currObj != null && calcCount > 0 && calcCount <= currObj.maxCount){
+            Basic.msg("Aqui hay NARIZ ! \uD83D\uDC43\uD83D\uDC3D\uD83E\uDD25\uD83E\uDD78 ");
+
+            currObj.saleCount = calcCount;
+            currObj.currCount =  currObj.maxCount - calcCount;
+
+            objListAll.set(currGrid, currObj);
+
+            calcCount = 0;
+            viewResult.setText("Cantidad:"); ;
+            mButt2.setEnabled(false);
+
+            if (mAdapter1 != null) {
+                //Basic.msg("currCount "+item.currCount+" > 0 && maxCount "+ item.maxCount +" > 0 && saleCount "+ item.saleCount +" < maxCount "+ item.maxCount, true);
+
+                mAdapter1.setSelectedPos(-1);
+                mAdapter1.notifyDataSetChanged();
+            }
+            updateSaleList(currObj);
+
+            binding.bottomPanel.setVisibility(View.VISIBLE);
+            binding.panelCalc.setVisibility(View.GONE);
+
+            sharedViewModel.setCalcVisible(false);
+            isCalc = false;
+            currObj = null;
+
         }
     }
 
@@ -472,15 +720,17 @@ public class HomeFragment extends Fragment {
     private double setTotal(List<Obj> list){
         if (list.isEmpty()){
             viewTotal.setVisibility(View.INVISIBLE);
-            mInput2.setVisibility(View.GONE);
-            mButt2.setEnabled(false);
+            mInput3.setVisibility(View.GONE);
+            mButt3.setVisibility(View.GONE);
+            mButt4.setEnabled(false);
             mSpinn1.setEnabled(false);
 
         }
         else {
             viewTotal.setVisibility(View.VISIBLE);
-            mInput2.setVisibility(View.VISIBLE);
-            mButt2.setEnabled(true);
+            mInput3.setVisibility(View.VISIBLE);
+            mButt3.setVisibility(View.VISIBLE);
+            mButt4.setEnabled(true);
             mSpinn1.setEnabled(true);
         }
 
@@ -533,9 +783,9 @@ public class HomeFragment extends Fragment {
             String strNr = " nr"+cltNr + (" (" + CalendUtls.getShortDate(currDate) + ")");
             strClt = "Cliente" + strNr ;
 
-            if(!mInput2.getText().toString().isEmpty()) {
+            if(!mInput3.getText().toString().isEmpty()) {
 
-                strClt = mInput2.getText().toString()+strNr;
+                strClt = mInput3.getText().toString()+strNr;
             }
 
 
@@ -570,9 +820,9 @@ public class HomeFragment extends Fragment {
             );
 
             //Se restauran los elementos
-            mInput2.setText("");
-            mInput2.setVisibility(View.GONE);
-            mButt2.setEnabled(false);
+            mInput3.setText("");
+            mInput3.setVisibility(View.GONE);
+            mButt4.setEnabled(false);
             mSpinn1.setEnabled(false);
 
             //Se guarda la venta
@@ -582,7 +832,8 @@ public class HomeFragment extends Fragment {
             daoArt.updateUser(artList);
 
             //Se actualiza la lista de fechas si esta no existe
-            CalendUtls.addCurrentDate(contex, 0);
+            CalendUtls calendUtls = new CalendUtls();
+            calendUtls.addCurrentDate(contex, 0);
 
             return true;
 

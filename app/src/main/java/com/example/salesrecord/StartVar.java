@@ -16,6 +16,7 @@ import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.CalendUtls;
 
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
@@ -55,7 +56,7 @@ public class StartVar {
     // DB Config
     public static Conf mConfigDB;
     public static String mConfID = "confID0";
-    public static String mDateVersion = "0";
+    public static String mDateVersion = "1";
 
     // Var redundants
     public static boolean mPermiss = false;     //Permisos de gestion multimedia
@@ -107,7 +108,7 @@ public class StartVar {
     }
 
     //------------------------------------------ Para guardar las cuentas
-    public void setAllListDB(){
+    public static void setAllListDB(){
         //Instancia de la base de datos
         StartVar.appDBall = Room.databaseBuilder( AppContextProvider.getContext(), AllDao.class, StartVar.nameDB).allowMainThreadQueries().build();
 
@@ -142,7 +143,9 @@ public class StartVar {
             }
 
             //configDatabase.daoConf().insertUser();
-            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, "",0d, currDate, currTime, 0, 0, 0, 0);
+
+            String strDbg = "Frits Config: "+ CalendUtls.getShortDate(currDate)+" "+CalendUtls.getTime(currTime);
+            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, "",0d, currDate, currTime, 0, 0, 0, 0, strDbg);
             StartVar.appDBall.daoCfg().insertUser(obj);
         }
     }
@@ -158,7 +161,7 @@ public class StartVar {
     }
     //----------------------------------------------------------------------------------
 
-    public void getFecListDB(){
+    public static void getFecListDB(){
         //Instancia para obtener Fechas
         StartVar.listfec =  StartVar.appDBall.daoDat().getUsers();
     }
@@ -203,7 +206,7 @@ public class StartVar {
         StartVar.cltBit = value;
     }
 
-    public void setmActivity(Activity activity){
+    public static void setmActivity(Activity activity){
         StartVar.mActivity = activity;
     }
 
@@ -214,9 +217,9 @@ public class StartVar {
 
     public static List<String> getImgList(){
         ArrayList<String> list = new ArrayList<>();
-        List<Sale> payList =  StartVar.appDBall.daoSal().getUsers();
-        for (Sale mU : payList) {
-            list.add(mU.imagen);
+        List<Article> payList =  StartVar.appDBall.daoAtr().getUsers();
+        for (Article mU : payList) {
+            list.add(mU.image);
         }
         return list;
     }

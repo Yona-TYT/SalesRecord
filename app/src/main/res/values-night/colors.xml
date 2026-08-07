@@ -12,13 +12,15 @@
     <color name="text_color1">#FFFFFF</color>
     <color name="text_background">#1A1A1A</color>
     <color name="text_background2">#2A2A2A</color>
-    <color name="text_top_image">#808C949B</color>
+    <color name="text_top_image">#CC8C949B</color>
     <color name="text_color_counter">#FFFFFF</color>
 
 
     <color name="alert_background">#9B0000</color>
     <color name="retire_background">#4E5D6C</color>
-    <color name="selected_background">#33000000</color>
+    <color name="selected_background">#334169E1</color>
+    <color name="normal_background">#2A2A2A</color>
+
 
     <color name="alert_text">#FFFFFF</color>
     <color name="button">#2A2A2A</color>

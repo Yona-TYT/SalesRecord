@@ -147,7 +147,7 @@ public class EditAtrFragment extends Fragment {
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
 
         daoArt = StartVar.appDBall.daoAtr();
@@ -277,7 +277,8 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
-                    double clcPrice = MathUtls.addPercentage(mInput2.getNumericValue(), mInput4.getNumericValue());
+                    double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
 
                     mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
@@ -360,6 +361,9 @@ public class EditAtrFragment extends Fragment {
                 crrArt.staus = (mSw2.isChecked() ? 1 : 0);
 
                 daoArt.update(crrArt);
+
+                //Encola al elemento a sincronizar
+                StartVar.genericQueue.enqueue(crrArt, 3);
 
                 //Limpia y Desactiva los inputs
                 mInput1.setText("");

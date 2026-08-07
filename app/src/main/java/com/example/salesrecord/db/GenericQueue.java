@@ -29,9 +29,7 @@ import java.util.concurrent.Executors;
 
 public class GenericQueue {
     private LifecycleOwner lifecycle;
-
     private final LinkedList<Object> queue;
-
     private final QueueItemDao queueItemDao;
     private final Context context;
     private final Gson gson;
@@ -40,55 +38,55 @@ public class GenericQueue {
         this.lifecycle = lifecycle;
         this.context = context.getApplicationContext();
         this.queue = new LinkedList<>();
-
         this.queueItemDao = StartVar.appDBall.daoQueue();
         this.gson = new Gson();
     }
 
-
-    //Test--------------------------------
-
-
-    // Encolar CUALQUIER objeto
+    // Encolar con mSend = 2 por defecto
     public void enqueue(Object objeto) {
+        enqueue(objeto, 2);
+    }
+
+    // Encolar con mSend personalizado
+    public void enqueue(Object objeto, int mSend) {
         String json = gson.toJson(objeto);
-        String tipoClase = objeto.getClass().getName(); // "com.package.Deuda"
+        String tipoClase = objeto.getClass().getName();
 
         long order = System.currentTimeMillis();
         QueueItem item = new QueueItem(json, tipoClase, order);
 
-        // Ejecutar en hilo secundario (Importante para evitar el crash anterior)
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 AuthState authState = DriveManager.getAuthState();
                 if (authState == null || !authState.isAuthorized()) {
                     Log.w("Queue", "No autorizado en Google Drive. No se inserta en cola.");
-                    return;                    // Sale inmediatamente del hilo
+                    return;
                 }
-                // Si está autorizado, continuamos
+
                 queueItemDao.insert(item);
 
                 // Sincronización con Drive
                 synchronizeCheck();
 
-                // Añadir a la cola en memoria (en el hilo principal)
+                // Añadir a la cola en memoria y arrancar el procesamiento con mSend
                 new Handler(Looper.getMainLooper()).post(() -> {
                     queue.add(objeto);
                     Log.d("Queue", "Objeto añadido a la cola en memoria");
+
+                    // Arranca el Worker con el mSend indicado (siempre 2 desde el fragment)
+                    startUsuarioQueue(mSend);
                 });
+
             } catch (Exception e) {
                 Log.e("Queue", "Error al procesar item en cola", e);
             }
-            // El hilo se termina automáticamente aquí
         });
     }
 
-    // Cargar desde DB reconociendo el tipo
     public void loadQueueFromDatabase(int send) {
         Executors.newSingleThreadExecutor().execute(() -> {
             List<QueueItem> items = queueItemDao.getAllQueueItems();
 
-            // Limpiar cola actual para evitar duplicados al recargar
             queue.clear();
 
             for (QueueItem item : items) {
@@ -101,7 +99,6 @@ public class GenericQueue {
                 }
             }
 
-            //Una vez cargada la lista, iniciamos el proceso en el hilo principal
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (!queue.isEmpty()) {
                     processNext(send);
@@ -112,40 +109,29 @@ public class GenericQueue {
         });
     }
 
-    //---------------------------------------------------------------------
-
-    // Cargar la cola desde Room
     public void startUsuarioQueue(int send) {
         loadQueueFromDatabase(send);
     }
 
-    private void synchronizeCheck(){
+    private void synchronizeCheck() {
         DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        StartVar.mWorkResult = new SetWorkResult( lifecycle, executorService, manager);
-
+        StartVar.mWorkResult = new SetWorkResult(lifecycle, executorService, manager);
         manager.dataSynchronizeCheck();
     }
 
-    // Procesar el siguiente elemento de la cola
     private void processNext(int sendOpt) {
-
         if (queue.isEmpty()) {
-            //Basic.msg("Empty: "+sendOpt);
             return;
         }
 
         Object objetoActual = queue.peek();
 
-        //Basic.msg("Not Empty: "+sendOpt);
-
-        // Encolar un trabajo en WorkManager
         Data inputData = new Data.Builder()
                 .putString("objeto_json", gson.toJson(objetoActual))
-                .putString("objeto_tipo", objetoActual.getClass().getName()) // Ej: "com.package.Deuda"
-                .putInt("send", sendOpt)
+                .putString("objeto_tipo", objetoActual.getClass().getName())
+                .putInt("send", sendOpt)   // ← aquí llega el mSend al GenericWorker
                 .build();
-
 
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(GenericWorker.class)
                 .setInputData(inputData)
@@ -154,22 +140,30 @@ public class GenericQueue {
         WorkManager.getInstance(context)
                 .getWorkInfoByIdLiveData(workRequest.getId())
                 .observe(lifecycle, workInfo -> {
-
                     if (workInfo != null && workInfo.getState().isFinished()) {
-
                         if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                            // Eliminar el elemento procesado
                             queue.poll();
+
                             QueueItem queueItem = queueItemDao.getFirstQueueItem();
                             if (queueItem != null) {
                                 queueItemDao.delete(queueItem);
                             }
-                            // Procesar el siguiente
-                            processNext(sendOpt);
 
+                            processNext(sendOpt);
                         } else {
-                            Basic.msg("Aqui fallloooo: "+StartVar.sendDate);
-                            //Log.e("UsuarioQueue", "Error procesando usuario: " + workInfo.getState());
+                            Basic.msg("Aqui fallloooo: " + StartVar.sendDate);
+
+                            WorkInfo.State state = workInfo.getState();
+                            String output = workInfo.getOutputData().toString();
+
+                            Log.e("Queue", "Work falló. Estado = " + state);
+                            Log.e("Queue", "OutputData = " + output);
+
+                            String errorMsg = workInfo.getOutputData().getString("error");
+                            if (errorMsg != null) {
+                                Log.e("Queue", "Error del Worker: " + errorMsg);
+                                Basic.msg("Error Worker: " + errorMsg);
+                            }
                         }
                     }
                 });
@@ -177,12 +171,10 @@ public class GenericQueue {
         WorkManager.getInstance(context).enqueue(workRequest);
     }
 
-    // Obtener el tamaño de la cola
     public int size() {
         return queue.size();
     }
 
-    // Limpiar la cola (opcional)
     public void clear() {
         queue.clear();
         queueItemDao.deleteAll();

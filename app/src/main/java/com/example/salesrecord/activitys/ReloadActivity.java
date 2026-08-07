@@ -1,6 +1,5 @@
 package com.example.salesrecord.activitys;
 
-import static com.example.salesrecord.StartVar.appDBall;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,14 +11,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.salesrecord.AppContextProvider;
-import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.DBListCreator;
+import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.Msg;
 
 import net.openid.appauth.AuthState;
@@ -27,6 +28,8 @@ import net.openid.appauth.AuthState;
 import java.util.List;
 
 public class ReloadActivity extends AppCompatActivity {
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +50,11 @@ public class ReloadActivity extends AppCompatActivity {
         StartVar.reloadActivity = this;
 
         //Recarga La lista de la DB ----------------------------
-        startVar.getFecListDB();
+        StartVar.getFecListDB();
         //----------------------------------------------------------------------------------------------------------------------
 
         // Se agregan datos solo la primera vez en el primer elemento de la lista ---------------------------------------------
-        List<Article> listArticle = appDBall.daoAtr().getUsers();
+        List<Article> listArticle = StartVar.appDBall.daoAtr().getUsers();
 
         if(!listArticle.isEmpty()) {
             Conf mCfg = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
@@ -67,12 +70,23 @@ public class ReloadActivity extends AppCompatActivity {
         }
         //----------------------------------------------------------------------------------------------------------------------
 
-        DBListCreator.createDbLists(); //Actualiza la lista para exportar csv
-
+        boolean sync = false;
         Bundle mExtra = getIntent().getExtras() ;
         if (mExtra != null) {
-            boolean sync = mExtra.getBoolean("sync", false);
+            sync = mExtra.getBoolean("sync", false);
             if (sync){
+
+                long currDate = 0;
+                long currTime = 0;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    currDate = java.time.Instant.now().toEpochMilli();
+                    currTime = System.currentTimeMillis();
+                }
+                String strDbg = "ReloadActivity: "+ CalendUtls.getShortDate(currDate)+" "+CalendUtls.getTime(currTime);
+                StartVar.appDBall.daoCfg().updateDateTime(StartVar.mConfID, currDate, currTime, strDbg);
+
+                DBListCreator.createDbLists(); //Actualiza la lista para exportar csv
+
                 //Envia una actulaizacion del CSV completa en este caso
                 AuthState authState = new AuthState();
                 authState = DriveManager.getAuthState();
@@ -82,6 +96,11 @@ public class ReloadActivity extends AppCompatActivity {
                 }
                 //----------------------------------------------------------------------
             }
+        }
+
+        // Si no habia sincronizacion se actualiza igualmente la lista csv
+        if(!sync){
+            DBListCreator.createDbLists(); //Actualiza la lista para exportar csv
         }
 
         //Esto inicia las actividad Main

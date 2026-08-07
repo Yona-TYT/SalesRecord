@@ -22,6 +22,7 @@ import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;
@@ -44,6 +45,8 @@ public class SetWorkResult {
     private LifecycleOwner lifecycle;
     private ExecutorService executorService;
     private DriveManager manager;
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
     private Observer<WorkInfo> workObserver; // Referencia al Observer
 
     public SetWorkResult(LifecycleOwner lifecycle, ExecutorService executorService, DriveManager manager) {
@@ -117,7 +120,8 @@ public class SetWorkResult {
                                 //Aqui se analizan los nuevos datos y se comparan con los existentes
                                 Uri uri = Uri.fromFile(mFile);
                                 try {
-                                    SetDb.set(context, outputData, uri,  manager);
+                                    SetDb setDb = new SetDb();
+                                    setDb.set(context, outputData, uri,  manager);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }

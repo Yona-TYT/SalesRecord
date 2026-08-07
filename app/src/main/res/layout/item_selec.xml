@@ -12,5 +12,5 @@
     android:paddingBottom="0dp"
     android:textStyle="bold"
     android:textSize="@dimen/inner_text_2"
-    android:background="@color/text_background2"
+    android:background="@color/normal_background"
     />

@@ -3,23 +3,32 @@ package com.example.salesrecord.activitys;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.CurrencyEditText;
+import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.Launcher;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SelecAdapter;
@@ -27,11 +36,14 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +59,12 @@ public class FullEditActivity extends AppCompatActivity {
     private CurrencyEditText mInput5;
     private EditText mInput6;
     private EditText mInput7;
+
+    private SwitchCompat mSw1;
+    private boolean swCurrency = false;
+
+    private ImageButton mImgButt;
+    private ImageView imageView;
 
     private List<EditText> mInpList =  new ArrayList<>();
 
@@ -66,10 +84,16 @@ public class FullEditActivity extends AppCompatActivity {
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
+    private FilesManager mFileM = new FilesManager();
+    private String sImage = "";
+    private Uri oldFile = null;
+    private Uri currUri = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        contex = this;
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_full_edit);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -87,7 +111,7 @@ public class FullEditActivity extends AppCompatActivity {
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
 
         daoArt = StartVar.appDBall.daoAtr();
@@ -99,6 +123,11 @@ public class FullEditActivity extends AppCompatActivity {
         mInput5 = findViewById(R.id.full_et_totalcount);
         mInput6 = findViewById(R.id.full_et_isopen);
         mInput7 = findViewById(R.id.full_et_caduca);
+
+        mSw1 = findViewById(R.id.edit_sw_bs);
+
+        mImgButt = findViewById(R.id.full_btn_image);
+        imageView = findViewById(R.id.full_img_preview);
 
         mInpList.add(mInput1);
         mInpList.add(mInput3);
@@ -117,6 +146,37 @@ public class FullEditActivity extends AppCompatActivity {
 
         if(crrArt != null){
 
+            //Set Picker and Camera Launchers
+            Launcher mLaunch = new Launcher(this.getActivityResultRegistry(), this.getApplicationContext(), new Launcher.OnCapture() {
+                @Override
+                public void invoke(List<Uri> uris) {
+                    if (!uris.isEmpty()) {
+                        Uri uri = uris.get(0);
+                        try {
+                            Log.d("PhotoPicker", "Selected URI: " + uri);
+                            if(imageView != null){
+                                imageView.setImageURI(uri);
+                            }
+                            currUri = uri;
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else {
+                        Basic.msg("No hay imagen seleccionada!");
+                    }
+                }
+            });
+
+            getLifecycle().addObserver(mLaunch);
+
+            // Adjunta al botón para el picker
+            mLaunch.attachToViewPicker(mImgButt, false, false);
+
+            // Adjunta al botón para la camara
+            mLaunch.attachToViewCam(mImgButt, true);
+
             Double precio = crrArt.precund;
             int mType = crrArt.artipo;
             if(mType == 1){
@@ -134,6 +194,21 @@ public class FullEditActivity extends AppCompatActivity {
             mInput5.setText(Basic.setFormatterEs(crrArt.totalcount));
             mInput6.setText(String.valueOf(crrArt.isopen));
             mInput7.setText(String.valueOf(crrArt.caduca));
+
+            mSw1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    swCurrency = !swCurrency;
+                    if(swCurrency) {
+                        mInput3.setCurrencySymbol("Bs");
+                        mInput3.setText(MoneyUtls.getMaskConv(mInput3.getNumericValue(), 1, false));
+                    }
+                    else{
+                        mInput3.setCurrencySymbol("$");
+                        mInput3.setText(MoneyUtls.getMaskConv(mInput3.getNumericValue(), 0, false));
+                    }
+                }
+            });
 
             //Para el selector de tipo de producto
             mSpin1.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL1));
@@ -187,16 +262,16 @@ public class FullEditActivity extends AppCompatActivity {
                     crrArt.nombre = mInput1.getText().toString();
                     crrArt.descr = mInput2.getText().toString();
 
-                    double precio = mInput3.getNumericValue();
+                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
                     if(currSel1 == 0) {
-                        crrArt.precund = precio;
+                        crrArt.precund = price;
                     }
                     if(currSel1 == 0) {
-                        crrArt.precpq = precio;
+                        crrArt.precpq = price;
                     }
                     else{
-                        crrArt.preccj = precio;
+                        crrArt.preccj = price;
                     }
 
                     crrArt.margen = mInput4.getNumericValue();
@@ -207,9 +282,37 @@ public class FullEditActivity extends AppCompatActivity {
                     crrArt.metrica = currSel2;
                     crrArt.caduca = 0;
 
+                    //Se guarda la foto en un nuevo directorio --------------------------------
+                    Bitmap bitmap = null;
+                    try {
+                        // Nueva imagen elegida con el picker
+                        if (currUri != null) {
+                            bitmap = MediaStore.Images.Media.getBitmap(contex.getContentResolver(), currUri);
+                            sImage = mFileM.SavePhoto(bitmap, crrArt.article, oldFile, contex, contex.getContentResolver());
+                        } else if (sImage != null && !sImage.isEmpty()) {
+                            // Se mantiene la imagen anterior
+                            oldFile = Uri.parse(sImage);
+                        } else {
+                            sImage = "";
+                        }
+                    } catch (IOException e) {
+                        Basic.msg("Error al guardar la IMAGEN!");
+                        e.printStackTrace();
+                        sImage = "";
+                    }
+                    crrArt.image = sImage;
+                    //-------------------------------------------------------------------
+
+                    Log.d("DB_INSTANCE", "Hash: " + System.identityHashCode(StartVar.appDBall));
+
                     daoArt.update(crrArt);
 
                     glData.setCurrArt(crrArt);
+
+                    //Basic.msg(daoArt.getUsers(crrArt.uid).nombre, true);
+
+                    //Encola al elemento a sincronizar
+                    StartVar.genericQueue.enqueue(crrArt, 3);
 
                     finish();
                 }

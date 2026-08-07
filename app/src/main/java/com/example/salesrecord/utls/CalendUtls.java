@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.dao.DaoDat;
@@ -25,6 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CalendUtls {
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
     public CalendUtls() {
     }
 
@@ -131,7 +135,7 @@ public class CalendUtls {
      * @param mContext Contexto de la aplicación.
      * @param compareMode Modo de comparación: COMPARE_BY_DAY_MONTH_YEAR, COMPARE_BY_MONTH_YEAR o COMPARE_BY_YEAR.
      */
-    public static void addCurrentDate(Context mContext, int compareMode) {
+    public void addCurrentDate(Context mContext, int compareMode) {
         DaoDat daoFecha = StartVar.appDBall.daoDat();
         List<Fecha> listFecha = daoFecha.getUsers();
         boolean exists = false;
@@ -193,8 +197,7 @@ public class CalendUtls {
         daoFecha.insertUser(obj);
 
         // Recarga la lista de la DB
-        StartVar var = new StartVar();
-        var.getFecListDB();
+        StartVar.getFecListDB();
     }
 
     public static boolean isSameMonth(long date1, long date2) {

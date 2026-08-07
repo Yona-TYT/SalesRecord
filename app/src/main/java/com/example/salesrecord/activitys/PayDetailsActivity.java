@@ -2,6 +2,7 @@ package com.example.salesrecord.activitys;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -30,7 +31,7 @@ import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.adapters.SaleAdapter;
+import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Sale;
@@ -188,7 +189,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
 
         mSale = daoSal.getUsers(glData.getCurrSalId());
@@ -236,7 +237,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
-            SaleAdapter mAdapter = new SaleAdapter(contex, objListSal, false);
+            SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
             mListView.setAdapter(mAdapter);
 
             mText1.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
@@ -310,8 +311,16 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
                 //Elimina el registro selecionado
                 daoSal.removerUser(mSale.uid);
-
                 finish(); //Finaliza la actividad y ya no se accede mas
+
+                // sync envia una actualizacion por red
+                Bundle mBundle = new Bundle();
+                mBundle.putBoolean("sync", true);
+                Intent mIntent = new Intent(contex, ReloadActivity.class);
+                mIntent.putExtras(mBundle);
+                //Esto inicia las actividad Reload
+
+                startActivity(mIntent);
             }
         }
         if (itemId == R.id.butt_dts2){

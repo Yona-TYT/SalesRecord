@@ -23,7 +23,7 @@ import com.example.salesrecord.utls.Obj;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SaleAdapter extends BaseAdapter  {
+public class SaleResultAdapter extends BaseAdapter  {
     //Test------------------------------------------------------------
     private Context mContex;
     private List<Obj> objList = new ArrayList<>();
@@ -38,7 +38,7 @@ public class SaleAdapter extends BaseAdapter  {
         Button mButt;
     }
 
-    public  SaleAdapter(Context mContex, List<Obj> objList, boolean isButt){
+    public SaleResultAdapter(Context mContex, List<Obj> objList, boolean isButt){
         this.mContex = mContex;
         this.objList = objList;
         this.isButt = isButt;
@@ -70,7 +70,7 @@ public class SaleAdapter extends BaseAdapter  {
 
         if (convertView == null) {
             // Inflamos el layout XML
-            convertView = LayoutInflater.from(mContex).inflate(R.layout.item_sales, parent, false);
+            convertView = LayoutInflater.from(mContex).inflate(R.layout.item_result_sale, parent, false);
 
             holder = new ViewHolder();
             holder.view1 = convertView.findViewById(R.id.sale_tex1);

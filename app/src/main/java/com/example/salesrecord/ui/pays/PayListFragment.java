@@ -85,7 +85,7 @@ public class PayListFragment extends Fragment {
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
         mSpinn1 = binding.paySelect1;
         mListView = binding.payViewList;

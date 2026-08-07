@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -27,6 +28,7 @@ import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.MoneyUtls;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +47,8 @@ public class AddAtrFragment extends Fragment {
     CurrencyEditText mInput2;
     CurrencyEditText mInput3;
 
+    private SwitchCompat mSw1;
+    private boolean swCurrency = false;
 
     private List<String> spinL1 = new ArrayList<>();
     private Spinner mSpin1;
@@ -77,7 +81,7 @@ public class AddAtrFragment extends Fragment {
         if (StartVar.appDBall == null) {
             //Satrted variables
             StartVar startVar = new StartVar();
-            startVar.setAllListDB();
+            StartVar.setAllListDB();
         }
 
         mInpList.add(binding.etNombre);
@@ -88,6 +92,8 @@ public class AddAtrFragment extends Fragment {
         mInput1 = binding.etPrecio;
         mInput2 = binding.etMargen;
         mInput3 = binding.etTotalcount;
+
+        mSw1 = binding.addSwBs;
 
         mInpList.add(binding.etMargen);
 
@@ -102,6 +108,20 @@ public class AddAtrFragment extends Fragment {
 
         daoArt = StartVar.appDBall.daoAtr();
 
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                swCurrency = !swCurrency;
+                if(swCurrency) {
+                    mInput1.setCurrencySymbol("Bs");
+                    mInput1.setText(MoneyUtls.getMaskConv(mInput1.getNumericValue(), 1, false));
+                }
+                else{
+                    mInput1.setCurrencySymbol("$");
+                    mInput1.setText(MoneyUtls.getMaskConv(mInput1.getNumericValue(), 0, false));
+                }
+            }
+        });
 
         //Para el selector de tipo de producto
         mSpin1.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL1));
@@ -117,7 +137,8 @@ public class AddAtrFragment extends Fragment {
             }
         });
 
-        //Para el selector de tipo de producto
+
+        //Para el selector de tipo metrica
         mSpin2.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL2));
         mSpin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -167,11 +188,12 @@ public class AddAtrFragment extends Fragment {
                 String atrId = DatabaseUtils.generateId("atrID", daoArt);
 
 
+                double price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
                 objA = new Article(atrId, mTxList.get(0), mTxList.get(1),"@null", "",
-                        (currSel1 == 0 ? (mInput1.getNumericValue()) : 0.0),
-                        (currSel1 == 1 ? (mInput1.getNumericValue()) : 0.0),
-                        (currSel1 == 2 ? (mInput1.getNumericValue()) : 0.0),
+                        (currSel1 == 0 ? (price) : 0.0),
+                        (currSel1 == 1 ? (price) : 0.0),
+                        (currSel1 == 2 ? (price) : 0.0),
 
                         mInput2.getNumericValue(),
                         mInput3.getNumericValue(), mInput3.getNumericValue(),
@@ -181,6 +203,10 @@ public class AddAtrFragment extends Fragment {
                         1, currDate, currDate
                 );
                 daoArt.insert(objA);
+
+                //Encola al elemento a sincronizar
+                StartVar.genericQueue.enqueue(objA, 3);
+
                 //Esto inicia las actividad Reload
                 Intent mIntent = new Intent(AppContextProvider.getContext(), ReloadActivity.class);
                 mIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);

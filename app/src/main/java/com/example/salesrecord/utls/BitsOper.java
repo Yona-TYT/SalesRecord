@@ -1,5 +1,7 @@
 package com.example.salesrecord.utls;
 
+import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.dao.DaoClt;
@@ -11,6 +13,8 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 public class BitsOper {
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
     public BitsOper() {}
 
     public static int bitL(int val, int rota) {
@@ -280,7 +284,7 @@ public class BitsOper {
         return mList;
     }
 
-    public static List<Object> setBits(boolean b, int idx, int cltId){
+    public List<Object> setBits(boolean b, int idx, int cltId){
         DaoClt daoClt = StartVar.appDBall.daoClt();
         Cliente mClt = daoClt.getUsers("cltID"+cltId);
 

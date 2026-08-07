@@ -1,8 +1,6 @@
 package com.example.salesrecord.activitys;
 
 
-import static com.example.salesrecord.StartVar.appDBall;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,6 +30,7 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GetDollar;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
@@ -47,6 +46,8 @@ import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Msg;
 
 public class Preloader extends AppCompatActivity {
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +68,8 @@ public class Preloader extends AppCompatActivity {
         //Check valus before start main activity
         //Satrted variables
         StartVar startVar = new StartVar();
-        startVar.setAllListDB();
-        startVar.setmActivity(this);
+        StartVar.setAllListDB();
+        StartVar.setmActivity(this);
         new Basic(AppContextProvider.getContext());
 
         List<Fecha> listFecha = StartVar.listfec;
@@ -82,7 +83,7 @@ public class Preloader extends AppCompatActivity {
             else {
                 obj = new Fecha("dateID0","", (long)0, (long)0);
             }
-            appDBall.daoDat().insertUser(obj);
+            StartVar.appDBall.daoDat().insertUser(obj);
             //-------------------------------------------------------
         }
 
