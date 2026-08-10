@@ -34,8 +34,10 @@ import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
@@ -243,8 +245,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             mText1.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
 
             mUser = mSale.sale;
-            String txName = mSale.cliente;
-            String txAlias = "";
+            String txAlias = mSale.cliente;
+
+            if(txAlias.startsWith("cltID")){
+                DaoClt daoClt = StartVar.appDBall.daoClt();
+                Cliente mClt = daoClt.getUsers(txAlias);
+                if(mClt != null){
+                    txAlias = mClt.nombre+" ("+mClt.iduser+")";
+                }
+            }
 
             String txConc = "Pagado";
             String txMont = mSale.monto.toString();
@@ -255,7 +264,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             String txHora = CalendUtls.getTime(mSale.time);
 
             int i = 0;
-            mTextList.get(i).setText("Alias: "+ txName);
+            mTextList.get(i).setText("Alias: "+ txAlias);
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;

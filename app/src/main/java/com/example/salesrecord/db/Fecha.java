@@ -13,7 +13,6 @@ public class Fecha {
     public Long date;
     public Long time;
 
-
     public Fecha(@NonNull String fecha, String strdate, Long date, Long time)
     {
             this.fecha = fecha;

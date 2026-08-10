@@ -140,7 +140,8 @@ public class SetDb {
             }
             if (isCheck) {
                 // Hay elementos en cola → procesarlos (send = 1)
-                StartVar.genericQueue.startUsuarioQueue(1);
+                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
+
             }
 
         } else if (comparison < 0) {
@@ -154,7 +155,7 @@ public class SetDb {
             if (isCheck) {
                 // Descargar sin cerrar y luego procesar cola con send = 2
                 mListCreator.cvsToDbNotFinish(StartVar.mActivity, uri, 1, "");
-                StartVar.genericQueue.startUsuarioQueue(2);
+                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(2);
             } else {
                 // Descarga completa (preloader, check manual, etc.)
                 mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "");
@@ -177,7 +178,7 @@ public class SetDb {
             }
 
             if (isCheck) {
-                StartVar.genericQueue.startUsuarioQueue(1);
+                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
             }
         }
 

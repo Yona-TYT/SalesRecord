@@ -3,6 +3,7 @@ package com.example.salesrecord.utls;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -333,4 +334,12 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
         return "application/octet-stream";
     }
 
+    public static void setImageView(String path, ImageView view){
+        File imgFile = new File(path);
+
+        if (imgFile.exists()) {
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            view.setImageBitmap(myBitmap);
+        }
+    }
 }

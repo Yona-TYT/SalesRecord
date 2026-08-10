@@ -28,18 +28,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class GenericQueue {
-    private LifecycleOwner lifecycle;
     private final LinkedList<Object> queue;
-    private final QueueItemDao queueItemDao;
+    private QueueItemDao queueItemDao;
     private final Context context;
     private final Gson gson;
 
-    public GenericQueue(LifecycleOwner lifecycle, Context context) {
-        this.lifecycle = lifecycle;
+    public GenericQueue(Context context) {
         this.context = context.getApplicationContext();
         this.queue = new LinkedList<>();
-        this.queueItemDao = StartVar.appDBall.daoQueue();
         this.gson = new Gson();
+    }
+
+    // 3. Agrega este método para asegurar que el DAO se obtenga solo cuando se necesite
+    private QueueItemDao getQueueItemDao() {
+        if (queueItemDao == null) {
+            // Si la app despertó en segundo plano y StartVar no se ha inicializado, lo forzamos
+            if (StartVar.appDBall == null) {
+                Log.w("Queue", "La BD en StartVar es null. Inicializando contenedores...");
+                StartVar.setAllListDB();
+            }
+            queueItemDao = StartVar.appDBall.daoQueue();
+        }
+        return queueItemDao;
     }
 
     // Encolar con mSend = 2 por defecto
@@ -63,7 +73,9 @@ public class GenericQueue {
                     return;
                 }
 
-                queueItemDao.insert(item);
+                getQueueItemDao().insert(item);
+
+
 
                 // Sincronización con Drive
                 synchronizeCheck();
@@ -83,9 +95,55 @@ public class GenericQueue {
         });
     }
 
+    public void enqueueList(List<Object> objList) {
+        enqueueList(objList, 2);
+    }
+
+    public void enqueueList(List<Object> objList, int mSend) {
+        if (objList == null || objList.isEmpty()) {
+            return;
+        }
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                AuthState authState = DriveManager.getAuthState();
+                if (authState == null || !authState.isAuthorized()) {
+                    Log.w("Queue", "No autorizado en Google Drive. No se inserta la lista.");
+                    return;
+                }
+
+                long baseOrder = System.currentTimeMillis();
+
+                // Convertir y guardar secuencialmente en la base de datos
+                for (int i = 0; i < objList.size(); i++) {
+                    Object objeto = objList.get(i);
+                    String json = gson.toJson(objeto);
+                    String tipoClase = objeto.getClass().getName();
+
+                    // Sumamos el índice para mantener el orden exacto de llegada
+                    QueueItem item = new QueueItem(json, tipoClase, baseOrder + i);
+                    getQueueItemDao().insert(item);
+                }
+
+                // Sincronización con Drive
+                synchronizeCheck();
+
+                // Pasar al hilo principal para actualizar memoria e iniciar Workers
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    queue.addAll(objList);
+                    Log.d("Queue", objList.size() + " objetos añadidos a la memoria.");
+
+                    startUsuarioQueue(mSend);
+                });
+
+            } catch (Exception e) {
+                Log.e("Queue", "Error al procesar lista en cola", e);
+            }
+        });
+    }
     public void loadQueueFromDatabase(int send) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            List<QueueItem> items = queueItemDao.getAllQueueItems();
+            List<QueueItem> items = getQueueItemDao().getAllQueueItems();
 
             queue.clear();
 
@@ -116,7 +174,7 @@ public class GenericQueue {
     private void synchronizeCheck() {
         DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        StartVar.mWorkResult = new SetWorkResult(lifecycle, executorService, manager);
+        StartVar.mWorkResult = new SetWorkResult(androidx.lifecycle.ProcessLifecycleOwner.get(), executorService, manager);
         manager.dataSynchronizeCheck();
     }
 
@@ -139,14 +197,14 @@ public class GenericQueue {
 
         WorkManager.getInstance(context)
                 .getWorkInfoByIdLiveData(workRequest.getId())
-                .observe(lifecycle, workInfo -> {
+                .observe(androidx.lifecycle.ProcessLifecycleOwner.get(), workInfo -> {
                     if (workInfo != null && workInfo.getState().isFinished()) {
                         if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
                             queue.poll();
 
-                            QueueItem queueItem = queueItemDao.getFirstQueueItem();
+                            QueueItem queueItem = getQueueItemDao().getFirstQueueItem();
                             if (queueItem != null) {
-                                queueItemDao.delete(queueItem);
+                                getQueueItemDao().delete(queueItem);
                             }
 
                             processNext(sendOpt);
@@ -177,7 +235,7 @@ public class GenericQueue {
 
     public void clear() {
         queue.clear();
-        queueItemDao.deleteAll();
+        getQueueItemDao().deleteAll();
     }
 
     public void poll() {

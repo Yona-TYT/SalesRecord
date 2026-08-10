@@ -4,6 +4,8 @@ package com.example.salesrecord.utls;
 import android.text.InputType;
 import android.widget.EditText;
 
+import java.text.Normalizer;
+
 public class InputHelper {
 
     // Constantes para identificar los tipos de entrada de forma clara
@@ -78,5 +80,25 @@ public class InputHelper {
         }
 
         return TYPE_UNKNOWN;
+    }
+
+    /**
+     * Cleans text by converting accented characters to standard letters
+     * and removing all special symbols, keeping only alphanumeric characters.
+     */
+    public static String sanitizeText(String originalText) {
+        if (originalText == null) {
+            return "";
+        }
+
+        // 1. Separate accents from letters (e.g., 'á' becomes 'a' + '´')
+        String normalizedText = Normalizer.normalize(originalText, Normalizer.Form.NFD);
+
+        // 2. Remove all standalone accent marks using Unicode blocks regex
+        String textWithoutAccents = normalizedText.replaceAll("\\p{M}", "");
+
+        // 3. Keep ONLY standard English letters and numbers
+        // Note: Add a space inside the brackets "[^a-zA-Z0-9 ]" if you want to keep spaces
+        return textWithoutAccents.replaceAll("[^a-zA-Z0-9]", "");
     }
 }

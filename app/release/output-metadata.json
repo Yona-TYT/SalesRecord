@@ -12,8 +12,8 @@
       "filters": [],
       "attributes": [],
       "versionCode": 1,
-      "versionName": "2026.08.07",
-      "outputFile": "Registro_Ventas-V2026.08.07.apk"
+      "versionName": "2026.08.09",
+      "outputFile": "Registro_Ventas-V2026.08.09.apk"
     }
   ],
   "elementType": "File",
@@ -22,14 +22,14 @@
       "minApi": 28,
       "maxApi": 30,
       "baselineProfiles": [
-        "baselineProfiles/1/Registro_Ventas-V2026.08.07.dm"
+        "baselineProfiles/1/Registro_Ventas-V2026.08.09.dm"
       ]
     },
     {
       "minApi": 31,
       "maxApi": 2147483647,
       "baselineProfiles": [
-        "baselineProfiles/0/Registro_Ventas-V2026.08.07.dm"
+        "baselineProfiles/0/Registro_Ventas-V2026.08.09.dm"
       ]
     }
   ],

@@ -133,9 +133,9 @@ public class CalendUtls {
      * según el tipo de comparación solicitado.
      *
      * @param mContext Contexto de la aplicación.
-     * @param compareMode Modo de comparación: COMPARE_BY_DAY_MONTH_YEAR, COMPARE_BY_MONTH_YEAR o COMPARE_BY_YEAR.
+     * @param compareMode Modo de comparación: DAY_MONTH_YEAR, MONTH_YEAR o BY_YEAR.
      */
-    public void addCurrentDate(Context mContext, int compareMode) {
+    public static Fecha getAndCreateDate(Context mContext, int compareMode) {
         DaoDat daoFecha = StartVar.appDBall.daoDat();
         List<Fecha> listFecha = daoFecha.getUsers();
         boolean exists = false;
@@ -152,7 +152,9 @@ public class CalendUtls {
         // 2. Instancia reutilizable en UTC para el bucle
         Calendar calItem = Calendar.getInstance(localZone);
 
+        Fecha mF = null;
         for (Fecha d : listFecha) {
+            mF = d;
             calItem.setTimeInMillis(d.date);
 
             int itemDay = calItem.get(Calendar.DAY_OF_MONTH);
@@ -186,7 +188,7 @@ public class CalendUtls {
 
         // Si ya existe registro bajo ese criterio, detenemos la inserción
         if (exists) {
-            return;
+            return mF;
         }
 
         // Registro de la nueva fecha si no hubo coincidencias
@@ -198,6 +200,8 @@ public class CalendUtls {
 
         // Recarga la lista de la DB
         StartVar.getFecListDB();
+
+        return obj;
     }
 
     public static boolean isSameMonth(long date1, long date2) {

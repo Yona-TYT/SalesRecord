@@ -10,24 +10,24 @@ public class Cliente {
     public long uid;
     public String cliente;
     public String nombre;
-    public String alias;
+    public String iduser;
     public String defaulacc;
     public Integer priority;
-    public String fecha;
+    public Long fecha;
     public Float level;
-    public String ulfech;
+    public Long ulfech;
     public Integer oper;
     public String debe;
     public String bits;
 
-    public Cliente(@NonNull String cliente, String nombre, String alias, String defaulacc,
-                   Integer priority, String fecha, Float level, String ulfech,
+    public Cliente(@NonNull String cliente, String nombre, String iduser, String defaulacc,
+                   Integer priority, Long fecha, Float level, Long ulfech,
                    Integer oper, String bits
             )
     {
         this.cliente = cliente;
         this.nombre = nombre;
-        this.alias = alias;
+        this.iduser = iduser;
         this.defaulacc = defaulacc;
         this.priority = priority;
         this.fecha = fecha;

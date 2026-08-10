@@ -27,6 +27,7 @@ public class GlobalData {
 
     private static GlobalData instance;
     private final Context context;
+    private GenericQueue genericQueue;
 
     // Variables globales
 
@@ -42,7 +43,7 @@ public class GlobalData {
     public Article currArt = null;
     public String currSalId = "";
 
-    public List<String> unitList = Arrays.asList("", "kg", "L", "m", "cm", "?", "?", "?");
+    public List<String> unitList = Arrays.asList("uds.", "kg", "L", "m", "cm", "?", "?", "?");
 
     public List<String> categ = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
 
@@ -69,28 +70,17 @@ public class GlobalData {
 
     public int optCalc = 0;
 
-//    public static List<String[]> csvList = new ArrayList<>();
-
-    //Todas las listas----------------------------------------------
-//    public  List<Article> listacc =  new ArrayList<>();
-//    public  List<Cliente> listclt =  new ArrayList<>();
-//    public  List<Fecha> listfec =  new ArrayList<>();
-//    public  List<Sale> listpay = new ArrayList<>();
-//    public  List<Deuda> listdeb = new ArrayList<>();
-//    // DB
-//    public  AllDao appDBall;
-//
-//    public int sendDate = 0;
-
-//    public static Activity mActivity;
-//    public static Activity reloadActivity;
-//    public GenericQueue genericQueue;
-//    public SetWorkResult mWorkResult = null;
-//    public LifecycleOwner mLifecycle = null;
-
 
     private GlobalData(Context context) {
         this.context = AppContextProvider.getContext(); // Garantizamos ApplicationContext
+        this.genericQueue = new GenericQueue(this.context);
+    }
+
+    public GenericQueue getGenericQueue() {
+        if (this.genericQueue == null) {
+            this.genericQueue = new GenericQueue(this.context != null ? this.context : AppContextProvider.getContext());
+        }
+        return this.genericQueue;
     }
 
     /**
@@ -118,88 +108,6 @@ public class GlobalData {
             instance = new GlobalData(context);
         }
     }
-
-//    //------------------------------------------ Para guardar las LISTAS
-//    public void setAllListDB(){
-//        //Instancia de la base de datos
-//        this.appDBall = Room.databaseBuilder( AppContextProvider.getContext(), AllDao.class, this.nameDB).allowMainThreadQueries().build();
-//
-//        this.listacc = this.appDBall.daoAtr().getUsers();
-//        this.listclt = this.appDBall.daoClt().getUsers();
-//        this.listdeb = this.appDBall.daoDeb().getUsers();
-//        this.listfec = this.appDBall.daoDat().getUsers();
-//        this.listpay = this.appDBall.daoSal().getUsers();
-//
-//        //Instancia de la base de datos para Config
-//        this.mConfigDB = this.appDBall.daoCfg().getUsers(this.mConfID);
-//
-//        if(this.mConfigDB == null){
-//            long currDate = 0;
-//            long currTime = 0;
-//            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-//                currDate = java.time.Instant.now().toEpochMilli();
-//                currTime = System.currentTimeMillis();
-//            }
-//
-//            // Generar UUID
-//            UUID uuid = UUID.randomUUID();
-//            // Convertir UUID a bytes (16 bytes)
-//            ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-//            byteBuffer.putLong(uuid.getMostSignificantBits());
-//            byteBuffer.putLong(uuid.getLeastSignificantBits());
-//
-//            // Codificar en Base64 (sin padding para ahorrar espacio)
-//            String textID = "";
-//            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-//                textID = Base64.getUrlEncoder().withoutPadding().encodeToString(byteBuffer.array());
-//            }
-//
-//            //configDatabase.daoConf().insertUser();
-//            Conf obj = new Conf(this.mConfID, mDateVersion, textID, "",0d, currDate, currTime, 0, 0, 0, 0);
-//            this.appDBall.daoCfg().insertUser(obj);
-//        }
-//    }
-//
-//    public void getConfigDB(){
-//        //Instancia de la base de datos
-//        this.mConfigDB =  this.appDBall.daoCfg().getUsers(this.mConfID);
-//    }
-//
-//
-//    public void getAccListDB(){
-//        //Instancia para obtener Cuentas
-//        this.listacc =  this.appDBall.daoAtr().getUsers();
-//    }
-//    //----------------------------------------------------------------------------------
-//
-//    public void getCltListDB(){
-//        //Instancia para obtener Clientes
-//        this.listclt =  this.appDBall.daoClt().getUsers();
-//    }
-//    //----------------------------------------------------------------------------------
-//
-//    public void getFecListDB(){
-//        //Instancia para obtener Fechas
-//        this.listfec =  this.appDBall.daoDat().getUsers();
-//    }
-//
-//    public List<String> getImgList(){
-//        ArrayList<String> list = new ArrayList<>();
-//        List<Sale> payList =  this.appDBall.daoSal().getUsers();
-//        for (Sale mU : payList) {
-//            list.add(mU.imagen);
-//        }
-//        return list;
-//    }
-//
-//    public void setCsvList(List<String[]> mList){
-//        this.csvList.clear();
-//        this.csvList = mList;
-//    }
-//
-//    public void setmActivity(Activity activity){
-//        this.mActivity = activity;
-//    }
 
 
     public void setCurrArt(Article obj){

@@ -98,9 +98,6 @@ public class Preloader extends AppCompatActivity {
         //Satrted variables
         Basic mBasic = new Basic(getApplicationContext());
 
-        // Inicializar la variable para las colas
-        StartVar.genericQueue = new GenericQueue(StartVar.mLifecycle, AppContextProvider.getContext());
-
         DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         SetWorkResult mWorkResult = new SetWorkResult(StartVar.mLifecycle, executorService, manager);

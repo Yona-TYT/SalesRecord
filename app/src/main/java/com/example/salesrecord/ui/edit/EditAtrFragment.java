@@ -363,7 +363,7 @@ public class EditAtrFragment extends Fragment {
                 daoArt.update(crrArt);
 
                 //Encola al elemento a sincronizar
-                StartVar.genericQueue.enqueue(crrArt, 3);
+                GlobalData.getInstance(getContext()).getGenericQueue().enqueue(crrArt, 3);
 
                 //Limpia y Desactiva los inputs
                 mInput1.setText("");

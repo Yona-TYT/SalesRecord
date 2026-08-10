@@ -82,13 +82,12 @@ public class FullEditActivity extends AppCompatActivity {
 
     private Context contex;
 
-    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
-
     private FilesManager mFileM = new FilesManager();
     private String sImage = "";
     private Uri oldFile = null;
     private Uri currUri = null;
 
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +144,8 @@ public class FullEditActivity extends AppCompatActivity {
         spinL2 = glData.unitList;
 
         if(crrArt != null){
+
+            FilesManager.setImageView(crrArt.image, imageView);
 
             //Set Picker and Camera Launchers
             Launcher mLaunch = new Launcher(this.getActivityResultRegistry(), this.getApplicationContext(), new Launcher.OnCapture() {
@@ -312,7 +313,7 @@ public class FullEditActivity extends AppCompatActivity {
                     //Basic.msg(daoArt.getUsers(crrArt.uid).nombre, true);
 
                     //Encola al elemento a sincronizar
-                    StartVar.genericQueue.enqueue(crrArt, 3);
+                    GlobalData.getInstance(contex).getGenericQueue().enqueue(crrArt, 3);
 
                     finish();
                 }

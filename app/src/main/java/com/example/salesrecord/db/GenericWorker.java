@@ -34,9 +34,10 @@ import java.time.LocalTime;
 
 public class GenericWorker extends Worker {
     private static final String TAG = "GenericWorker";
-
+    private Context context;
     public GenericWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
+        this.context = context;
     }
 
     @NonNull
@@ -66,7 +67,7 @@ public class GenericWorker extends Worker {
                 DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
                 manager.uploadDataBase();
                 //Basic.msg("Aqui hay!! :) : "+);
-                StartVar.genericQueue.clear();
+                GlobalData.getInstance(context).getGenericQueue().clear();
             }
 
             else if (mSend == 2 || mSend == 3) {
@@ -117,7 +118,7 @@ public class GenericWorker extends Worker {
                     DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
                     manager.uploadDataBase();
                     //Basic.msg("Aqui hay!! :) : "+gson.fromJson(queueItem.usuarioJson, Usuario.class).nombre);
-                    StartVar.genericQueue.clear();
+                    GlobalData.getInstance(context).getGenericQueue().clear();
 
                     if(mSend == 2){
                         Intent mIntent = new Intent(AppContextProvider.getContext(), StartVar.mActivity.getClass());

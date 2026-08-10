@@ -40,12 +40,16 @@ import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentHomeBinding;
 import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.DatabaseUtils;
+import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
+import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
@@ -55,6 +59,7 @@ import com.example.salesrecord.utls.SharedViewModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -811,9 +816,28 @@ public class HomeFragment extends Fragment {
             String strNr = " nr"+cltNr + (" (" + CalendUtls.getShortDate(currDate) + ")");
             strClt = "Cliente" + strNr ;
 
-            if(!mInput3.getText().toString().isEmpty()) {
+            String strRawName = mInput3.getText().toString();
+            if(!strRawName.isEmpty()) {
 
-                strClt = mInput3.getText().toString()+strNr;
+                strClt = strRawName+strNr;
+            }
+
+            Cliente mCl = null;
+            DaoClt daoClt = StartVar.appDBall.daoClt();
+            if(!strRawName.isEmpty()) {
+                String idUser = InputHelper.sanitizeText(strRawName);
+                boolean b = true;
+                for (Cliente cl : daoClt.getUsers()){
+                    if(cl.iduser.equals(idUser)){
+                        b = false;
+                        mCl = cl;
+                        break;
+                    }
+                }
+                if(b){
+                String cltId = DatabaseUtils.generateId("cltID", daoClt);
+                mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 0, "");
+                }
             }
 
             String strId = DatabaseUtils.generateId("salID", daoSal);
@@ -841,6 +865,12 @@ public class HomeFragment extends Fragment {
 
                 artList.add(art);
             }
+
+            if (mCl != null){
+                strClt = mCl.cliente;
+                daoClt.insertUser(mCl);
+            }
+
             Sale mObj = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
                     total, StartVar.mDollar, currSel1, "", currTime, "@null", 0, "", currDate
@@ -859,8 +889,11 @@ public class HomeFragment extends Fragment {
             daoArt.updateUser(artList);
 
             //Se actualiza la lista de fechas si esta no existe
-            CalendUtls calendUtls = new CalendUtls();
-            calendUtls.addCurrentDate(contex, 0);
+           CalendUtls.getAndCreateDate(contex, 0);
+
+//            Fecha objB = CalendUtls.getAndCreateDate(contex,0);
+//            List<Object> mList = Arrays.asList(mF, objB);
+//            GlobalData.getInstance(getContext()).getGenericQueue().enqueueList(mList, 3);
 
             return true;
 

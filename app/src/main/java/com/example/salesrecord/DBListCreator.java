@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -184,12 +183,12 @@ public class DBListCreator extends AppCompatActivity {
 
             txList[0] = myClt.cliente;
             txList[1] = myClt.nombre;
-            txList[2] = myClt.alias;
+            txList[2] = myClt.iduser;
             txList[3] = myClt.defaulacc;
             txList[4] = myClt.priority.toString();
-            txList[5] = myClt.fecha;
+            txList[5] = String.valueOf(myClt.fecha);
             txList[6] = myClt.level.toString();
-            txList[7] = myClt.ulfech;
+            txList[7] = String.valueOf(myClt.ulfech);
             txList[8] = myClt.oper.toString();
             txList[9] = myClt.bits;
 
@@ -198,7 +197,7 @@ public class DBListCreator extends AppCompatActivity {
             //--------------------------------------------------------
             cltLmA.add(myClt.cliente);
             cltLmB.add(myClt.nombre);
-            cltLmC.add(myClt.alias);
+            cltLmC.add(myClt.iduser);
             cltLmD.add(myClt.defaulacc);
             cltLmE.add(myClt.priority);
             cltLmF.add(myClt.fecha);
@@ -531,8 +530,8 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 else if(opt==2) {
                     Cliente obj = new Cliente(
-                            spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), spl[5], Float.parseFloat(spl[6]),
-                            spl[7], Integer.parseInt(spl[8]), spl[9]
+                            spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
+                            Long.parseLong(spl[7]), Integer.parseInt(spl[8]), spl[9]
                     );
                     daoCliente.insertUser(obj);
                 }

@@ -375,7 +375,7 @@ public class SaleMainAdapter extends BaseAdapter  {
         }
 
         // Textos
-        holder.view1.setText(item.name);
+        holder.view1.setText(item.name+" ("+item.desc+")");
         holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
 
 
