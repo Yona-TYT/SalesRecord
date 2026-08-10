@@ -115,6 +115,11 @@ public class SaleMainAdapter extends BaseAdapter  {
                     ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
             );
         }
+       else if (item.currCount <= 3 || item.maxCount <= 3){
+            holder.layout1.setBackgroundColor(
+                    ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
+            );
+        }
         else if (pos == currPos) {
 
             holder.layout1.setBackgroundColor(
@@ -375,7 +380,8 @@ public class SaleMainAdapter extends BaseAdapter  {
         }
 
         // Textos
-        holder.view1.setText(item.name+" ("+item.desc+")");
+        String desc = item.desc.isEmpty() ? "" : " ("+item.desc+")";
+        holder.view1.setText(item.name+desc);
         holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
 
 

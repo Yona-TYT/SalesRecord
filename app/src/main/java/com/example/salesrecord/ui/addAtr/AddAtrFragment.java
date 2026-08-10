@@ -1,12 +1,15 @@
 package com.example.salesrecord.ui.addAtr;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
@@ -38,6 +42,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 
 import java.io.IOException;
@@ -55,9 +60,11 @@ public class AddAtrFragment extends Fragment {
 
     private List<EditText> mInpList =  new ArrayList<>();
 
-    CurrencyEditText mInput1;
-    CurrencyEditText mInput2;
-    CurrencyEditText mInput3;
+    private CurrencyEditText mInput1;
+    private CurrencyEditText mInput2;
+    private CurrencyEditText mInput3;
+
+    private TextView viewTotal;
 
     private ImageButton mImgButt;
     private ImageView imageView;
@@ -80,7 +87,7 @@ public class AddAtrFragment extends Fragment {
     private Uri oldFile = null;
     private Uri currUri = null;
 
-    Context contex;
+    private Context contex;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -115,6 +122,8 @@ public class AddAtrFragment extends Fragment {
         mInput1 = binding.etPrecio;
         mInput2 = binding.etMargen;
         mInput3 = binding.etTotalcount;
+
+        viewTotal = binding.addTotal;
 
         mSw1 = binding.addSwBs;
 
@@ -176,6 +185,45 @@ public class AddAtrFragment extends Fragment {
                     mInput1.setCurrencySymbol("$");
                     mInput1.setText(MoneyUtls.getMaskConv(mInput1.getNumericValue(), 0, false));
                 }
+            }
+        });
+
+        mInput1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                double price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                double clcPrice = MathUtls.addPercentage(price, mInput2.getNumericValue());
+                viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        mInput2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                double price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                double clcPrice = MathUtls.addPercentage(price, mInput2.getNumericValue());
+                viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
 

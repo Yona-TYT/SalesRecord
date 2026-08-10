@@ -109,6 +109,11 @@ public class SummaryAdapter extends BaseAdapter  {
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
                 );
             }
+            else if (item.currCount <= 3 || item.maxCount <= 3){
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
+                );
+            }
             else {
                 holder.layout1.setBackgroundColor(
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.normal_background)
@@ -119,8 +124,9 @@ public class SummaryAdapter extends BaseAdapter  {
 
         // Textos
         String off = item.status == 0 ? "(RETIRADO) ":"";
+        String desc = item.desc.isEmpty() ? "" : " ("+item.desc+")";
 
-        holder.view1.setText(off+item.name);
+        holder.view1.setText(off+item.name+desc);
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
         Double total = (clcPrice*item.saleCount);

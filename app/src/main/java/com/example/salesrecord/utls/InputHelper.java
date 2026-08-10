@@ -99,6 +99,6 @@ public class InputHelper {
 
         // 3. Keep ONLY standard English letters and numbers
         // Note: Add a space inside the brackets "[^a-zA-Z0-9 ]" if you want to keep spaces
-        return textWithoutAccents.replaceAll("[^a-zA-Z0-9]", "");
+        return textWithoutAccents.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
     }
 }

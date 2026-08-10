@@ -7,7 +7,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,6 +41,7 @@ import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
@@ -59,6 +63,8 @@ public class FullEditActivity extends AppCompatActivity {
     private CurrencyEditText mInput5;
     private EditText mInput6;
     private EditText mInput7;
+
+    private TextView viewTotal;
 
     private SwitchCompat mSw1;
     private boolean swCurrency = false;
@@ -122,6 +128,8 @@ public class FullEditActivity extends AppCompatActivity {
         mInput5 = findViewById(R.id.full_et_totalcount);
         mInput6 = findViewById(R.id.full_et_isopen);
         mInput7 = findViewById(R.id.full_et_caduca);
+
+        viewTotal = findViewById(R.id.edit_total);
 
         mSw1 = findViewById(R.id.edit_sw_bs);
 
@@ -210,6 +218,47 @@ public class FullEditActivity extends AppCompatActivity {
                     }
                 }
             });
+
+            mInput3.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
+            mInput4.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
 
             //Para el selector de tipo de producto
             mSpin1.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL1));

@@ -17,6 +17,7 @@
 
 
     <color name="alert_background">#9B0000</color>
+    <color name="warning_background">#F4B400</color>
     <color name="retire_background">#4E5D6C</color>
     <color name="selected_background">#334169E1</color>
     <color name="normal_background">#2A2A2A</color>

@@ -44,7 +44,7 @@
                 android:id="@+id/full_et_nombre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textPersonName|textCapWords"
                 android:hint="Nombre del artículo"
                 android:layout_marginBottom="16dp"
                 android:tag="Campo de nombre no debe estar Vacio!"
@@ -63,7 +63,7 @@
                 android:id="@+id/full_et_descr"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
+                android:inputType="textPersonName|textCapWords"
                 android:lines="1"
                 android:hint="Descripción del artículo"
                 android:layout_marginBottom="24dp" />
@@ -148,23 +148,51 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
-            <com.example.salesrecord.CurrencyEditText
-                android:id="@+id/full_et_margen"
+            <!-- Fila horizontal: TextInput + Button -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:hint="0,00 %"
-                android:focusable="true"
-                android:imeOptions="actionDone"
-                android:maxLines="1"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                app:localeTag="ES"
-                app:maxNumberOfDecimalDigits="2"
-                app:currencySymbol="%"
-                app:currencySymbolSuffix="true"
+                <com.example.salesrecord.CurrencyEditText
+                    android:id="@+id/full_et_margen"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_h1"
+                    android:layout_weight="0.6"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00 %"
+                    android:focusable="true"
+                    android:imeOptions="actionDone"
+                    android:maxLines="1"
 
-                />
+                    app:localeTag="ES"
+                    app:maxNumberOfDecimalDigits="2"
+                    app:currencySymbol="%"
+                    app:currencySymbolSuffix="true"
+                    app:maxValue="100"
+
+                    />
+
+                <TextView
+                    android:id="@+id/edit_total"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_h1"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:background="?android:attr/editTextBackground"
+                    android:gravity="center_vertical"
+
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text=""
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:enabled="true"
+                    android:visibility="visible" />
+            </LinearLayout>
 
             <!-- ========================================= -->
             <!-- SELECTORES / ENTEROS (inputType="number") -->
@@ -195,6 +223,8 @@
                 app:maxNumberOfDecimalDigits="2"
                 app:currencySymbol="uds."
                 app:currencySymbolSuffix="true"
+                app:maxValue="100"
+
                 />
 
             <TextView

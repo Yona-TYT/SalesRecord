@@ -18,6 +18,7 @@
 
     <!-- Alerta: sin cambios -->
     <color name="alert_background">#ff2d06</color>
+    <color name="warning_background">#F4B400</color>
     <color name="alert_text">#FFFFFF</color>
 
     <!-- Fondos de selección / estado -->
