@@ -41,8 +41,8 @@ import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentHomeBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
+import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.DatabaseUtils;
-import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
@@ -59,7 +59,6 @@ import com.example.salesrecord.utls.SharedViewModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -70,6 +69,7 @@ public class HomeFragment extends Fragment {
     // DB
     private DaoSal daoSal;
     private DaoArt daoArt;
+    private Conf mConf;
     private List<Article> mArtList =  new ArrayList<>();
 
     private CurrencyEditText mInput1;
@@ -244,6 +244,7 @@ public class HomeFragment extends Fragment {
         daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
         mArtList = daoArt.getUsers();
+        mConf = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
 
 
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
@@ -280,13 +281,44 @@ public class HomeFragment extends Fragment {
                 isSrch = true;
                 binding.topPanel.setVisibility(View.GONE);
                 searchBar.setVisibility(View.VISIBLE);
+
+                // 1. Desplegar el SearchView (si estuviera colapsado por un icono)
+                searchBar.setIconified(false);
+
+                // 2. Esperar a que la interfaz se dibuje para solicitar el foco y el teclado
+                searchBar.post(() -> {
+                    searchBar.requestFocus();
+
+                    // 3. Forzar la apertura del teclado virtual
+                    InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        // Buscamos el elemento interno del SearchView que recibe el texto
+                        int editTextId = searchBar.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
+                        View searchEditText = searchBar.findViewById(editTextId);
+
+                        if (searchEditText != null) {
+                            searchEditText.requestFocus();
+                            imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
+                        } else {
+                            // Respaldo por si no encuentra el ID interno en alguna capa de personalización
+                            imm.showSoftInput(searchBar, InputMethodManager.SHOW_IMPLICIT);
+                        }
+                    }
+                });
                 return;
             }
 
             // Quiere cerrar (visible == false)
             isSrch = false;
+            searchBar.clearFocus(); // Oculta el foco al cerrar
             searchBar.setVisibility(View.GONE);
             binding.topPanel.setVisibility(View.VISIBLE);
+
+            // Opcional: Ocultar el teclado explícitamente al cerrar la barra
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(searchBar.getWindowToken(), 0);
+            }
         });
 
 
@@ -338,7 +370,7 @@ public class HomeFragment extends Fragment {
                 if(currObj != null) {
                     if (currObj.maxCount > 0) {
                         mInput2.setError(null);
-                        double price = MathUtls.addPercentage(currObj.price, currObj.margen);
+                        double price = MathUtls.addPercentage(currObj.price, currObj.margen+mConf.margen);
                         double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
                         double quant = MoneyUtls.getQuantity(price, cueePrice);
@@ -454,26 +486,43 @@ public class HomeFragment extends Fragment {
             }
         });
 
+
+// 1. Listener de texto estándar corregido
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // 1. AQUÍ MANDAS A HACER LA BUSQUEDA
-                // Ejemplo: miAdaptador.filtrar(query);
-
-                // 2. OCULTAR EL TECLADO AUTOMÁTICAMENTE
+                // Ejecuta la búsqueda (incluso si viene vacía)
+                loadCatalogIntoSlot(currSlot, query != null ? query.trim() : "");
                 searchBar.clearFocus();
-
-                return true; // Retornamos true para indicarle al sistema que ya manejamos el evento
+                return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Este método se ejecuta cada vez que el usuario escribe una letra
-                // Puedes dejarlo vacío si solo buscas al presionar Enter
-                return false;
+                // Si el usuario borra manualmente hasta dejarlo vacío,
+                // forzamos la restauración inmediata de la lista completa
+                if (newText == null || newText.trim().isEmpty()) {
+                    loadCatalogIntoSlot(currSlot, "");
+                }
+                return true;
             }
         });
 
+// 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
+        int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
+        View searchButton = searchBar.findViewById(searchButtonId);
+
+        if (searchButton != null) {
+            searchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String query = searchBar.getQuery().toString();
+                    // Forzamos la carga del catálogo con lo que tenga (cadena vacía o texto)
+                    loadCatalogIntoSlot(currSlot, query.trim());
+                    searchBar.clearFocus();
+                }
+            });
+        }
         //----------------------------------------------------
 
         //Para la lista de todos los productos
@@ -769,7 +818,7 @@ public class HomeFragment extends Fragment {
 
         double total = 0.0;
         for (Obj obj : list) {
-            double price = MathUtls.addPercentage(obj.price, obj.margen);
+            double price = MathUtls.addPercentage(obj.price, obj.margen+mConf.margen);
             total = total + ( price * obj.saleCount);
         }
         return total;
@@ -788,7 +837,7 @@ public class HomeFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen, art.uid
+                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen+mConf.margen, art.uid
         );
 
         return mObj;
@@ -851,7 +900,7 @@ public class HomeFragment extends Fragment {
             List<Article> artList = new ArrayList<>();
 
             for (Obj o : objListSal){
-                double price = MathUtls.addPercentage(o.price, o.margen);
+                double price = MathUtls.addPercentage(o.price, o.margen+mConf.margen);
                 total = total + ( price * o.saleCount);
                 strArtList.append("|").append(o.strId);
                 strCountList.append("|").append(o.saleCount);
@@ -940,6 +989,11 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadCatalogIntoSlot(int slot) {
+        loadCatalogIntoSlot( slot, "");
+    }
+
+    private void loadCatalogIntoSlot(int slot, String str) {
+        str = InputHelper.cleanText(str);
         if (slot < 0 || slot > 2) return;
         if (allSlots[slot] == null) allSlots[slot] = new ArrayList<>();
         if (salSlots[slot] == null) salSlots[slot] = new ArrayList<>();
@@ -950,7 +1004,7 @@ public class HomeFragment extends Fragment {
         if (mArtList == null) return;
 
         for (Article obj : mArtList) {
-            if (obj.staus > 0) {
+            if (obj.staus > 0 && InputHelper.hasWordMatch(obj.nombre+obj.descr, str)) {
                 allSlots[slot].add(setGalleryArray(obj));
             }
         }

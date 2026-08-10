@@ -6,12 +6,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SearchView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -25,11 +30,15 @@ import com.example.salesrecord.activitys.FullEditActivity;
 import com.example.salesrecord.adapters.SummaryAdapter;
 import com.example.salesrecord.databinding.FragmentEditBinding;
 import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
+import com.example.salesrecord.utls.SharedViewModel;
 import com.example.salesrecord.utls.StringsUtls;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
@@ -52,10 +61,14 @@ public class EditAtrFragment extends Fragment {
     private List<Obj> objListSal = new ArrayList<>();
     private int currSel1 = 0;
 
+    private SearchView searchBar;
+    private String strValidate = "";
+
     private TextInputEditText mInput1;
     private CurrencyEditText mInput2;
     private CurrencyEditText mInput3;
     private CurrencyEditText mInput4;
+    private CurrencyEditText glMarg;
 
     private TextInputLayout mTil1;
     private TextInputLayout mTil2;
@@ -69,8 +82,13 @@ public class EditAtrFragment extends Fragment {
     private Button acepButt;
 
     private Article crrArt;
+    private Conf mConf;
+    private DaoCfg daoCfg;
 
     private Context contex;
+
+    private SharedViewModel sharedViewModel;
+    private boolean isMarg = false;
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
@@ -83,10 +101,13 @@ public class EditAtrFragment extends Fragment {
 
         mListView = binding.editViewList;
 
+        searchBar = binding.searchBar;
+
         mInput1 = binding.etNombre;
         mInput2 = binding.etMonto;
         mInput3 = binding.etReponer;
         mInput4 = binding.etMargen;
+        glMarg = binding.editGlmarg;
 
         mTil1 = binding.tilReponer;
         mTil2 = binding.tilMargen;
@@ -106,24 +127,20 @@ public class EditAtrFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        swCurrency = false;
-        mSw1.setChecked(false);
-
         if(crrArt != null) {
 
             objListSal.clear();
 
             mArtList = daoArt.getUsers();
 
-            for (Article obj : mArtList) {
-                objListSal.add(setGalleryArray(obj));
-            }
-            mAdapter1.notifyDataSetChanged();
+            reloadList();
 
             if (!objListSal.isEmpty() && currSel1 < objListSal.size()) {
 
                 // Mueve el scroll visualmente hacia el ítem
                 mListView.setSelection(currSel1);
+
+                mSw1.setChecked(true);
 
                 // SIMULA EL CLIC: Ejecuta el código dentro de tu onItemClick
                 mListView.performItemClick(
@@ -155,9 +172,119 @@ public class EditAtrFragment extends Fragment {
 
         //Para la lista de Articulos ----------------------------
         //Para la lista de todos los productos
-        for (Article obj : mArtList) {
-            objListSal.add(setGalleryArray(obj));
+        reloadList();
+
+        daoCfg = StartVar.appDBall.daoCfg();
+        mConf = daoCfg.getUsers(StartVar.mConfID);
+
+        if(mConf != null) {
+            glMarg.setText(Basic.setFormatterEs(mConf.margen));
         }
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getMargToggle().observe(getViewLifecycleOwner(), visible -> {
+            if (visible == null) return;
+
+            // Quiere abrir la calculadora
+            if (visible) {
+                isMarg = true;
+                binding.searchBar.setVisibility(View.GONE);
+                binding.topPanel.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            // Quiere cerrar (visible == false)
+            binding.searchBar.setVisibility(View.VISIBLE);
+            binding.topPanel.setVisibility(View.GONE);
+        });
+
+        // Configuramos el listener para capturar el botón "Listo" / "Enter" del teclado
+        glMarg.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                // Detecta el botón 'Listo' (actionDone) o la presión física de la tecla Enter
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                        (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+
+
+                    // 3. Ocultamos el teclado de la pantalla
+                    InputMethodManager imm = (InputMethodManager) glMarg.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(glMarg.getWindowToken(), 0);
+                    }
+
+                    mConf.margen = glMarg.getNumericValue();
+                    daoCfg.insertUser(mConf);
+
+                    //Encola al elemento a sincronizar
+                    GlobalData.getInstance(getContext()).getGenericQueue().enqueue(mConf, 3);
+
+                    return true;
+
+                }
+                return false; // Pasa el evento al sistema si no es la tecla Enter
+            }
+        });
+
+        glMarg.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    mConf.margen = glMarg.getNumericValue();
+                    daoCfg.insertUser(mConf);
+
+                    //Encola al elemento a sincronizar
+                    GlobalData.getInstance(getContext()).getGenericQueue().enqueue(mConf, 3);
+                }
+            }
+        });
+
+
+        // 1. Listener de texto estándar corregido
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // Ejecuta la búsqueda (incluso si viene vacía)
+                if(query != null) {
+                    strValidate = query.trim();
+                }
+                else {
+                    strValidate = "";
+
+                }
+                reloadList();
+                searchBar.clearFocus();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // Si el usuario borra manualmente hasta dejarlo vacío,
+                // forzamos la restauración inmediata de la lista completa
+                if (newText == null || newText.trim().isEmpty()) {
+                    strValidate = "";
+                    reloadList();
+                }
+                return true;
+            }
+        });
+
+        // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
+        int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
+        View searchButton = searchBar.findViewById(searchButtonId);
+
+        if (searchButton != null) {
+            searchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String query = searchBar.getQuery().toString();
+                    // Forzamos la carga del catálogo con lo que tenga (cadena vacía o texto)
+                    strValidate = query.trim();
+                    reloadList();
+                    searchBar.clearFocus();
+                }
+            });
+        }
+        //----------------------------------------------------
 
         mAdapter1 = new SummaryAdapter(contex, objListSal);
         //-----------------------------------------------------
@@ -176,6 +303,10 @@ public class EditAtrFragment extends Fragment {
 
                 mTil1.setHint("Reponer");
                 mTil2.setHint("Ganancia");
+
+                mSw1.setChecked(false);
+                swCurrency = false;
+                mInput2.setCurrencySymbol("$");
 
                 currSel1 = position;
 
@@ -238,7 +369,7 @@ public class EditAtrFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
                     double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue()+mConf.margen);
                     mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
             }
@@ -278,7 +409,7 @@ public class EditAtrFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
                     double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue()+mConf.margen);
 
                     mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
@@ -330,7 +461,7 @@ public class EditAtrFragment extends Fragment {
                 }
 
 
-                String nombre = Objects.requireNonNull(mInput1.getText()).toString();
+                String nombre = InputHelper.cleanText(Objects.requireNonNull(mInput1.getText()).toString());
 
                 if(nombre.isEmpty()){
                     Basic.msg("Nombre no debe estar VACIO!");
@@ -393,18 +524,27 @@ public class EditAtrFragment extends Fragment {
 
                 mArtList = daoArt.getUsers();
 
-                objListSal.clear();
-
-                mAdapter1.setSelectedPos(-1);
-
-                //Para la lista de Articulos ----------------------------
-                //Para la lista de todos los productos
-                for (Article obj : mArtList) {
-                    objListSal.add(setGalleryArray(obj));
-                }
-                mAdapter1.notifyDataSetChanged();
+                reloadList();
             }
         });
+    }
+
+    private void reloadList(){
+        objListSal.clear();
+
+
+        //Para la lista de Articulos ----------------------------
+        //Para la lista de todos los productos
+        for (Article obj : mArtList) {
+            if(InputHelper.hasWordMatch(obj.nombre+obj.descr, strValidate) ){
+                objListSal.add(setGalleryArray(obj));
+            }
+        }
+
+        if(mAdapter1 != null) {
+            mAdapter1.setSelectedPos(-1);
+            mAdapter1.notifyDataSetChanged();
+        }
     }
 
     private Obj setGalleryArray(Article art){

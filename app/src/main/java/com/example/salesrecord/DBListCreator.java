@@ -69,7 +69,7 @@ public class DBListCreator extends AppCompatActivity {
         //Instancia de la base de datos
         Conf mConf =  daoConf.getUsers(StartVar.mConfID);
         mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.datetasa,
-                String.valueOf(mConf.dolar), String.valueOf(mConf.date),
+                String.valueOf(mConf.dolar), String.valueOf(mConf.margen), String.valueOf(mConf.date),
                 String.valueOf(mConf.time), mConf.curr.toString(), mConf.moneda.toString(),
                 mConf.mes.toString(), mConf.show.toString(), mConf.dbg
         });
@@ -190,7 +190,7 @@ public class DBListCreator extends AppCompatActivity {
             txList[6] = myClt.level.toString();
             txList[7] = String.valueOf(myClt.ulfech);
             txList[8] = myClt.oper.toString();
-            txList[9] = myClt.bits;
+            txList[9] = String.valueOf(myClt.bits);
 
             mList.add(txList);
 
@@ -516,7 +516,17 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 if(opt==0) {
                     version = spl[1];
-                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]), version.equals("1")? spl[11]:"csv Version Vieja");
+                    if(version.equals("2")) {
+                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
+                                Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
+                                Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
+                                Integer.parseInt(spl[11]), spl[12]);
+                    }
+                    else{
+                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), 0.0,
+                                Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]),
+                                Integer.parseInt(spl[9]), Integer.parseInt(spl[10]), spl[11]);
+                    }
                 }
                 else if(opt==1){
                     Article obj = new Article(
@@ -531,7 +541,7 @@ public class DBListCreator extends AppCompatActivity {
                 else if(opt==2) {
                     Cliente obj = new Cliente(
                             spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
-                            Long.parseLong(spl[7]), Integer.parseInt(spl[8]), spl[9]
+                            Long.parseLong(spl[7]), Integer.parseInt(spl[8]), "0"
                     );
                     daoCliente.insertUser(obj);
                 }

@@ -62,8 +62,8 @@ public class SetDb {
                 if (spl.length >= 7 && "confID0".equals(spl[0])) {
                     hexID = spl[2];
                     try {
-                        remoteDate = Long.parseLong(spl[5].trim());
-                        remoteTime = Long.parseLong(spl[6].trim());
+                        remoteDate = Long.parseLong(spl[6].trim());
+                        remoteTime = Long.parseLong(spl[7].trim());
                         confLineFound = true;
                     } catch (NumberFormatException e) {
                         Basic.msg("Error: El CSV no contiene timestamps válidos");

@@ -5,6 +5,9 @@ import android.text.InputType;
 import android.widget.EditText;
 
 import java.text.Normalizer;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InputHelper {
 
@@ -46,6 +49,13 @@ public class InputHelper {
                 }
 
                 if (Double.parseDouble(cleanDigits) <= 0) {
+                    input.setError(errorMsg);
+                    return false;
+                }
+            }
+
+            if(getInputType(input) == TYPE_TEXT){
+                if(InputHelper.cleanText(input.getText().toString()).isEmpty()){
                     input.setError(errorMsg);
                     return false;
                 }
@@ -100,5 +110,47 @@ public class InputHelper {
         // 3. Keep ONLY standard English letters and numbers
         // Note: Add a space inside the brackets "[^a-zA-Z0-9 ]" if you want to keep spaces
         return textWithoutAccents.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+    }
+
+    /**
+     * Cleans text by removing accents and special characters,
+     * preserving spaces and keeping the letter 'Ñ'/'ñ' intact.
+     */
+    public static String cleanText(String originalText) {
+        if (originalText == null) return "";
+
+        // 1. Proteger Ñ/ñ con tokens que SOBREVIVEN al sanitize
+        String protectedText = originalText
+                .replace("Ñ", "XXNTILDEXX")
+                .replace("ñ", "xxntildexx");
+
+        // 2. Quitar acentos del resto (á→a, é→e, etc.)
+        String normalized = Normalizer.normalize(protectedText, Normalizer.Form.NFD);
+        String noAccents = normalized.replaceAll("\\p{M}", "");
+
+        // 3. Solo letras, números y espacios
+        String sanitized = noAccents.replaceAll("[^a-zA-Z0-9 ]", "");
+
+        // 4. Restaurar Ñ/ñ
+        return sanitized
+                .replace("XXNTILDEXX", "Ñ")
+                .replace("xxntildexx", "ñ");
+    }
+
+    public static boolean hasWordMatch(String textToValidate, String keyword) {
+        if (textToValidate == null || keyword == null || keyword.trim().isEmpty()) {
+            return true;
+        }
+
+        // SOLUCIÓN: Eliminamos los \\b de los extremos.
+        // Usamos Pattern.quote para escapar caracteres especiales de forma segura.
+        String regex = Pattern.quote(keyword.trim());
+
+        // Compilamos ignorando mayúsculas/minúsculas y con soporte Unicode para acentos
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        Matcher matcher = pattern.matcher(textToValidate);
+
+        // Devuelve true si el texto contiene esa secuencia de letras en cualquier parte
+        return matcher.find();
     }
 }

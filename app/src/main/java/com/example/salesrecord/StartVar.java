@@ -56,7 +56,7 @@ public class StartVar {
     // DB Config
     public static Conf mConfigDB;
     public static String mConfID = "confID0";
-    public static String mDateVersion = "1";
+    public static String mDateVersion = "2";
 
     // Var redundants
     public static boolean mPermiss = false;     //Permisos de gestion multimedia
@@ -145,7 +145,7 @@ public class StartVar {
             //configDatabase.daoConf().insertUser();
 
             String strDbg = "Frits Config: "+ CalendUtls.getShortDate(currDate)+" "+CalendUtls.getTime(currTime);
-            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, "",0d, currDate, currTime, 0, 0, 0, 0, strDbg);
+            Conf obj = new Conf(StartVar.mConfID, mDateVersion, textID, "",0d, 0d, currDate, currTime, 0, 0, 0, 0, strDbg);
             StartVar.appDBall.daoCfg().insertUser(obj);
         }
     }

@@ -166,6 +166,7 @@
                     android:focusable="true"
                     android:imeOptions="actionDone"
                     android:maxLines="1"
+                    android:cursorVisible="true"
 
                     app:localeTag="ES"
                     app:maxNumberOfDecimalDigits="2"

@@ -17,7 +17,6 @@ public class Cliente {
     public Float level;
     public Long ulfech;
     public Integer oper;
-    public String debe;
     public String bits;
 
     public Cliente(@NonNull String cliente, String nombre, String iduser, String defaulacc,

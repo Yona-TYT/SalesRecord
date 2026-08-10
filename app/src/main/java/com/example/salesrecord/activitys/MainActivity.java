@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private int mTry = 30;
     private final int mTime = 100;
 
-
     private boolean reTry = true;
 
     private SharedViewModel sharedViewModel;
@@ -178,10 +177,9 @@ public class MainActivity extends AppCompatActivity {
 //                    menuInflater.inflate(R.menu.save, menu);
 //                }]
 //                // 💡 CASO 3: Si estás en la pestaña de EDITAR (Edit)
-//                else if (currentDestinationId == R.id.navigation_edit) {
-//                    menuInflater.inflate(R.menu.impor, menu);
-//                    menuInflater.inflate(R.menu.merge, menu);
-//                }
+                else if (currentDestinationId == R.id.navigation_edit) {
+                    menuInflater.inflate(R.menu.margen, menu);
+                }
                 // 💡 CASO 4: Si estás en la pestaña de PAGOS (Pays)
                 else if (currentDestinationId == R.id.navigation_pays) {
                     // Puedes inflar otros o dejarlo vacío si no lleva íconos
@@ -205,6 +203,11 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.srch) {
                     //Basic.msg("Mostrando resumen...");
                     sharedViewModel.toggleSrch();
+                    return true;
+                }
+                else if (id == R.id.margen) {
+                    //Basic.msg("Mostrando resumen...");
+                    sharedViewModel.toggleMarg();
                     return true;
                 }
                 else if (id == R.id.summary) {

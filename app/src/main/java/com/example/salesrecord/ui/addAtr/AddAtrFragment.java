@@ -288,8 +288,6 @@ public class AddAtrFragment extends Fragment {
                     currDate = java.time.Instant.now().toEpochMilli();
                 }
 
-
-
                 Article objA = null;
                 String atrId = DatabaseUtils.generateId("atrID", daoArt);
 
@@ -314,7 +312,7 @@ public class AddAtrFragment extends Fragment {
 
                 double price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
-                objA = new Article(atrId, mTxList.get(0), mTxList.get(1),"@null", sImage,
+                objA = new Article(atrId, InputHelper.cleanText(mTxList.get(0)), InputHelper.cleanText(mTxList.get(1)),"@null", sImage,
                         (currSel1 == 0 ? (price) : 0.0),
                         (currSel1 == 1 ? (price) : 0.0),
                         (currSel1 == 2 ? (price) : 0.0),

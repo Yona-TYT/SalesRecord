@@ -13,6 +13,7 @@ public class Conf {
     public String hexid;
     public String datetasa;
     public Double dolar;
+    public Double margen;
     public Long date;
     public Long time;
     public Integer curr;
@@ -22,7 +23,7 @@ public class Conf {
     public String dbg;
 
 
-    public Conf(@NonNull String config, String version, String hexid, String datetasa, Double dolar, Long date, Long time, Integer curr, Integer moneda, Integer mes, Integer show, String dbg) {
+    public Conf(@NonNull String config, String version, String hexid, String datetasa, Double dolar, Double margen, Long date, Long time, Integer curr, Integer moneda, Integer mes, Integer show, String dbg) {
         this.config = config;
         this.version = version;
         this.hexid = hexid;
@@ -32,6 +33,7 @@ public class Conf {
         this.time = time;
         this.curr = curr;
         this.moneda = moneda;
+        this.margen = margen;
         this.mes = mes;
         this.show = show;
         this.dbg = dbg;

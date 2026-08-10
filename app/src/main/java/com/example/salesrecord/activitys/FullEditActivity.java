@@ -309,8 +309,8 @@ public class FullEditActivity extends AppCompatActivity {
                         return;
                     }
 
-                    crrArt.nombre = mInput1.getText().toString();
-                    crrArt.descr = mInput2.getText().toString();
+                    crrArt.nombre = InputHelper.cleanText(mInput1.getText().toString());
+                    crrArt.descr = InputHelper.cleanText(mInput2.getText().toString());
 
                     double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
