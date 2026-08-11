@@ -49,6 +49,13 @@ public class DriveUtils {
 
     private static final String TAG = "GoogleDriveFileHelper";
 
+    private static final OkHttpClient HTTP = new OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build();
+
     /**
      * Obtiene un accessToken fresco (renovado si es necesario).
      * Bloquea hasta que tenga el token o falle.
@@ -99,75 +106,122 @@ public class DriveUtils {
      * @param folderId    ID de la carpeta donde buscar
      * @return DriveFileMeta con la información, o null si no se encuentra
      */
+//    public static DriveFileMeta getFileMetaFromDrive(String accessToken, String fileName, String folderId) {
+//        try {
+//            // Construir query
+//            String query = "name = '" + fileName + "' " +
+//                    "and '" + folderId + "' in parents " +
+//                    "and trashed = false";
+//
+//            String encodedQuery = URLEncoder.encode(query, "UTF-8");
+//
+//            // URL con los campos necesarios
+//            String urlString = "https://www.googleapis.com/drive/v3/files" +
+//                    "?q=" + encodedQuery +
+//                    "&fields=files(id,name,md5Checksum,modifiedTime)";
+//
+//            URL url = new URL(urlString);
+//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//
+//            conn.setRequestMethod("GET");
+//            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+//            conn.setRequestProperty("Accept", "application/json");
+//
+//            int responseCode = conn.getResponseCode();
+//
+//            if (responseCode == 200) {
+//                // Leer respuesta
+//                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//                StringBuilder sb = new StringBuilder();
+//                String line;
+//                while ((line = br.readLine()) != null) {
+//                    sb.append(line);
+//                }
+//                br.close();
+//
+//                String response = sb.toString();
+//
+//                if (response.isEmpty() || response.equals("{}")) {
+//                    Log.d(TAG, "Respuesta vacía para archivo: " + fileName);
+//                    return null;
+//                }
+//
+//                JSONObject json = new JSONObject(response);
+//
+//                if (!json.has("files") || json.isNull("files")) {
+//                    return null;
+//                }
+//
+//                JSONArray files = json.getJSONArray("files");
+//
+//                if (files.length() > 0) {
+//                    JSONObject fileJson = files.getJSONObject(0);
+//
+//                    String id          = fileJson.optString("id", null);
+//                    String name        = fileJson.optString("name", "Unknown");
+//                    String md5         = fileJson.optString("md5Checksum", "");
+//                    String modifiedTime = fileJson.optString("modifiedTime", "");
+//
+//                    if (id != null && !id.isEmpty()) {
+//                        Log.d(TAG, "Archivo encontrado: " + name + " | MD5: " + md5 + " | Modified: " + modifiedTime);
+//                        return new DriveFileMeta(id, name, md5, modifiedTime);
+//                    }
+//                }
+//            } else {
+//                Log.e(TAG, "Error HTTP " + responseCode + " buscando archivo: " + fileName);
+//            }
+//        } catch (Exception e) {
+//            Log.e(TAG, "Error en getFileMetaFromDrive para " + fileName, e);
+//        }
+//
+//        return null;
+//    }
+
+
     public static DriveFileMeta getFileMetaFromDrive(String accessToken, String fileName, String folderId) {
         try {
-            // Construir query
-            String query = "name = '" + fileName + "' " +
-                    "and '" + folderId + "' in parents " +
-                    "and trashed = false";
+            String escaped = fileName.replace("\\", "\\\\").replace("'", "\\'");
+            String query = "name = '" + escaped + "' and trashed = false";
+            if (!isNullOrEmpty(folderId)) {
+                query += " and '" + folderId + "' in parents";
+            }
 
-            String encodedQuery = URLEncoder.encode(query, "UTF-8");
+            String url = "https://www.googleapis.com/drive/v3/files"
+                    + "?q=" + URLEncoder.encode(query, "UTF-8")
+                    + "&fields=files(id,name,md5Checksum,modifiedTime)"
+                    + "&pageSize=1";
 
-            // URL con los campos necesarios
-            String urlString = "https://www.googleapis.com/drive/v3/files" +
-                    "?q=" + encodedQuery +
-                    "&fields=files(id,name,md5Checksum,modifiedTime)";
+            Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("Authorization", "Bearer " + accessToken)
+                    .addHeader("Accept", "application/json")
+                    .build();
 
-            URL url = new URL(urlString);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-            conn.setRequestProperty("Accept", "application/json");
-
-            int responseCode = conn.getResponseCode();
-
-            if (responseCode == 200) {
-                // Leer respuesta
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                br.close();
-
-                String response = sb.toString();
-
-                if (response.isEmpty() || response.equals("{}")) {
-                    Log.d(TAG, "Respuesta vacía para archivo: " + fileName);
+            try (Response response = HTTP.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    Log.e(TAG, "Error HTTP " + response.code() + " buscando: " + fileName);
                     return null;
                 }
+                String body = response.body() != null ? response.body().string() : "";
+                JSONObject json = new JSONObject(body);
+                JSONArray files = json.optJSONArray("files");
+                if (files == null || files.length() == 0) return null;
 
-                JSONObject json = new JSONObject(response);
+                JSONObject f = files.getJSONObject(0);
+                String id = f.optString("id", null);
+                String name = f.optString("name", "Unknown");
+                String md5 = f.optString("md5Checksum", "");
+                String modified = f.optString("modifiedTime", "");
 
-                if (!json.has("files") || json.isNull("files")) {
-                    return null;
-                }
+                if (id == null || id.isEmpty()) return null;
 
-                JSONArray files = json.getJSONArray("files");
-
-                if (files.length() > 0) {
-                    JSONObject fileJson = files.getJSONObject(0);
-
-                    String id          = fileJson.optString("id", null);
-                    String name        = fileJson.optString("name", "Unknown");
-                    String md5         = fileJson.optString("md5Checksum", "");
-                    String modifiedTime = fileJson.optString("modifiedTime", "");
-
-                    if (id != null && !id.isEmpty()) {
-                        Log.d(TAG, "Archivo encontrado: " + name + " | MD5: " + md5 + " | Modified: " + modifiedTime);
-                        return new DriveFileMeta(id, name, md5, modifiedTime);
-                    }
-                }
-            } else {
-                Log.e(TAG, "Error HTTP " + responseCode + " buscando archivo: " + fileName);
+                Log.d(TAG, "Archivo encontrado: " + name + " | MD5: " + md5 + " | Modified: " + modified);
+                return new DriveFileMeta(id, name, md5, modified);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error en getFileMetaFromDrive para " + fileName, e);
+            return null;
         }
-
-        return null;
     }
 
     // ====================== MÉTODOS DE AYUDA ======================

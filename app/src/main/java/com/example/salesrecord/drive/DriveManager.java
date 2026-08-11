@@ -121,16 +121,16 @@ public class DriveManager {
     }
 
     public void InternalImportDataToDrive(List<File> files, boolean img) {
-        String tag = String.valueOf(Objects.hashCode(files));
+        // ANTES (malo): tag distinto en cada llamada
+        // String tag = String.valueOf(Objects.hashCode(files));
 
+        // AHORA: siempre el mismo nombre único
+        String tag = "google_drive_upload";
 
         HashMap<String, Object> dataMap = new HashMap<>();
         dataMap.put("filePaths", files.stream().map(File::getAbsolutePath).toArray(String[]::new));
-
         dataMap.put("filePath", "");
-
         dataMap.put("img", img);
-
         dataMap.put("list", true);
 
         SetWorkResult.startWorkManagerRequest(DriveUpWorker.class, dataMap, tag);

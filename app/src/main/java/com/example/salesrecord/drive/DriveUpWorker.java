@@ -87,54 +87,51 @@ public class DriveUpWorker extends Worker {
                 return Result.failure();
             }
             // Figure out the Folder ID to upload to, from the path; recursively create if it doesn't exist.
-            String folderPath = PreferenceHelper.getInstance().getGoogleDriveFolderPath();
-            String[] pathParts = folderPath.split("/");
-            String parentFolderId = PreferenceHelper.getInstance().getGoogleDriveFolderId();
-            String latestFolderId = null;
-
-            for (String part : pathParts) {
-
-                latestFolderId = DriveUtils.getFileIdFromFileName(googleDriveAccessToken, part, parentFolderId);
-
-                if (!DriveUtils.isNullOrEmpty(latestFolderId)) {
-
-                    LOG.debug("Folder " + part + " found, folder ID is " + latestFolderId);
-                } else {
-                    LOG.debug("Folder " + part + " not found, creating.");
-                    latestFolderId = DriveUtils.createEmptyFile(googleDriveAccessToken, part,
-                            "application/vnd.google-apps.folder", DriveUtils.isNullOrEmpty(parentFolderId) ? "root" : parentFolderId);
-                }
-                parentFolderId = latestFolderId;
+            String parent = PreferenceHelper.getInstance().getGoogleDriveFolderId();
+            if (DriveUtils.isNullOrEmpty(parent)) {
+                parent = "root";
             }
 
-            String diverFolderId = latestFolderId;
+            String salesName = PreferenceHelper.getInstance().getGoogleDriveFolderPath(); // "Sales-Save"
+            String imgName = PreferenceHelper.getInstance().getGoogleDriveImgPath();     // "Img"
 
-            if (DriveUtils.isNullOrEmpty(diverFolderId)) {
-                failureMessage = "Could not create folder";
+            // Sales-Save (siempre carpeta)
+            String salesId = DriveUtils.getFileIdFromFileName(
+                    googleDriveAccessToken, salesName, parent, "application/vnd.google-apps.folder");
+            if (DriveUtils.isNullOrEmpty(salesId)) {
+                salesId = DriveUtils.createEmptyFile(
+                        googleDriveAccessToken, salesName,
+                        "application/vnd.google-apps.folder", parent);
+            }
+
+            if (DriveUtils.isNullOrEmpty(salesId)) {
+                failureMessage = "Could not create folder Sales-Save";
                 success = false;
-            }
-            else{
-                 if (isList){
-                    String imgFolderName = PreferenceHelper.getInstance().getGoogleDriveImgPath();
-                    String imgFolderId = DriveUtils.getFileIdFromFileName(googleDriveAccessToken, imgFolderName, diverFolderId, "application/vnd.google-apps.folder");
-                    if (!DriveUtils.isNullOrEmpty(imgFolderId)) {
-                        LOG.debug("Folder " + imgFolderName + " found, folder ID is " + diverFolderId);
-                    } else {
-                        LOG.debug("Folder " + imgFolderName + " not found, creating.");
-                        imgFolderId = DriveUtils.createEmptyFile(googleDriveAccessToken, imgFolderName,
-                                "application/vnd.google-apps.folder", diverFolderId);
+            } else if (isList) {
+                String targetFolderId = salesId;
+
+                // Img solo si es subida de imágenes
+                if (isImg) {
+                    String imgId = DriveUtils.getFileIdFromFileName(
+                            googleDriveAccessToken, imgName, salesId, "application/vnd.google-apps.folder");
+                    if (DriveUtils.isNullOrEmpty(imgId)) {
+                        imgId = DriveUtils.createEmptyFile(
+                                googleDriveAccessToken, imgName,
+                                "application/vnd.google-apps.folder", salesId);
                     }
-                    if (DriveUtils.isNullOrEmpty(imgFolderId)) {
-                        failureMessage = "Could not create folder";
+                    if (DriveUtils.isNullOrEmpty(imgId)) {
+                        failureMessage = "Could not create folder Img";
                         success = false;
+                    } else {
+                        targetFolderId = imgId;
                     }
-                    else {
-                        String folderId = (isImg ? imgFolderId : diverFolderId );
-                        for(String path : filePaths){
-                            File mFile = new File(path);
-                            if(mFile.exists()){
-                                filesSet(mFile, folderId);
-                            }
+                }
+
+                if (success) {
+                    for (String path : filePaths) {
+                        File mFile = new File(path);
+                        if (mFile.exists()) {
+                            filesSet(mFile, targetFolderId);
                         }
                     }
                 }
@@ -176,82 +173,58 @@ public class DriveUpWorker extends Worker {
 
     private boolean filesSet(File localFile, String folderId) throws Exception {
         String fileName = localFile.getName();
-
         LOG.info("=== INICIANDO filesSet() - Archivo: " + fileName);
 
-        // 1. Buscar ID existente
-        String driveFileId = DriveUtils.getFileIdFromFileName(googleDriveAccessToken, fileName, folderId);
-        LOG.info("   → getFileIdFromFileName() → " + (driveFileId != null ? driveFileId : "NULL"));
+        // 1. Una sola consulta: metadatos (id + MD5)
+        DriveFileMeta driveFile = DriveUtils.getFileMetaFromDrive(
+                googleDriveAccessToken, fileName, folderId);
 
+        String driveFileId;
+        boolean isNew = false;
 
-        if (DriveUtils.isNullOrEmpty(driveFileId)) {
-            LOG.info("   → Archivo no existe → Creando archivo vacío...");
-            driveFileId = DriveUtils.createEmptyFile(googleDriveAccessToken,
+        if (driveFile == null || DriveUtils.isNullOrEmpty(driveFile.id)) {
+            LOG.info("   → No existe en Drive → createEmptyFile()");
+            driveFileId = DriveUtils.createEmptyFile(
+                    googleDriveAccessToken,
                     fileName,
                     DriveUtils.getMimeTypeFromFileName(fileName),
-                    folderId);
-            LOG.info("   → createEmptyFile() devolvió ID: " + (driveFileId != null ? driveFileId : "NULL"));
+                    folderId
+            );
+            isNew = true;
+        } else {
+            driveFileId = driveFile.id;
+            LOG.info("   → Encontrado ID: " + driveFileId
+                    + " | MD5: " + driveFile.md5Checksum);
         }
 
         if (DriveUtils.isNullOrEmpty(driveFileId)) {
-            LOG.error("   ❌ ERROR: No se pudo obtener ni crear el archivo en Drive");
+            LOG.error("   ❌ No se pudo obtener/crear el archivo en Drive");
             count--;
             return false;
         }
 
-        LOG.info("   → ID listo para usar: " + driveFileId);
-
-        // 2. Obtener metadatos + MD5 + modification date
-        DriveFileMeta driveFile = DriveUtils.getFileMetaFromDrive(googleDriveAccessToken, localFile.getName(), folderId);
-
-        if (driveFile != null) {
-            LOG.info("✅ MD5 obtenido: " + (driveFile.md5Checksum != null ? driveFile.md5Checksum : "NULL"));
-            LOG.info("   → DriveFileMeta completo: " + driveFile.toString());
-        } else {
-            LOG.warn("⚠️ getFileMetaFromDrive devolvió NULL (posible archivo recién creado)");
+        // 2. ¿Hay que subir contenido?
+        boolean mustUpload = isNew;
+        if (!isNew) {
+            String localMd5 = DriveUtils.getLocalFileMd5(localFile);
+            String remoteMd5 = driveFile.md5Checksum != null ? driveFile.md5Checksum : "";
+            // Sin MD5 remoto (recién creado o Google no lo devuelve) → subir
+            mustUpload = remoteMd5.isEmpty()
+                    || localMd5 == null
+                    || !remoteMd5.equalsIgnoreCase(localMd5);
         }
 
-        // 3. Subir contenido
-        LOG.info("   → Iniciando updateFileContents()...");
-        //copyToClipboard(mContext, localFile.getName()+" "  +getLocalFileMd5(localFile), localFile.getName());
-
-        String mMime = FilesManager.getMimeType(localFile);
-        if(fileName.endsWith("bin")){
-            mMime = "application/octet-stream";
-        }
-        if(driveFile == null) {
-            //DriveUtils.copyToClipboard(mContext, localFile.getName()+" "+ driveFile.md5Checksum +" "+DriveUtils.getLocalFileMd5(localFile), localFile.getName());
-            uploadFileContents(googleDriveAccessToken, driveFileId, localFile);
-            LOG.info("   → updateFileContents() finalizado correctamente");
-            LOG.info("=== FIN DE filesSet() para " + fileName);
-            return true;
+        if (!mustUpload) {
+            LOG.info("   → MD5 igual, no se sube: " + fileName);
+            count--;
+            return false;
         }
 
-        else {
-//            if(fileName.endsWith("csv")){
-//                DriveUtils.copyToClipboard(mContext, fileName+" --"+ driveFile.md5Checksum +" --"+ DriveUtils.getLocalFileMd5(localFile), fileName);
-//
-//            }
-//
-//            if(fileName.endsWith("csv")){
-//                uploadFileContents(googleDriveAccessToken, driveFileId, localFile);
-//
-//                LOG.info("   → updateFileContents() finalizado correctamente");
-//                LOG.info("=== FIN DE filesSet() para " + fileName);
-//                return true;
-//            }
-            if(!driveFile.md5Checksum.equals(DriveUtils.getLocalFileMd5(localFile))){
-                //copyToClipboard(mContext, driveFile.modifiedTime+driveFile.md5Checksum.isEmpty()+" --"+ driveFile.md5Checksum +" --"+ DriveUtils.getLocalFileMd5(localFile), fileName);
-
-                uploadFileContents(googleDriveAccessToken, driveFileId, localFile);
-
-                LOG.info("   → updateFileContents() finalizado correctamente");
-                LOG.info("=== FIN DE filesSet() para " + fileName);
-                return true;
-            }
-        }
-        count--;
-        return false;
+        // 3. Subir
+        LOG.info("   → Subiendo contenido...");
+        uploadFileContents(googleDriveAccessToken, driveFileId, localFile);
+        LOG.info("=== FIN DE filesSet() OK: " + fileName);
+        return true;
     }
 
     private String uploadFileContents2(String accessToken, String driveFileId, File fileToUpload, String mType) throws Exception {
@@ -321,60 +294,71 @@ public class DriveUpWorker extends Worker {
         }
     }
 
+//    private String uploadFileContents(String accessToken, String driveFileId, File fileToUpload) throws Exception {
+//        FileInputStream fis = new FileInputStream(fileToUpload);
+//        String fileId = null;
+//
+//        String fileUpdateUrl = "https://www.googleapis.com/upload/drive/v3/files/" + driveFileId + "?uploadType=media";
+//
+//        OkHttpClient client = new OkHttpClient();
+//        Request.Builder requestBuilder = new Request.Builder().url(fileUpdateUrl);
+//
+//        requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
+//        RequestBody body = RequestBody.create(MediaType.parse(DriveUtils.getMimeTypeFromFileName(fileToUpload.getName())), getByteArrayFromInputStream(fis));
+//        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+//            requestBuilder.addHeader("X-HTTP-Method-Override", "PATCH");
+//        }
+//        requestBuilder = requestBuilder.method("PATCH", body);
+//
+//        Request request = requestBuilder.build();
+//        Response response = client.newCall(request).execute();
+//        String fileMetadata = response.body().string();
+//        LOG.debug(fileMetadata);
+//        response.body().close();
+//
+//        JSONObject fileMetadataJson = new JSONObject(fileMetadata);
+//        fileId = fileMetadataJson.getString("id");
+//
+//        return fileId;
+//    }
+
     private String uploadFileContents(String accessToken, String driveFileId, File fileToUpload) throws Exception {
-        FileInputStream fis = new FileInputStream(fileToUpload);
-        String fileId = null;
-
-        String fileUpdateUrl = "https://www.googleapis.com/upload/drive/v3/files/" + driveFileId + "?uploadType=media";
-
-        OkHttpClient client = new OkHttpClient();
-        Request.Builder requestBuilder = new Request.Builder().url(fileUpdateUrl);
-
-        requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-        RequestBody body = RequestBody.create(MediaType.parse(DriveUtils.getMimeTypeFromFileName(fileToUpload.getName())), getByteArrayFromInputStream(fis));
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-            requestBuilder.addHeader("X-HTTP-Method-Override", "PATCH");
+        if (fileToUpload == null || !fileToUpload.exists()) {
+            throw new IllegalArgumentException("El archivo a subir no existe");
         }
-        requestBuilder = requestBuilder.method("PATCH", body);
 
-        Request request = requestBuilder.build();
-        Response response = client.newCall(request).execute();
-        String fileMetadata = response.body().string();
-        LOG.debug(fileMetadata);
-        response.body().close();
+        String contentType = DriveUtils.getMimeTypeFromFileName(fileToUpload.getName());
+        String updateUrl = "https://www.googleapis.com/upload/drive/v3/files/"
+                + driveFileId + "?uploadType=media";
 
-        JSONObject fileMetadataJson = new JSONObject(fileMetadata);
-        fileId = fileMetadataJson.getString("id");
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
+                .build();
 
-        return fileId;
-    }
+        RequestBody body = RequestBody.create(fileToUpload, MediaType.parse(contentType));
 
-    private String uploadFileContents3(String accessToken, String driveFileId, File fileToUpload, String mType) throws Exception {
-        FileInputStream fis = new FileInputStream(fileToUpload);
-        String fileId = null;
+        Request.Builder builder = new Request.Builder()
+                .url(updateUrl)
+                .addHeader("Authorization", "Bearer " + accessToken);
 
-        String fileUpdateUrl = "https://www.googleapis.com/upload/drive/v3/files/" + driveFileId + "?uploadType=media";
-
-        OkHttpClient client = new OkHttpClient();
-        Request.Builder requestBuilder = new Request.Builder().url(fileUpdateUrl);
-
-        requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-        RequestBody body = RequestBody.create(MediaType.parse(DriveUtils.getMimeTypeFromFileName(fileToUpload.getName())), getByteArrayFromInputStream(fis));
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-            requestBuilder.addHeader("X-HTTP-Method-Override", "PATCH");
+            builder.addHeader("X-HTTP-Method-Override", "PATCH");
+            builder.method("POST", body);
+        } else {
+            builder.method("PATCH", body);
         }
-        requestBuilder = requestBuilder.method("PATCH", body);
 
-        Request request = requestBuilder.build();
-        Response response = client.newCall(request).execute();
-        String fileMetadata = response.body().string();
-        LOG.debug(fileMetadata);
-        response.body().close();
-
-        JSONObject fileMetadataJson = new JSONObject(fileMetadata);
-        fileId = fileMetadataJson.getString("id");
-
-        return fileId;
+        try (Response response = client.newCall(builder.build()).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "";
+                throw new Exception("Error al subir: HTTP " + response.code() + " - " + errorBody);
+            }
+            String responseBody = response.body() != null ? response.body().string() : "{}";
+            return new JSONObject(responseBody).optString("id", driveFileId);
+        }
     }
 
     protected int getRetryLimit() {

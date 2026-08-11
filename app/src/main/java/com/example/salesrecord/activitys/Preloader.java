@@ -122,7 +122,7 @@ public class Preloader extends AppCompatActivity {
 
         if(authState.isAuthorized()) {
             //En caso de estancar se forza el inicio de mainActivity
-            startMainDelayErr(30000);
+            startMainDelayErr(15000);
 
             if(!StartVar.mainStart) {
                 Basic.msg("Sincronizando Datos...");

@@ -350,7 +350,9 @@ public class FullEditActivity extends AppCompatActivity {
                         e.printStackTrace();
                         sImage = "";
                     }
-                    crrArt.image = sImage;
+                    if (!sImage.isEmpty()) {
+                        crrArt.image = sImage;
+                    }
                     //-------------------------------------------------------------------
 
                     Log.d("DB_INSTANCE", "Hash: " + System.identityHashCode(StartVar.appDBall));

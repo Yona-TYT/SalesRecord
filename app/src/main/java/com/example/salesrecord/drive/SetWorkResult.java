@@ -193,10 +193,14 @@ public class SetWorkResult {
 
         // 6. Encolar con política conservadora
         try {
-            WorkManager.getInstance(appContext)
-                    .enqueueUniqueWork(tag, ExistingWorkPolicy.KEEP, workRequest);
+            ExistingWorkPolicy policy = "google_drive_upload".equals(tag)
+                    ? ExistingWorkPolicy.APPEND : ExistingWorkPolicy.KEEP;
+
+            WorkManager.getInstance(appContext).enqueueUniqueWork(tag, policy, workRequest);
+
             android.util.Log.i("DriveSync", "✅ WorkManager encolado: " + tag);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             android.util.Log.e("DriveSync", "❌ Error Binder/WorkManager", e);
         }
     }

@@ -370,7 +370,7 @@ public class HomeFragment extends Fragment {
                 if(currObj != null) {
                     if (currObj.maxCount > 0) {
                         mInput2.setError(null);
-                        double price = MathUtls.addPercentage(currObj.price, currObj.margen+mConf.margen);
+                        double price = MathUtls.addPercentage(currObj.price, currObj.margen);
                         double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
 
                         double quant = MoneyUtls.getQuantity(price, cueePrice);
@@ -818,7 +818,7 @@ public class HomeFragment extends Fragment {
 
         double total = 0.0;
         for (Obj obj : list) {
-            double price = MathUtls.addPercentage(obj.price, obj.margen+mConf.margen);
+            double price = MathUtls.addPercentage(obj.price, obj.margen);
             total = total + ( price * obj.saleCount);
         }
         return total;
@@ -900,7 +900,7 @@ public class HomeFragment extends Fragment {
             List<Article> artList = new ArrayList<>();
 
             for (Obj o : objListSal){
-                double price = MathUtls.addPercentage(o.price, o.margen+mConf.margen);
+                double price = MathUtls.addPercentage(o.price, o.margen);
                 total = total + ( price * o.saleCount);
                 strArtList.append("|").append(o.strId);
                 strCountList.append("|").append(o.saleCount);

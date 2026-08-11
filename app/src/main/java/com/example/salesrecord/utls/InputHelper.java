@@ -129,7 +129,7 @@ public class InputHelper {
         String noAccents = normalized.replaceAll("\\p{M}", "");
 
         // 3. Solo letras, números y espacios
-        String sanitized = noAccents.replaceAll("[^a-zA-Z0-9 ]", "");
+        String sanitized = noAccents.replaceAll("[^a-zA-Z0-9\\s.]", "");
 
         // 4. Restaurar Ñ/ñ
         return sanitized
