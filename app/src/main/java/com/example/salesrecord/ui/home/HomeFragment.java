@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -69,6 +70,8 @@ public class HomeFragment extends Fragment {
     // DB
     private DaoSal daoSal;
     private DaoArt daoArt;
+    private DaoClt daoClt;
+
     private Conf mConf;
     private List<Article> mArtList =  new ArrayList<>();
 
@@ -80,7 +83,8 @@ public class HomeFragment extends Fragment {
 
     private SaleMainAdapter mAdapter1;
     private SaleResultAdapter mAdapter2;
-    private ListView mListView;
+    private ListView mListV1;
+    private ListView mListV2;
 
     private Button mButt1;
     private Button mButt2;
@@ -153,7 +157,9 @@ public class HomeFragment extends Fragment {
         // Inicialización de tus componentes de la interfaz
         mInput1 = binding.inputHome1;
         gridView = binding.gcImg;
-        mListView = binding.viewList;
+        mListV1 = binding.viewList;
+        mListV2 = binding.listNames;
+
         viewTotal = binding.homeText2;
         viewResult = binding.calcResult;
         searchBar = binding.searchBar;
@@ -243,6 +249,7 @@ public class HomeFragment extends Fragment {
 
         daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
+        daoClt = StartVar.appDBall.daoClt();
         mArtList = daoArt.getUsers();
         mConf = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
 
@@ -487,7 +494,7 @@ public class HomeFragment extends Fragment {
         });
 
 
-// 1. Listener de texto estándar corregido
+        // 1. Listener de texto estándar corregido
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -508,7 +515,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-// 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
+        // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
         int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
         View searchButton = searchBar.findViewById(searchButtonId);
 
@@ -629,8 +636,8 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        mListView.setAdapter(mAdapter2);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListV1.setAdapter(mAdapter2);
+        mListV1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @SuppressLint("SetTextI18n")
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -729,6 +736,52 @@ public class HomeFragment extends Fragment {
         if(isSave) {
             refreshAllUI();
         }
+
+        // 1. Obtener la lista de clientes desde tus variables globales existentes (StartVar)
+        // Mapeamos a String si es una lista de objetos complejos
+        List<String> clientNames = new ArrayList<>();
+
+        for (Cliente mC : daoClt.getUsers()) {
+            // Reemplaza .getName() por el método real que devuelva el texto de tu objeto Cliente
+            clientNames.add(mC.iduser);
+        }
+
+
+        // 2. Crear y asignar el adaptador
+        ArrayAdapter<String> clientAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, clientNames);
+        mListV2.setAdapter(clientAdapter);
+
+        // 3. Filtrado dinámico y control de visibilidad en tiempo real
+        mInput3.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (clientAdapter != null) {
+                    clientAdapter.getFilter().filter(s);
+                }
+
+                // Si el input no está vacío, mostramos la lista de sugerencias, de lo contrario la ocultamos
+                if (s != null && s.length() > 0) {
+                    mListV2.setVisibility(View.VISIBLE);
+                } else {
+                    mListV2.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // 4. Guardar selección al hacer click en un nombre de la lista
+        mListV2.setOnItemClickListener((parent, view1, position, id) -> {
+            String selectedName = clientAdapter.getItem(position);
+            mInput3.setText(selectedName);
+            mInput3.setSelection(mInput3.getText().length()); // Mueve el cursor al final
+            mListV2.setVisibility(View.GONE); // Ocultamos la lista ya seleccionada
+        });
+
     }
 
     private void setCalcResult(){
@@ -872,7 +925,6 @@ public class HomeFragment extends Fragment {
             }
 
             Cliente mCl = null;
-            DaoClt daoClt = StartVar.appDBall.daoClt();
             if(!strRawName.isEmpty()) {
                 String idUser = InputHelper.sanitizeText(strRawName);
                 boolean b = true;
@@ -915,6 +967,7 @@ public class HomeFragment extends Fragment {
                 artList.add(art);
             }
 
+            String strCltId = "@null";
             if (mCl != null){
                 strClt = mCl.cliente;
                 daoClt.insertUser(mCl);
@@ -922,7 +975,7 @@ public class HomeFragment extends Fragment {
 
             Sale mObj = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
-                    total, StartVar.mDollar, currSel1, "", currTime, "@null", 0, "", currDate
+                    total, StartVar.mDollar, currSel1, "", currTime, strCltId, 0, "", currDate
             );
 
             //Se restauran los elementos
@@ -982,7 +1035,7 @@ public class HomeFragment extends Fragment {
         }
         if (mAdapter2 != null) {
             mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
-            mListView.setAdapter(mAdapter2);
+            mListV1.setAdapter(mAdapter2);
         }
 
         refreshAllUI();

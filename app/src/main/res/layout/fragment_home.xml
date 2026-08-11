@@ -124,38 +124,55 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Fila horizontal: TextInput + Button -->
+        <!-- Contenedor Vertical Principal para el buscador de clientes -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginBottom="12dp"
+            android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/input_client"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/input_hs"
-                android:layout_weight="1"
-                android:background="@color/text_background"
-                android:hint="Nombre (Opcional)"
-                android:imeOptions="actionDone"
-                android:inputType="textPersonName|textCapWords"
-                android:maxLines="1"
-                android:padding="5dp"
-                android:textSize="@dimen/inner_text_1"
-                android:visibility="visible" />
+            <!-- LISTVIEW DE SUGERENCIAS: Ahora se posiciona correctamente abajo.
+                 Inicia en 'gone' para que no ocupe espacio si no se está buscando -->
+            <ListView
+                android:id="@+id/list_names"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="4dp"
+                android:background="?android:attr/editTextBackground"
+                android:elevation="4dp"
+                android:visibility="gone" />
 
-            <Button
-                android:id="@+id/butt_home3"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_h1"
-                android:layout_marginStart="10dp"
-                android:layout_weight="0.5"
+            <!-- Fila horizontal: Solo el Input y el Botón -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                android:enabled="true"
-                android:text="Limpiar"
-                android:visibility="visible"/>
+                <EditText
+                    android:id="@+id/input_client"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_hs"
+                    android:layout_weight="1"
+                    android:background="@color/text_background"
+                    android:hint="Nombre (Opcional)"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLines="1"
+                    android:padding="5dp"
+                    android:textSize="@dimen/inner_text_1"
+                    android:visibility="gone"/>
+
+                <Button
+                    android:id="@+id/butt_home3"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_h1"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="0.4"
+                    android:text="Limpiar"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
         </LinearLayout>
 
         <!-- Fila horizontal: Spinner + Procesar -->

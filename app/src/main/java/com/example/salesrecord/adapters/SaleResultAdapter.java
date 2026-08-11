@@ -166,7 +166,8 @@ public class SaleResultAdapter extends BaseAdapter  {
         }
 
         // Textos
-        holder.view1.setText(item.name);
+        String desc = item.desc.isEmpty() ? "":" ("+item.desc+")";
+        holder.view1.setText(item.name+desc);
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
         Double total = (clcPrice*item.saleCount);

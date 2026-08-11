@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -12,26 +13,63 @@
         android:layout_width="0dp"
         android:layout_height="@dimen/spinner_hs"
         android:layout_marginTop="10dp"
-        app:layout_constraintEnd_toEndOf="@id/guideline2"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@id/guideline"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintHorizontal_weight="1"
         app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@+id/pay_select2" />
 
+    <Spinner
+        android:id="@+id/pay_select2"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/spinner_hs"
+        android:layout_marginTop="10dp"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/pay_select1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- TextView posicionado justo debajo de pay_select1 -->
+    <TextView
+        android:id="@+id/txview_pays1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="2dp"
+        android:text="Total:"
+        android:textSize="@dimen/inner_text_2"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/pay_select1" />
+    <TextView
+        android:id="@+id/txview_pays2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="2dp"
+        android:text="Inflación:"
+        android:textSize="@dimen/inner_text_2"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/txview_pays1" />
+
+    <!-- ListView ahora inicia correctamente debajo de txview_pays1 y llena el espacio restante -->
     <ListView
         android:id="@+id/pay_viewList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-
+        android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/pay_select1" />
+        app:layout_constraintTop_toBottomOf="@+id/txview_pays2" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_begin="10dp" />
 
@@ -41,6 +79,5 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="10dp" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

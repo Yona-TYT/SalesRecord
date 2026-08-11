@@ -61,7 +61,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private ListView mListView;
 
     //Todos los View
-    private TextView mText1;
+    private TextView total1;
+    private TextView total2;
+
     private TextView mText2;
     private TextView mText3;
     private TextView mText4;
@@ -135,7 +137,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         //mImage1 = findViewById(R.id.image_dts1);
         mListView = findViewById(R.id.pay_dts_viewList);
 
-        mText1 = findViewById(R.id.txview_dts1); //TOTAL
+        total1 = findViewById(R.id.txtotal_dts1); //TOTAL
+        total2 = findViewById(R.id.txtotal_dts2); //TOTAL
 
         mText2 = findViewById(R.id.txview_dts2);
         mText3 = findViewById(R.id.txview_dts3);
@@ -242,7 +245,26 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
             mListView.setAdapter(mAdapter);
 
-            mText1.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+            total1.setText("Actual: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+
+            double oldTasa = mSale.tasa;
+            String infla = "";
+            if(StartVar.mDollar > 0 && oldTasa > 0) {
+                // 1. Calculamos la variación real por cada unidad monetaria
+                double rateDiff= StartVar.mDollar - oldTasa;
+
+                // 2. La pérdida total es la diferencia de tasa multiplicada por la cantidad
+                // ELIMINADO: infla * StartVar.mDollar (Esto duplicaba el cálculo erróneamente)
+                double loss = rateDiff * total;
+
+                if (loss > 0) {
+                    infla = "Fijo: " + Basic.getMaskConv(total, oldTasa,0) +" / "+Basic.getMaskConv(total, oldTasa,1);
+                }
+            }
+
+            total2.setText(infla);
+
+
 
             mUser = mSale.sale;
             String txAlias = mSale.cliente;
@@ -268,7 +290,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;
-            mTextList.get(i).setText("Monto: "+txOpt+ Basic.getMaskConv(mSale.monto, 0) +" / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
+            mTextList.get(i).setText("Monto Fijo: "+txOpt+ Basic.getMaskConv(mSale.monto, 0) +" / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
             i++;
             mTextList.get(i).setText("Tasa: " + Basic.getMask(mSale.tasa, 1));
             i++;

@@ -18,15 +18,43 @@
         tools:ignore="MissingConstraints" />
 
     <TextView
-        android:id="@+id/txview_dts1"
+        android:id="@+id/tx_dts"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:padding="2dp"
+        android:gravity="center"
+        android:text="Total:"
+        android:textSize="@dimen/inner_text_3"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="@+id/guideline3"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_dts"
+        tools:ignore="MissingConstraints" />
+    <TextView
+        android:id="@+id/txtotal_dts1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="2dp"
+        android:text="Actual:"
+        android:textSize="@dimen/inner_text_2"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="@+id/guideline3"
+        app:layout_constraintTop_toBottomOf="@+id/tx_dts"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/txtotal_dts2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:padding="2dp"
-        android:text="Total:"
-        android:textSize="@dimen/inner_text_3"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_dts"
+        android:text=""
+        android:textSize="@dimen/inner_text_2"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/txtotal_dts1"
         app:layout_constraintBottom_toTopOf="@+id/pay_dts_viewList"
         app:layout_constraintStart_toStartOf="@+id/guideline3"
         app:layout_constraintEnd_toStartOf="@+id/guideline4"
@@ -38,7 +66,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts1"
+        app:layout_constraintTop_toBottomOf="@+id/txtotal_dts2"
         app:layout_constraintBottom_toTopOf="@+id/txview_dts2"
         app:layout_constraintStart_toStartOf="@+id/guideline3"
         app:layout_constraintEnd_toStartOf="@+id/guideline4" />
