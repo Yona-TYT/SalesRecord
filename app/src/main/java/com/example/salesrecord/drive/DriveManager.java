@@ -6,8 +6,10 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
@@ -199,58 +201,78 @@ public class DriveManager {
     }
 
     public void uploadDataBase() {
-
-        //Dialogs.progress((FragmentActivity) getActivity(), "getString(R.string.please_wait)");
-        //Basic.msg("StartVar.csvList: "+StartVar.csvList.get(1)[1]);
         Context context = AppContextProvider.getContext();
-        try {
-            // Ejecutar ImportDataToDrive en el hilo principal
-            new Handler(Looper.getMainLooper()).post(() -> {
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                // Asegurar que las listas CSV existan antes de exportar
+                if (StartVar.csvList == null || StartVar.csvList.isEmpty()) {
+                    Log.w("Drive", "csvList vacía → generando con DBListCreator");
+                    DBListCreator.createDbLists();
+                }
+
+                if (StartVar.csvList == null || StartVar.csvList.isEmpty()) {
+                    Log.e("Drive", "csvList sigue vacía: se cancela la subida");
+                    Basic.msg("Error: no hay datos para exportar");
+                    return;
+                }
+
                 List<File> mFileList = new ArrayList<>();
                 FilesManager fMang = new FilesManager();
-                File file;
                 String name = StartVar.exportName;
 
-               // Basic.msg("uploadDataBase " +StartVar.csvList.get(5)[1], true);
-
+                File file;
                 try {
                     file = fMang.csvExport(StartVar.csvList, name);
                 } catch (IOException e) {
+                    Log.e("Drive", "Error creando CSV: " + e.getMessage());
                     Basic.msg("Error Archivo no creado: " + e.getMessage());
-                    throw new RuntimeException(e);
+                    return; // NO lanzar RuntimeException
                 }
-                if (file != null) {
-                    mFileList.add(file);
-                    // Ahora se envía también un respaldo
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+                if (file == null) {
+                    Log.e("Drive", "csvExport devolvió null");
+                    return;
+                }
+
+                if (!FilesManager.isCsvSafeToUpload(file)) {
+                    Log.e("Drive", "CSV inválido: subida cancelada");
+                    Basic.msg("Error: CSV inválido, no se subió a Drive");
+                    return;
+                }
+
+                mFileList.add(file);
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    try {
                         LocalDate currDate = LocalDate.now();
-                        File newFile;
-                        try {
-                            newFile = FilesManager.getNewFile(file.getAbsolutePath(), currDate.toString().replaceAll("\\D", "-") + ".bin", context);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        File newFile = FilesManager.getNewFile(
+                                file.getAbsolutePath(),
+                                currDate.toString().replaceAll("\\D", "-") + ".bin",
+                                context
+                        );
                         if (newFile != null) {
-                            // Ejecutar ImportDataToDrive en el hilo principal
                             mFileList.add(newFile);
                         }
+                    } catch (IOException e) {
+                        Log.e("Drive", "Error creando respaldo .bin: " + e.getMessage());
+                        // no tumbar la app; se puede subir solo el CSV principal
                     }
                 }
-                if (!mFileList.isEmpty()){
+
+                if (!mFileList.isEmpty()) {
                     ImportDataToDrive(mFileList, false);
-                }
-                else {
-                    //Si la lista esta vacia se procede a sincronizar
-                    dataSynchronize();
+                } else {
+                    Log.w("Drive", "No hay archivos para subir");
                 }
 
-            });
-        } catch (Exception e) {
-            Basic.msg("Error Archivo no creado: " + e.getMessage());
-            e.printStackTrace();
-        }
+            } catch (Exception e) {
+                Log.e("Drive", "Error en uploadDataBase", e);
+                Basic.msg("Error al subir: " + e.getMessage());
+                // sin throw
+            }
+        });
     }
-
     public void uploadDataImg() {
         // 1. Obtener una referencia segura al contexto (evita fugas de memoria)
         final Context appContext =  AppContextProvider.getContext();

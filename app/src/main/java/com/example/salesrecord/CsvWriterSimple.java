@@ -25,70 +25,135 @@ public class CsvWriterSimple {
         //writer.writeToCsvFile(createCsvDataSpecial(), new File("c:\\test\\monitor.csv"));
     }
 
+//    public String convertToCsvFormat(final String[] line) {
+//        return convertToCsvFormat(line, DEFAULT_SEPARATOR);
+//    }
+
+//    public String convertToCsvFormat(final String[] line, final String separator) {
+//        return convertToCsvFormat(line, separator, true);
+//    }
+//
+//    // if quote = true, all fields are enclosed in double quotes
+//    public String convertToCsvFormat(
+//            final String[] line,
+//            final String separator,
+//            final boolean quote) {
+//
+//        return Stream.of(line)                              // convert String[] to stream
+//                .map(l -> formatCsvField(l, quote))         // format CSV field
+//                .collect(Collectors.joining(separator));    // join with a separator
+//
+//    }
+
+
     public String convertToCsvFormat(final String[] line) {
-        return convertToCsvFormat(line, DEFAULT_SEPARATOR);
+        return convertToCsvFormat(line, DEFAULT_SEPARATOR, true);
     }
 
     public String convertToCsvFormat(final String[] line, final String separator) {
         return convertToCsvFormat(line, separator, true);
     }
 
-    // if quote = true, all fields are enclosed in double quotes
     public String convertToCsvFormat(
             final String[] line,
             final String separator,
             final boolean quote) {
 
-        return Stream.of(line)                              // convert String[] to stream
-                .map(l -> formatCsvField(l, quote))         // format CSV field
-                .collect(Collectors.joining(separator));    // join with a separator
+        if (line == null) {
+            throw new IllegalArgumentException("Fila CSV null");
+        }
 
+        return Stream.of(line)
+                .map(field -> formatCsvField(field, quote))  // también lambda, más claro
+                .collect(Collectors.joining(separator));
     }
 
-    // put your extra login here
     private String formatCsvField(final String field, final boolean quote) {
-
-        String result = field;
-        //Log.d("PhotoPicker", " malayaaa!!------------------------: "+ field);
+        String result = (field == null) ? "" : field;
 
         if (result.contains(COMMA)
                 || result.contains(DOUBLE_QUOTES)
                 || result.contains(NEW_LINE_UNIX)
                 || result.contains(NEW_LINE_WINDOWS)) {
 
-            // if field contains double quotes, replace it with two double quotes \"\"
             result = result.replace(DOUBLE_QUOTES, EMBEDDED_DOUBLE_QUOTES);
-
-            // must wrap by or enclosed with double quotes
             result = DOUBLE_QUOTES + result + DOUBLE_QUOTES;
-
-        } else {
-            // should all fields enclosed in double quotes
-            if (quote) {
-                result = DOUBLE_QUOTES + result + DOUBLE_QUOTES;
-            }
+        } else if (quote) {
+            result = DOUBLE_QUOTES + result + DOUBLE_QUOTES;
         }
 
         return result;
-
     }
+
+    // put your extra login here
+//    private String formatCsvField(final String field, final boolean quote) {
+//
+//        String result = field;
+//        //Log.d("PhotoPicker", " malayaaa!!------------------------: "+ field);
+//
+//        if (result.contains(COMMA)
+//                || result.contains(DOUBLE_QUOTES)
+//                || result.contains(NEW_LINE_UNIX)
+//                || result.contains(NEW_LINE_WINDOWS)) {
+//
+//            // if field contains double quotes, replace it with two double quotes \"\"
+//            result = result.replace(DOUBLE_QUOTES, EMBEDDED_DOUBLE_QUOTES);
+//
+//            // must wrap by or enclosed with double quotes
+//            result = DOUBLE_QUOTES + result + DOUBLE_QUOTES;
+//
+//        } else {
+//            // should all fields enclosed in double quotes
+//            if (quote) {
+//                result = DOUBLE_QUOTES + result + DOUBLE_QUOTES;
+//            }
+//        }
+//
+//        return result;
+//
+//    }
 
     // a standard FileWriter, CSV is a normal text file
     public void writeToCsvFile(List<String[]> list, File file) throws IOException {
+        if (list == null || list.isEmpty()) {
+            throw new IOException("CSV vacío o null: no se escribe el archivo");
+        }
 
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) == null) {
+                throw new IOException("CSV corrupto: fila null en índice " + i);
+            }
+        }
+
+        // Lambda explícita → evita el error de method reference
         List<String> collect = list.stream()
-                .map(this::convertToCsvFormat)
+                .map(row -> convertToCsvFormat(row))  // llama a la de 1 parámetro
                 .collect(Collectors.toList());
 
-        // CSV is a normal text file, need a writer
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+        File temp = new File(file.getAbsolutePath() + ".tmp");
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
             for (String line : collect) {
                 bw.write(line);
                 bw.newLine();
             }
         }
 
+        if (file.exists() && !file.delete()) {
+            throw new IOException("No se pudo reemplazar el CSV anterior");
+        }
+        if (!temp.renameTo(file)) {
+            throw new IOException("No se pudo renombrar el CSV temporal");
+        }
     }
+
+//    public String convertToCsvFormat(final String[] line, final String separator, final boolean quote) {
+//        if (line == null) {
+//            throw new IllegalArgumentException("Fila CSV null");
+//        }
+//        return Stream.of(line)
+//                .map(l -> formatCsvField(l == null ? "" : l, quote))
+//                .collect(Collectors.joining(separator));
+//    }
 
     public static List<String[]> createCsvDataSpecial(List<String[]> list ) {
 

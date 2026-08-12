@@ -22,6 +22,7 @@ import com.example.salesrecord.activitys.MainActivity;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -341,5 +342,34 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             view.setImageBitmap(myBitmap);
         }
+    }
+
+    public static boolean isCsvSafeToUpload(File csvFile) {
+        if (csvFile == null || !csvFile.exists()) {
+            Log.e("CSV", "Archivo no existe");
+            return false;
+        }
+        if (csvFile.length() == 0) {
+            Log.e("CSV", "Archivo vacío");
+            return false;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
+            String first = reader.readLine();
+            if (first == null || first.trim().isEmpty()) {
+                Log.e("CSV", "Sin contenido");
+                return false;
+            }
+
+            // Opcional: comprobar que exista la línea de configuración
+            String line;
+            boolean confFound = false;
+            // volver a leer desde el inicio
+        } catch (IOException e) {
+            Log.e("CSV", "Error leyendo CSV", e);
+            return false;
+        }
+
+        return true;
     }
 }

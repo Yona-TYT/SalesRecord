@@ -330,6 +330,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 String[] countList = mSale.countlist.split("\\|");
 
                 DaoArt daoArt = StartVar.appDBall.daoAtr();
+                List<Object> mList = new ArrayList<>();
                 for(int i = 0; i < artcList.length; i++ ){
                     String strArtc = artcList[i];
                     Article crrArt = daoArt.getUsers(strArtc);
@@ -338,20 +339,17 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         crrArt.totalcount += count;
                         crrArt.currcount += count;
                         daoArt.update(crrArt);
+                        mList.add(crrArt);
                     }
                 }
                 //Elimina el registro selecionado
                 daoSal.removerUser(mSale.uid);
+                mList.add(mSale);
+
+                GlobalData.getInstance(contex).getGenericQueue().enqueueList(mList, 3);
+
                 finish(); //Finaliza la actividad y ya no se accede mas
 
-                // sync envia una actualizacion por red
-                Bundle mBundle = new Bundle();
-                mBundle.putBoolean("sync", true);
-                Intent mIntent = new Intent(contex, ReloadActivity.class);
-                mIntent.putExtras(mBundle);
-                //Esto inicia las actividad Reload
-
-                startActivity(mIntent);
             }
         }
         if (itemId == R.id.butt_dts2){
@@ -359,6 +357,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if(mSale != null) {
                 mSale.status = currSel1;
                 daoSal.insertUser(mSale);
+
+                GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
+
                 finish(); //Finaliza la actividad y ya no se accede mas
             }
         }
