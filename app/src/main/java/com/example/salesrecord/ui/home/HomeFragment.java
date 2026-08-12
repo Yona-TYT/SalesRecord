@@ -567,7 +567,7 @@ public class HomeFragment extends Fragment {
                     mAdapter2.notifyDataSetChanged();
                 }
                 else {
-                    Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2, true);
+                    Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
                 }
 
                 currObj = null;
@@ -761,7 +761,7 @@ public class HomeFragment extends Fragment {
                         mAdapter2.notifyDataSetChanged();
                     }
                     else {
-                        Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2, true);
+                        Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
                     }
 
                     currObj = null;
@@ -1053,7 +1053,7 @@ public class HomeFragment extends Fragment {
             return true;
 
         } else {
-            Basic.msg("Aqui no hay aqui no hay !: "+crrSale , true);
+            Basic.msg("Aqui no hay aqui no hay !: "+crrSale );
         }
         return false;
     }

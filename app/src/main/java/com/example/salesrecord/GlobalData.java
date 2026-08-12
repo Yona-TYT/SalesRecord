@@ -30,15 +30,10 @@ public class GlobalData {
     private GenericQueue genericQueue;
 
     // Variables globales
-
-    // DB Config
-//    public  Conf mConfigDB;
-//    public  String mConfID = "confID0";
-//    public  String mDateVersion = "0";
-
-    //Nombre de data Base
-//    private static final String nameDB = "Ventas";
-//    public static String nameDBconf = "Config-RG";
+    public final String glTelef = "04126850965";
+    public final String glCedula = "v11758206";
+    public final String glCodeBank = "0108";
+    public final String glNameBank = "Provincial";
 
     public Article currArt = null;
     public String currSalId = "";

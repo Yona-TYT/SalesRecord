@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Ventas-Negocio</string>
+    <string name="app_name">Negocio</string>
     <string name="title_home">Ventas</string>
     <string name="title_addpay">Pagos</string>
     <string name="title_addacc">Cuenta</string>

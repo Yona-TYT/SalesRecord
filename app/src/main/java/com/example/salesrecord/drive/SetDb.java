@@ -97,7 +97,7 @@ public class SetDb {
             if (mAccList == null || mAccList.isEmpty()) {
                 mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "Los datos locales están vacios");
             } else {
-                Basic.msg("Error: Los IDs de las DB no coinciden: " + hexID + " , " + mConf.hexid, true);
+                Basic.msg("Error: Los IDs de las DB no coinciden: " + hexID + " , " + mConf.hexid);
             }
             SetWorkResult.resetPreloader(preloader);
             return;

@@ -55,6 +55,42 @@
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/txview_pays1" />
 
+
+    <!-- Fila horizontal: TextView + Button (Cadena horizontal directa) -->
+    <TextView
+        android:id="@+id/txview_pays3"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:padding="2dp"
+        android:text="Datos: PAGO + MONTO"
+        android:textSize="@dimen/inner_text_2"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:visibility="gone"
+
+        app:layout_constraintBottom_toTopOf="@+id/pay_viewList"
+        app:layout_constraintEnd_toStartOf="@id/butt_pays1"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/txview_pays2" />
+
+    <Button
+        android:id="@+id/butt_pays1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:layout_marginStart="10dp"
+        android:enabled="true"
+        android:text="Copiar"
+        android:visibility="gone"
+
+        app:layout_constraintHorizontal_weight="0.5"
+        app:layout_constraintTop_toTopOf="@id/txview_pays3"
+        app:layout_constraintBottom_toBottomOf="@id/txview_pays3"
+        app:layout_constraintStart_toEndOf="@id/txview_pays3"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
     <!-- ListView ahora inicia correctamente debajo de txview_pays1 y llena el espacio restante -->
     <ListView
         android:id="@+id/pay_viewList"
@@ -64,7 +100,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_pays2" />
+        app:layout_constraintTop_toBottomOf="@+id/butt_pays1" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"

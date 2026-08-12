@@ -1,8 +1,9 @@
 package com.example.salesrecord.activitys;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -43,6 +44,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
 
 
@@ -64,6 +66,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private TextView total1;
     private TextView total2;
 
+    private TextView datos;
+
     private TextView mText2;
     private TextView mText3;
     private TextView mText4;
@@ -79,6 +83,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private String mUser = "";
     private Button mBtton1;
     private Button mBtton2;
+    private Button mBtton3;
 
     private Spinner mSpinn1;
     private int currSel1 = 0;
@@ -86,7 +91,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     public String payId = StartVar.currPayId;
     public int accIndex = StartVar.accSelect;
 
-    private List<String> mCurrencyList= Arrays.asList("$", "Bs");
+    private List<String> mCurrencyList = Arrays.asList("$", "Bs");
     private int mCindex = StartVar.mCurrency;
 
     private ImageView mImage1;
@@ -98,6 +103,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private Sale mSale;
+
+    private double mTotal = 0.0;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -140,6 +147,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         total1 = findViewById(R.id.txtotal_dts1); //TOTAL
         total2 = findViewById(R.id.txtotal_dts2); //TOTAL
 
+        datos = findViewById(R.id.text_dts1);
+
         mText2 = findViewById(R.id.txview_dts2);
         mText3 = findViewById(R.id.txview_dts3);
         mText4 = findViewById(R.id.txview_dts4);
@@ -147,13 +156,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mText6 = findViewById(R.id.txview_dts6);
 
         mBtton1 = findViewById(R.id.butt_dts1);
-        mBtton2  = findViewById(R.id.butt_dts2);
+        mBtton2 = findViewById(R.id.butt_dts2);
+        mBtton3 = findViewById(R.id.butt_dts3);
         mSw = findViewById(R.id.sw_dts1);
 
-        mSpinn1= findViewById(R.id.pay_dts_select1);
+        mSpinn1 = findViewById(R.id.pay_dts_select1);
 
         mBtton1.setOnClickListener(this);
         mBtton2.setOnClickListener(this);
+        mBtton3.setOnClickListener(this);
         //mImage1.setOnClickListener(this);
         mSw.setOnClickListener(this);
 
@@ -176,11 +187,12 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             return insets;
         });
     }
+
     // MenuToolbar boton back
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        if(itemId == android.R.id.home){
+        if (itemId == android.R.id.home) {
             this.finish();
             return true;
         }
@@ -189,7 +201,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     //------------------------------------------------------------
 
     @SuppressLint("SetTextI18n")
-    public void setTextViewList(){
+    public void setTextViewList() {
 
         if (StartVar.appDBall == null) {
             //Satrted variables
@@ -199,7 +211,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         mSale = daoSal.getUsers(glData.getCurrSalId());
 
-        if(mSale != null) {
+        if (mSale != null) {
+
+            if(mSale.status > 0){
+                datos.setVisibility(View.VISIBLE);
+                mBtton1.setVisibility(View.VISIBLE);
+
+            }
 
             mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
             mSpinn1.setSelection(mSale.status);
@@ -224,18 +242,18 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             DaoArt daoArt = StartVar.appDBall.daoAtr();
 
-            double total = 0.0;
+            mTotal = 0.0;
 
-            for(int i = 0; i < artcList.length; i++ ){
+            for (int i = 0; i < artcList.length; i++) {
                 Article crrArt = daoArt.getUsers(artcList[i]);
 
-                if(crrArt != null) {
+                if (crrArt != null) {
                     double count = Double.parseDouble(countList[i]);
                     double price = Double.parseDouble(priceList[i]);
                     double marge = Double.parseDouble(margList[i]);
 
                     double calc = MathUtls.addPercentage(price, marge);
-                    total = total + ( calc * count);
+                    mTotal = mTotal + (calc * count);
 
                     //Basic.msg(""+price+" "+count+" "+marge, true);
                     objListSal.add(setObjects(crrArt, price, count, marge));
@@ -245,56 +263,55 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
             mListView.setAdapter(mAdapter);
 
-            total1.setText("Actual: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+            total1.setText("Actual: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
 
             double oldTasa = mSale.tasa;
             String infla = "";
-            if(StartVar.mDollar > 0 && oldTasa > 0) {
+            if (StartVar.mDollar > 0 && oldTasa > 0) {
                 // 1. Calculamos la variación real por cada unidad monetaria
-                double rateDiff= StartVar.mDollar - oldTasa;
+                double rateDiff = StartVar.mDollar - oldTasa;
 
                 // 2. La pérdida total es la diferencia de tasa multiplicada por la cantidad
                 // ELIMINADO: infla * StartVar.mDollar (Esto duplicaba el cálculo erróneamente)
-                double loss = rateDiff * total;
+                double loss = rateDiff * mTotal;
 
                 if (loss > 0) {
-                    infla = "Fijo: " + Basic.getMaskConv(total, oldTasa,0) +" / "+Basic.getMaskConv(total, oldTasa,1);
+                    infla = "Fijo: " + Basic.getMaskConv(mTotal, oldTasa, 0) + " / " + Basic.getMaskConv(mTotal, oldTasa, 1);
                 }
             }
 
             total2.setText(infla);
 
 
-
             mUser = mSale.sale;
             String txAlias = mSale.cliente;
 
-            if(txAlias.startsWith("cltID")){
+            if (txAlias.startsWith("cltID")) {
                 DaoClt daoClt = StartVar.appDBall.daoClt();
                 Cliente mClt = daoClt.getUsers(txAlias);
-                if(mClt != null){
-                    txAlias = mClt.nombre+" ("+mClt.iduser+")";
+                if (mClt != null) {
+                    txAlias = mClt.nombre + " (" + mClt.iduser + ")";
                 }
             }
 
             String txConc = "Pagado";
             String txMont = mSale.monto.toString();
-            String txOpt = (mSale.status==0?"+ ":"- ");
+            String txOpt = (mSale.status == 0 ? "+ " : "- ");
             String txFech = "";
             txFech = CalendUtls.getDate(mSale.fecha);
 
             String txHora = CalendUtls.getTime(mSale.time);
 
             int i = 0;
-            mTextList.get(i).setText("Alias: "+ txAlias);
+            mTextList.get(i).setText("Alias: " + txAlias);
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;
-            mTextList.get(i).setText("Monto Fijo: "+txOpt+ Basic.getMaskConv(mSale.monto, 0) +" / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
+            mTextList.get(i).setText("Monto Fijo: " + txOpt + Basic.getMaskConv(mSale.monto, 0) + " / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
             i++;
             mTextList.get(i).setText("Tasa: " + Basic.getMask(mSale.tasa, 1));
             i++;
-            mTextList.get(i).setText("Fecha y Hora: "+ txFech+" "+txHora);
+            mTextList.get(i).setText("Fecha y Hora: " + txFech + " " + txHora);
 
             currDir = mFileM.getImage(mSale.imagen, mImage1);
         }
@@ -303,7 +320,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Obj setObjects(Article art, double mPrice, double count, double margen) {
 
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus,1, art.currcount, count, count, mPrice, margen
+                art.staus, 1, art.currcount, count, count, mPrice, margen
                 , art.uid);
 
         return mObj;
@@ -312,18 +329,26 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     @Override
     public void onClick(View view) {
         int itemId = view.getId();
-        if (itemId == R.id.sw_dts1){
-            swDel = !swDel;
-            if(swDel) {
-                mBtton1.setEnabled(true);
-            }
-            else{
-                mBtton1.setEnabled(false);
-            }
-        }
-        if (itemId == R.id.butt_dts1){
+        if (mSale != null) {
 
-            if(mSale != null) {
+            if (itemId == R.id.sw_dts1) {
+                swDel = !swDel;
+                if (swDel) {
+                    mBtton2.setEnabled(true);
+                } else {
+                    mBtton2.setEnabled(false);
+                }
+            }
+
+            if (itemId == R.id.butt_dts1) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" + glData.glCedula + "\n" + glData.glCodeBank + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
+                clipboard.setPrimaryClip(clipData);
+                Basic.msg("Datos de PAGO+MONTO copiados al portapapeles.");
+            }
+
+            if (itemId == R.id.butt_dts2) {
+
                 //fmang.RemoveFile(saveImage, this.getContentResolver());
 
                 String[] artcList = mSale.artclist.split("\\|");
@@ -331,10 +356,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                 DaoArt daoArt = StartVar.appDBall.daoAtr();
                 List<Object> mList = new ArrayList<>();
-                for(int i = 0; i < artcList.length; i++ ){
+                for (int i = 0; i < artcList.length; i++) {
                     String strArtc = artcList[i];
                     Article crrArt = daoArt.getUsers(strArtc);
-                    if(crrArt != null){
+                    if (crrArt != null) {
                         double count = Double.parseDouble(countList[i]);
                         crrArt.totalcount += count;
                         crrArt.currcount += count;
@@ -351,21 +376,20 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 finish(); //Finaliza la actividad y ya no se accede mas
 
             }
-        }
-        if (itemId == R.id.butt_dts2){
+            if (itemId == R.id.butt_dts3) {
 
-            if(mSale != null) {
                 mSale.status = currSel1;
                 daoSal.insertUser(mSale);
 
                 GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
 
                 finish(); //Finaliza la actividad y ya no se accede mas
+
             }
-        }
 //        if(itemId == R.id.image_dts1) {
 ////            Intent mIntent = new Intent(this, ImageActivity.class);
 ////            startActivity(mIntent);
 //        }
+        }
     }
 }
