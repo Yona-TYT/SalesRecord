@@ -303,7 +303,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Obj setObjects(Article art, double mPrice, double count, double margen) {
 
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, art.currcount, count, count, mPrice, margen
+                art.staus,1, art.currcount, count, count, mPrice, margen
                 , art.uid);
 
         return mObj;

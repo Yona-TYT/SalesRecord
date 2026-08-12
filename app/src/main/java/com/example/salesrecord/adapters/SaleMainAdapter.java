@@ -105,309 +105,321 @@ public class SaleMainAdapter extends BaseAdapter  {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-
         Obj item = objList.get(pos);
 
-        // Layout
-
-        if (item.currCount <= 0 || item.maxCount <= 0){
-            holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
-            );
-        }
-       else if (item.currCount <= 3 || item.maxCount <= 3){
-            holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
-            );
-        }
-        else if (pos == currPos) {
-
-            holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.selected_background)
-            );
-        }
-        else {
-            holder.layout1.setBackgroundColor(
-                    ContextCompat.getColor(holder.layout1.getContext(), R.color.normal_background)
-            );
-        }
-
-        // Imagen
-        if (!item.img.isEmpty() && !item.img.equals("null")) {
-            File file = new File(item.img);
-            holder.imageView.setImageURI(file.exists() ? Uri.fromFile(file) : Uri.parse(item.img));
+        // SOLUCIÓN AL RECICLAJE: Modificamos el Layout interno, NO el convertView entero
+        if (item.visible == 0) {
+            // Reducimos el alto y ancho a 0 para que no deje un hueco vacío en el Grid
+            ViewGroup.LayoutParams params = holder.layout1.getLayoutParams();
+            params.height = 0;
+            params.width = 0;
+            holder.layout1.setLayoutParams(params);
+            holder.layout1.setVisibility(View.GONE);
         } else {
-            holder.imageView.setImageResource(R.drawable.image_icon);
-        }
+            // Restauramos sus dimensiones originales para que vuelva a ser visible al reciclarse
+            ViewGroup.LayoutParams params = holder.layout1.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT; // O pon el alto fijo en PX de tu diseño (ej: Basic.dpToPx(80))
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            holder.layout1.setLayoutParams(params);
+            holder.layout1.setVisibility(View.VISIBLE);
 
-        // ==================== CONTADOR Y BOTÓN ====================
-        Double count = item.saleCount;
 
-        TextView viewCount = holder.viewcount;
+            // Layout
 
-        CurrencyEditText inputCount = holder.inputcount;
-        viewCount.setText(Basic.formatDecimal(count));
+            if (item.currCount <= 0 || item.maxCount <= 0) {
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
+                );
+            } else if (item.currCount <= 3 || item.maxCount <= 3) {
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
+                );
+            } else if (pos == currPos) {
 
-        Object mTag = inputCount.getTag();
-
-        if(mTag != null && (int) mTag == pos){
-            inputCount.setText(Basic.getValueFormatter(String.valueOf(count)));
-        }
-
-        //  Boton X
-        TextView button = holder.mButt;
-
-        if (count > 0) {
-            if (inputCount.getVisibility() == View.INVISIBLE) {
-                viewCount.setVisibility(View.VISIBLE);
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.selected_background)
+                );
+            } else {
+                holder.layout1.setBackgroundColor(
+                        ContextCompat.getColor(holder.layout1.getContext(), R.color.normal_background)
+                );
             }
-            button.setVisibility(View.VISIBLE);
-            button.setClickable(false);      // Evita que bloquee el click del item
-            button.setFocusable(false);
 
-            button.setOnClickListener(v -> {
+            // Imagen
+            if (!item.img.isEmpty() && !item.img.equals("null")) {
+                File file = new File(item.img);
+                holder.imageView.setImageURI(file.exists() ? Uri.fromFile(file) : Uri.parse(item.img));
+            } else {
+                holder.imageView.setImageResource(R.drawable.image_icon);
+            }
 
-                // 1. Obtener la posición real (el tag debe ser actualizado en onBind)
-                Object tag = v.getTag();
-                if (tag == null) return;
-                int idx = (int) tag;
+            // ==================== CONTADOR Y BOTÓN ====================
+            Double count = item.saleCount;
 
-                // 2. Usar SIEMPRE idx para obtener el objeto
-                Obj mitem = objList.get(idx);
-                mitem.click = 0;
+            TextView viewCount = holder.viewcount;
 
-                // 3. Validar límites ANTES de modificar nada
-                if (mitem.currCount >= mitem.maxCount) {
-                    return;
-                }
+            CurrencyEditText inputCount = holder.inputcount;
+            viewCount.setText(Basic.formatDecimal(count));
 
-                // 4. Aplicar cambios lógicos
-                if (mitem.saleCount > 0) {
-                    if(mitem.saleCount < 1){
-                        mitem.saleCount = 0;
-                    }
-                    else {
-                        mitem.saleCount--;
-                    }
-                }
-                mitem.currCount++;
-                if(mitem.currCount > mitem.maxCount){
-                    mitem.currCount = mitem.maxCount;
-                }
+            Object mTag = inputCount.getTag();
 
-                // 5. Notificar  el cambio
-                notifyDataSetChanged();
+            if (mTag != null && (int) mTag == pos) {
+                inputCount.setText(Basic.getValueFormatter(String.valueOf(count)));
+            }
 
-                // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                if (parent instanceof GridView) {
-                    ((GridView) parent).performItemClick(v, idx, idx);
-                }
+            //  Boton X
+            TextView button = holder.mButt;
 
-            });
-
-            button.setOnLongClickListener(v -> {
-                Object tag = v.getTag();
-
-                if (tag == null) return false;
-                int idx = (int) tag;
-                Obj mitem = objList.get(idx);
-                mitem.saleCount = 0;
-                mitem.currCount = mitem.maxCount;
-                mitem.click = 1;
-                objList.set(idx, mitem);
-                //------------------------------------
-
-                notifyDataSetChanged();
-
-                // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                if (parent instanceof GridView) {
-                    ((GridView) parent).performItemClick(v, idx, idx);
-                }
-
-                return true;
-            });
-
-            viewCount.setOnClickListener(v -> {
+            if (count > 0) {
                 if (inputCount.getVisibility() == View.INVISIBLE) {
-
-                    // 1. Hacemos el intercambio de visibilidad inmediatamente
-                    inputCount.setVisibility(View.VISIBLE);
-                    viewCount.setVisibility(View.INVISIBLE);
-
-                    // 2. SOLUCCIÓN: Esperamos a que Android termine el ciclo de renderizado completo (Layout Pass)
-                    inputCount.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Ahora que el input ya existe físicamente en pantalla con su tamaño real,
-                            // pedir el foco disparará el 'onFocusChanged' interno de tu clase personalizada
-                            // de forma idéntica a los inputs que siempre están visibles.
-                            inputCount.requestFocus();
-
-                            // Desplegamos el teclado de manera limpia
-                            InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (imm != null) {
-                                imm.showSoftInput(inputCount, InputMethodManager.SHOW_IMPLICIT);
-                            }
-                        }
-                    });
-                }  else {
-                    // Ocultamos el input
-                    inputCount.setVisibility(View.INVISIBLE);
-
                     viewCount.setVisibility(View.VISIBLE);
-
-
-                    // Opcional: Ocultamos el teclado automáticamente para que no se quede abierto solo
-                    InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) {
-                        imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
-                    }
                 }
-            });
+                button.setVisibility(View.VISIBLE);
+                button.setClickable(false);      // Evita que bloquee el click del item
+                button.setFocusable(false);
 
-            // Configuramos el listener para capturar el botón "Listo" / "Enter" del teclado
-            holder.inputcount.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                    // Detecta el botón 'Listo' (actionDone) o la presión física de la tecla Enter
-                    if (actionId == EditorInfo.IME_ACTION_DONE ||
-                            (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                button.setOnClickListener(v -> {
 
-                        Object tag = inputCount.getTag();
-                        if (tag == null) return false;
-                        int idx = (int) tag;
+                    // 1. Obtener la posición real (el tag debe ser actualizado en onBind)
+                    Object tag = v.getTag();
+                    if (tag == null) return;
+                    int idx = (int) tag;
 
-                        // Verificación de seguridad de posición y visibilidad
-                        if (idx == pos && inputCount.getVisibility() == View.VISIBLE) {
+                    // 2. Usar SIEMPRE idx para obtener el objeto
+                    Obj mitem = objList.get(idx);
+                    mitem.click = 0;
 
-                            // 1. Guardamos el valor de forma segura en tu lista de datos
-                            Obj mitem = objList.get(idx);
-                            double value = inputCount.getNumericValue();
-                            if(value <= mitem.maxCount) {
-                                mitem.saleCount = value;
-                                mitem.currCount = mitem.maxCount - value;
-                                objList.set(idx, mitem);
-                            }
-                            else {
-                                inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
-                            }
+                    // 3. Validar límites ANTES de modificar nada
+                    if (mitem.currCount >= mitem.maxCount) {
+                        return;
+                    }
 
-                            // 2. Ocultamos el input y regresamos al diseño del texto original
-                            inputCount.setVisibility(View.INVISIBLE);
-                            viewCount.setVisibility(View.VISIBLE);
-
-                            // Actualizamos el texto visual con el nuevo valor guardado
-                            viewCount.setText(Basic.formatDecimal(mitem.saleCount));
-
-                            // 3. Ocultamos el teclado de la pantalla
-                            InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (imm != null) {
-                                imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
-                            }
-
-                            // 4. Forzamos el click del GridView si tu lógica externa lo requiere
-                            if (parent instanceof GridView) {
-                                ((GridView) parent).performItemClick(inputCount, idx, idx);
-                            }
-
-                            // 5. Ahora sí podemos refrescar la lista de forma segura sin romper el teclado
-                            notifyDataSetChanged();
-
-                            return true; // Indica que el evento fue procesado con éxito
+                    // 4. Aplicar cambios lógicos
+                    if (mitem.saleCount > 0) {
+                        if (mitem.saleCount < 1) {
+                            mitem.saleCount = 0;
+                        } else {
+                            mitem.saleCount--;
                         }
                     }
-                    return false; // Pasa el evento al sistema si no es la tecla Enter
-                }
-            });
+                    mitem.currCount++;
+                    if (mitem.currCount > mitem.maxCount) {
+                        mitem.currCount = mitem.maxCount;
+                    }
 
-            holder.inputcount.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if(!hasFocus){
-                        Object tag = inputCount.getTag();
-                        if (tag == null) return;
-                        int idx = (int) tag;
+                    // 5. Notificar  el cambio
+                    notifyDataSetChanged();
 
-                        // Verificación de seguridad de posición y visibilidad
-                        if (idx == pos && inputCount.getVisibility() == View.VISIBLE) {
+                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
+                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
+                    if (parent instanceof GridView) {
+                        ((GridView) parent).performItemClick(v, idx, idx);
+                    }
 
-                            // 1. Guardamos el valor de forma segura en tu lista de datos
-                            Obj mitem = objList.get(idx);
-                            double value = inputCount.getNumericValue();
-                            if(value <= mitem.maxCount) {
-                                mitem.saleCount = value;
-                                mitem.currCount = mitem.maxCount - value;
-                                objList.set(idx, mitem);
+                });
+
+                button.setOnLongClickListener(v -> {
+                    Object tag = v.getTag();
+
+                    if (tag == null) return false;
+                    int idx = (int) tag;
+                    Obj mitem = objList.get(idx);
+                    mitem.saleCount = 0;
+                    mitem.currCount = mitem.maxCount;
+                    mitem.click = 1;
+                    objList.set(idx, mitem);
+                    //------------------------------------
+
+                    notifyDataSetChanged();
+
+                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
+                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
+                    if (parent instanceof GridView) {
+                        ((GridView) parent).performItemClick(v, idx, idx);
+                    }
+
+                    return true;
+                });
+
+                viewCount.setOnClickListener(v -> {
+                    if (inputCount.getVisibility() == View.INVISIBLE) {
+
+                        // 1. Hacemos el intercambio de visibilidad inmediatamente
+                        inputCount.setVisibility(View.VISIBLE);
+                        viewCount.setVisibility(View.INVISIBLE);
+
+                        // 2. SOLUCCIÓN: Esperamos a que Android termine el ciclo de renderizado completo (Layout Pass)
+                        inputCount.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Ahora que el input ya existe físicamente en pantalla con su tamaño real,
+                                // pedir el foco disparará el 'onFocusChanged' interno de tu clase personalizada
+                                // de forma idéntica a los inputs que siempre están visibles.
+                                inputCount.requestFocus();
+
+                                // Desplegamos el teclado de manera limpia
+                                InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                if (imm != null) {
+                                    imm.showSoftInput(inputCount, InputMethodManager.SHOW_IMPLICIT);
+                                }
                             }
-                            else {
-                                inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
-                                Basic.msg("Valor EXCEDIDO!");
-                            }
+                        });
+                    } else {
+                        // Ocultamos el input
+                        inputCount.setVisibility(View.INVISIBLE);
 
-                            // 2. Ocultamos el input y regresamos al diseño del texto original
-                            inputCount.setVisibility(View.INVISIBLE);
-                            viewCount.setVisibility(View.VISIBLE);
+                        viewCount.setVisibility(View.VISIBLE);
 
-                            // Actualizamos el texto visual con el nuevo valor guardado
-                            viewCount.setText(Basic.formatDecimal(mitem.saleCount));
 
-                            // 3. Ocultamos el teclado de la pantalla
-                            InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (imm != null) {
-                                imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
-                            }
-
-                            // 4. Forzamos el click del GridView si tu lógica externa lo requiere
-                            if (parent instanceof GridView) {
-                                ((GridView) parent).performItemClick(inputCount, idx, idx);
-                            }
-
-                            // 5. Ahora sí podemos refrescar la lista de forma segura sin romper el teclado
-                            notifyDataSetChanged();
+                        // Opcional: Ocultamos el teclado automáticamente para que no se quede abierto solo
+                        InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
                         }
                     }
-                }
-            });
+                });
+
+                // Configuramos el listener para capturar el botón "Listo" / "Enter" del teclado
+                holder.inputcount.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        // Detecta el botón 'Listo' (actionDone) o la presión física de la tecla Enter
+                        if (actionId == EditorInfo.IME_ACTION_DONE ||
+                                (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+
+                            Object tag = inputCount.getTag();
+                            if (tag == null) return false;
+                            int idx = (int) tag;
+
+                            // Verificación de seguridad de posición y visibilidad
+                            if (idx == pos && inputCount.getVisibility() == View.VISIBLE) {
+
+                                // 1. Guardamos el valor de forma segura en tu lista de datos
+                                Obj mitem = objList.get(idx);
+                                double value = inputCount.getNumericValue();
+                                if (value <= mitem.maxCount) {
+                                    mitem.saleCount = value;
+                                    mitem.currCount = mitem.maxCount - value;
+                                    objList.set(idx, mitem);
+                                } else {
+                                    inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
+                                }
+
+                                // 2. Ocultamos el input y regresamos al diseño del texto original
+                                inputCount.setVisibility(View.INVISIBLE);
+                                viewCount.setVisibility(View.VISIBLE);
+
+                                // Actualizamos el texto visual con el nuevo valor guardado
+                                viewCount.setText(Basic.formatDecimal(mitem.saleCount));
+
+                                // 3. Ocultamos el teclado de la pantalla
+                                InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                if (imm != null) {
+                                    imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
+                                }
+
+                                // 4. Forzamos el click del GridView si tu lógica externa lo requiere
+                                if (parent instanceof GridView) {
+                                    ((GridView) parent).performItemClick(inputCount, idx, idx);
+                                }
+
+                                // 5. Ahora sí podemos refrescar la lista de forma segura sin romper el teclado
+                                notifyDataSetChanged();
+
+                                return true; // Indica que el evento fue procesado con éxito
+                            }
+                        }
+                        return false; // Pasa el evento al sistema si no es la tecla Enter
+                    }
+                });
+
+                holder.inputcount.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        if (!hasFocus) {
+                            Object tag = inputCount.getTag();
+                            if (tag == null) return;
+                            int idx = (int) tag;
+
+                            // Verificación de seguridad de posición y visibilidad
+                            if (idx == pos && inputCount.getVisibility() == View.VISIBLE) {
+
+                                // 1. Guardamos el valor de forma segura en tu lista de datos
+                                Obj mitem = objList.get(idx);
+                                double value = inputCount.getNumericValue();
+                                if (value <= mitem.maxCount) {
+                                    mitem.saleCount = value;
+                                    mitem.currCount = mitem.maxCount - value;
+                                    objList.set(idx, mitem);
+                                } else {
+                                    inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
+                                    Basic.msg("Valor EXCEDIDO!");
+                                }
+
+                                // 2. Ocultamos el input y regresamos al diseño del texto original
+                                inputCount.setVisibility(View.INVISIBLE);
+                                viewCount.setVisibility(View.VISIBLE);
+
+                                // Actualizamos el texto visual con el nuevo valor guardado
+                                viewCount.setText(Basic.formatDecimal(mitem.saleCount));
+
+                                // 3. Ocultamos el teclado de la pantalla
+                                InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                if (imm != null) {
+                                    imm.hideSoftInputFromWindow(inputCount.getWindowToken(), 0);
+                                }
+
+                                // 4. Forzamos el click del GridView si tu lógica externa lo requiere
+                                if (parent instanceof GridView) {
+                                    ((GridView) parent).performItemClick(inputCount, idx, idx);
+                                }
+
+                                // 5. Ahora sí podemos refrescar la lista de forma segura sin romper el teclado
+                                notifyDataSetChanged();
+                            }
+                        }
+                    }
+                });
 
 
-        } else {
-            viewCount.setVisibility(View.INVISIBLE);
+            } else {
+                viewCount.setVisibility(View.INVISIBLE);
 
-            button.setVisibility(View.INVISIBLE);
-            button.setVisibility(View.INVISIBLE);
+                button.setVisibility(View.INVISIBLE);
+                button.setVisibility(View.INVISIBLE);
+            }
+
+            // Textos
+            String desc = item.desc.isEmpty() ? "" : " (" + item.desc + ")";
+            holder.view1.setText(item.name + desc);
+            holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
+
+
+            double clcPrice = MathUtls.addPercentage(item.price, item.margen);
+
+            holder.view3.setText("Precio: " + Basic.getMaskConv(clcPrice, 0) + "/" + Basic.getMaskConv(clcPrice, 1));
+
+            holder.view1.setTextColor(
+                    ContextCompat.getColor(holder.view1.getContext(), R.color.alert_text)
+            );
+            holder.view2.setTextColor(
+                    ContextCompat.getColor(holder.view2.getContext(), R.color.alert_text)
+            );
+            holder.view3.setTextColor(
+                    ContextCompat.getColor(holder.view3.getContext(), R.color.alert_text)
+            );
+
+            // Tags (para identificar posición)
+            holder.imageView.setTag(pos);
+            holder.view1.setTag(pos);
+            holder.view2.setTag(pos);
+            button.setTag(pos);
+            inputCount.setTag(pos);
+
+
         }
-
-        // Textos
-        String desc = item.desc.isEmpty() ? "" : " ("+item.desc+")";
-        holder.view1.setText(item.name+desc);
-        holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
-
-
-        double clcPrice = MathUtls.addPercentage(item.price, item.margen);
-
-        holder.view3.setText("Precio: " + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1));
-
-        holder.view1.setTextColor(
-                ContextCompat.getColor(holder.view1.getContext(), R.color.alert_text)
-        );
-        holder.view2.setTextColor(
-                ContextCompat.getColor(holder.view2.getContext(), R.color.alert_text)
-        );
-        holder.view3.setTextColor(
-                ContextCompat.getColor(holder.view3.getContext(), R.color.alert_text)
-        );
-
-        // Tags (para identificar posición)
-        holder.imageView.setTag(pos);
-        holder.view1.setTag(pos);
-        holder.view2.setTag(pos);
-        button.setTag(pos);
-        inputCount.setTag(pos);
-
-
-
         return convertView;
+
     }
+
 }

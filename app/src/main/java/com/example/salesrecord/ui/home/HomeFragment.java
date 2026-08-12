@@ -44,6 +44,7 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.DatabaseUtils;
+import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
@@ -53,7 +54,6 @@ import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
-import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.SharedViewModel;
@@ -176,7 +176,6 @@ public class HomeFragment extends Fragment {
         // RECOLECCIÓN DE DATOS RESPALDADOS (savedInstanceState)
         // =========================================================================
 
-        Msg.init(contex);
         if (savedInstanceState != null) {
             initSlots(); // listas vacías base
 
@@ -281,6 +280,8 @@ public class HomeFragment extends Fragment {
             binding.bottomPanel.setVisibility(View.VISIBLE);
         });
 
+
+
         sharedViewModel.getSrchToggle().observe(getViewLifecycleOwner(), visible -> {
             if (visible == null) return;
 
@@ -321,6 +322,13 @@ public class HomeFragment extends Fragment {
             searchBar.setVisibility(View.GONE);
             binding.topPanel.setVisibility(View.VISIBLE);
 
+            for (Obj item : objListAll) {
+                item.visible = 1;
+
+            }
+
+            refreshAllUI();
+
             // Opcional: Ocultar el teclado explícitamente al cerrar la barra
             InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
@@ -328,6 +336,87 @@ public class HomeFragment extends Fragment {
             }
         });
 
+
+        //==============================================================================================
+
+        // 1. Listener de texto estándar corregido
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // Ejecuta la búsqueda (incluso si viene vacía)
+                String str = InputHelper.cleanText(query.trim());
+
+                for (Obj item : objListAll) {
+                    if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                        item.visible = 1;
+                    }
+                    else {
+                        item.visible = 0;
+
+                    }
+                }
+                refreshAllUI();
+                searchBar.clearFocus();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // Si el usuario borra manualmente hasta dejarlo vacío,
+                // forzamos la restauración inmediata de la lista completa
+                if (newText == null || newText.trim().isEmpty()) {
+                    String str = InputHelper.cleanText(newText.trim());
+
+                    for (Obj item : objListAll) {
+                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                            item.visible = 1;
+                        }
+                        else {
+                            item.visible = 0;
+
+                        }
+                    }
+                    refreshAllUI();
+                }
+                return true;
+            }
+        });
+
+        // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
+        int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
+        View searchButton = searchBar.findViewById(searchButtonId);
+
+        if (searchButton != null) {
+            searchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String query = searchBar.getQuery().toString();
+                    // Forzamos la carga del catálogo con lo que tenga (cadena vacía o texto)
+                    String str = InputHelper.cleanText(query.trim());
+
+                    for (Obj item : objListAll) {
+                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                            item.visible = 1;
+                        }
+                        else {
+                            item.visible = 0;
+
+                        }
+                    }
+                    searchBar.clearFocus();
+                }
+            });
+        }
+        //=====================================================================================
+
+
+        sharedViewModel.getChgToggle().observe(getViewLifecycleOwner(), pos -> {
+            // Si es nulo o no se ha seleccionado ninguna lista válida, salimos
+            if (pos == null || pos == -1) return;
+
+            // Evaluamos el número de lista recibido desde el XML
+           // Basic.msg(" "+pos);
+        });
 
         // Boton Recargar
         mButt1.setOnClickListener(new View.OnClickListener() {
@@ -359,7 +448,6 @@ public class HomeFragment extends Fragment {
                     if (mAdapter1 != null) {
                         mAdapter1.notifyDataSetChanged();
                     }
-
                 }
             }
         });
@@ -492,45 +580,6 @@ public class HomeFragment extends Fragment {
                 Basic.msg("Mantegan precionado para limpiar la lista.");
             }
         });
-
-
-        // 1. Listener de texto estándar corregido
-        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                // Ejecuta la búsqueda (incluso si viene vacía)
-                loadCatalogIntoSlot(currSlot, query != null ? query.trim() : "");
-                searchBar.clearFocus();
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // Si el usuario borra manualmente hasta dejarlo vacío,
-                // forzamos la restauración inmediata de la lista completa
-                if (newText == null || newText.trim().isEmpty()) {
-                    loadCatalogIntoSlot(currSlot, "");
-                }
-                return true;
-            }
-        });
-
-        // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
-        int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
-        View searchButton = searchBar.findViewById(searchButtonId);
-
-        if (searchButton != null) {
-            searchButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String query = searchBar.getQuery().toString();
-                    // Forzamos la carga del catálogo con lo que tenga (cadena vacía o texto)
-                    loadCatalogIntoSlot(currSlot, query.trim());
-                    searchBar.clearFocus();
-                }
-            });
-        }
-        //----------------------------------------------------
 
         //Para la lista de todos los productos
         if(!isSave) {
@@ -717,15 +766,15 @@ public class HomeFragment extends Fragment {
 
                     currObj = null;
 
-                    // sync envia una actualizacion por red
-                    Bundle mBundle = new Bundle();
-                    mBundle.putBoolean("sync", true);
-                    Intent mIntent = new Intent(contex, ReloadActivity.class);
-                    mIntent.putExtras(mBundle);
-                    //Esto inicia las actividad Reload
-
-                    startActivity(mIntent);
-                    //-------------------------------------
+//                    // sync envia una actualizacion por red
+//                    Bundle mBundle = new Bundle();
+//                    mBundle.putBoolean("sync", true);
+//                    Intent mIntent = new Intent(contex, ReloadActivity.class);
+//                    mIntent.putExtras(mBundle);
+//                    //Esto inicia las actividad Reload
+//
+//                    startActivity(mIntent);
+//                    //-------------------------------------
                 }
             }
             else {
@@ -890,7 +939,7 @@ public class HomeFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen+mConf.margen, art.uid
+                art.staus, 1, art.currcount, art.totalcount, 0, mPrice, art.margen+mConf.margen, art.uid
         );
 
         return mObj;
@@ -950,6 +999,7 @@ public class HomeFragment extends Fragment {
             double total = 0.0;
 
             List<Article> artList = new ArrayList<>();
+            List<Object> mList = new ArrayList<>();
 
             for (Obj o : objListSal){
                 double price = MathUtls.addPercentage(o.price, o.margen);
@@ -965,15 +1015,17 @@ public class HomeFragment extends Fragment {
                 art.currcount -= o.saleCount;
 
                 artList.add(art);
+                mList.add(art);
             }
 
             String strCltId = "@null";
             if (mCl != null){
                 strClt = mCl.cliente;
                 daoClt.insertUser(mCl);
+                mList.add(mCl);
             }
 
-            Sale mObj = new Sale(
+            Sale mSal = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
                     total, StartVar.mDollar, currSel1, "", currTime, strCltId, 0, "", currDate
             );
@@ -985,17 +1037,18 @@ public class HomeFragment extends Fragment {
             mSpinn1.setEnabled(false);
 
             //Se guarda la venta
-            daoSal.insertUser(mObj);
+            daoSal.insertUser(mSal);
+            mList.add(mSal);
 
             //Se actualiza la lista de articulos con valores descontados
             daoArt.updateUser(artList);
 
             //Se actualiza la lista de fechas si esta no existe
-           CalendUtls.getAndCreateDate(contex, 0);
+            Fecha objB = CalendUtls.getAndCreateDate(contex, 0);
 
-//            Fecha objB = CalendUtls.getAndCreateDate(contex,0);
-//            List<Object> mList = Arrays.asList(mF, objB);
-//            GlobalData.getInstance(getContext()).getGenericQueue().enqueueList(mList, 3);
+            mList.add(objB);
+
+            GlobalData.getInstance(getContext()).getGenericQueue().enqueueList(mList, 3);
 
             return true;
 
@@ -1042,11 +1095,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadCatalogIntoSlot(int slot) {
-        loadCatalogIntoSlot( slot, "");
-    }
-
-    private void loadCatalogIntoSlot(int slot, String str) {
-        str = InputHelper.cleanText(str);
         if (slot < 0 || slot > 2) return;
         if (allSlots[slot] == null) allSlots[slot] = new ArrayList<>();
         if (salSlots[slot] == null) salSlots[slot] = new ArrayList<>();
@@ -1057,7 +1105,7 @@ public class HomeFragment extends Fragment {
         if (mArtList == null) return;
 
         for (Article obj : mArtList) {
-            if (obj.staus > 0 && InputHelper.hasWordMatch(obj.nombre+obj.descr, str)) {
+            if (obj.staus > 0 ) {
                 allSlots[slot].add(setGalleryArray(obj));
             }
         }

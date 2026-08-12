@@ -55,31 +55,6 @@ public class SetWorkResult {
         this.manager = manager;
     }
 
-    //Debug
-//    public void observeWorkResult() {
-//        android.util.Log.d("QueueManager", "Iniciando observador para WORK_TAG_CONFDB: " + StartVar.WORK_TAG_CONFDB);
-//        WorkManager.getInstance(StartVar.mContex)
-//                .getWorkInfosForUniqueWorkLiveData(StartVar.WORK_TAG_CONFDB)
-//                .observe(lifecycle, workInfos -> {
-//                    android.util.Log.d("WorkerStatus", "Recibidos " + workInfos.size() + " WorkInfos");
-//                    for (WorkInfo workInfo : workInfos) {
-//                        android.util.Log.d("WorkerStatus", "Estado: " + workInfo.getState() + ", ID: " + workInfo.getId());
-//                        if (workInfo.getState().isFinished()) {
-//                            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-//                                String result = workInfo.getOutputData().getString("result");
-//                                android.util.Log.d("WorkerResult", "Éxito: " + result);
-//                            } else if (workInfo.getState() == WorkInfo.State.FAILED) {
-//                                android.util.Log.d("WorkerResult", "Fallo en Worker");
-//                            } else if (workInfo.getState() == WorkInfo.State.CANCELLED) {
-//                                android.util.Log.d("WorkerResult", "Worker cancelado");
-//                            }
-//                        } else {
-//                            android.util.Log.d("WorkerStatus", "Worker en curso: " + workInfo.getState());
-//                        }
-//                    }
-//                });
-//    }
-//
     // Observar los resultados del Worker
     public void observeWorkResult() {
         Context context = AppContextProvider.getContext();

@@ -1,4 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-  
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://android.com"> <!-- Agregamos herramientas -->
+
+    <item
+        android:id="@+id/chg"
+        android:icon="@drawable/chg"
+        android:title="Cambio entre Listas"
+        app:showAsAction="always" >
+
+        <menu>
+            <item
+                android:id="@+id/action_list1"
+                android:title="Lista de atencion 1"
+                app:value="0"
+                 />
+
+            <item
+                android:id="@+id/action_list2"
+                android:title="Lista de atencion 2"
+                app:value="1"
+                 />
+
+            <item
+                android:id="@+id/action_list3"
+                android:title="Lista de atencion 3"
+                app:value="2"
+                 />
+
+            <item
+                android:id="@+id/action_list4"
+                android:title="Lista de atencion 4"
+                app:value="3"
+               />
+        </menu>
+
+    </item>
 </menu>

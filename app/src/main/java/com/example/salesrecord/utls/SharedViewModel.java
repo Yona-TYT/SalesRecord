@@ -9,7 +9,7 @@ public class SharedViewModel extends ViewModel {
     private final MutableLiveData<Boolean> calcToggle = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> srchToggle = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> margToggle = new MutableLiveData<>(false);
-
+    private final MutableLiveData<Integer> chgToggle = new MutableLiveData<>(0);
 
     public LiveData<Boolean> getCalcToggle() {
         return calcToggle;
@@ -21,6 +21,10 @@ public class SharedViewModel extends ViewModel {
 
     public LiveData<Boolean> getMargToggle() {
         return margToggle;
+    }
+
+    public LiveData<Integer> getChgToggle() {
+        return chgToggle;
     }
 
     /** Alterna el estado de la calculadora */
@@ -51,5 +55,10 @@ public class SharedViewModel extends ViewModel {
 
     public void setMargVisible(boolean visible) {
         margToggle.setValue(visible);
+    }
+
+    /** Alterna el estado del multi cliente */
+    public void selectListValue(int value) {
+        chgToggle.setValue(value);
     }
 }

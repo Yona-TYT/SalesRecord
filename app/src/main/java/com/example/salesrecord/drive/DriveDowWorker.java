@@ -222,7 +222,7 @@ public class DriveDowWorker extends Worker {
         if(success){
             if(isImg) {
                 // Notify internal listeners
-                EventBus.getDefault().post(new DownloadEvents.GoogleDrive().succeeded(" Archivos Descargados: ", count));
+                EventBus.getDefault().post(new DownloadEvents.GoogleDrive().succeeded(" Archivos Descargados: = ", count));
                 // Notify external listeners
                 //Basic.sendFileUploadedBroadcast(getApplicationContext(), new String[]{fileToUpload.getAbsolutePath()}, "googledrive");
             }

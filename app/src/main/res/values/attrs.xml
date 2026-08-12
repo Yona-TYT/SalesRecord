@@ -1,16 +1,21 @@
 <resources>
-<declare-styleable name="FullscreenAttrs">
-    <attr name="fullscreenBackgroundColor" format="color" />
-    <attr name="fullscreenTextColor" format="color" />
-</declare-styleable>
-<declare-styleable name="CurrencyEditText">
-    <attr name="currencySymbol" format="string"/>
-    <attr name="localeTag" format="string"/>
-    <attr name="useCurrencySymbolAsHint" format="boolean"/>
-    <attr name="maxNumberOfDecimalDigits" format="integer"/>
-    <attr name="viewsToHideIds" format="string" />
-    <attr name="keepFocusOnKeyboardClose" format="boolean" />
-    <attr name="currencySymbolSuffix" format="boolean" />
-    <attr name="maxValue" format="float" />
-</declare-styleable>
+    <declare-styleable name="FullscreenAttrs">
+        <attr name="fullscreenBackgroundColor" format="color" />
+        <attr name="fullscreenTextColor" format="color" />
+    </declare-styleable>
+    <declare-styleable name="CurrencyEditText">
+        <attr name="currencySymbol" format="string"/>
+        <attr name="localeTag" format="string"/>
+        <attr name="useCurrencySymbolAsHint" format="boolean"/>
+        <attr name="maxNumberOfDecimalDigits" format="integer"/>
+        <attr name="viewsToHideIds" format="string" />
+        <attr name="keepFocusOnKeyboardClose" format="boolean" />
+        <attr name="currencySymbolSuffix" format="boolean" />
+        <attr name="maxValue" format="float" />
+    </declare-styleable>
+
+
+    <declare-styleable name="MenuItemAttrs">
+        <attr name="value" format="integer" />
+    </declare-styleable>
 </resources>

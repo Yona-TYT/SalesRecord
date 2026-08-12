@@ -43,7 +43,6 @@ import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.ex.PreferenceHelper;
-import com.example.salesrecord.utls.Msg;
 
 public class Preloader extends AppCompatActivity {
 

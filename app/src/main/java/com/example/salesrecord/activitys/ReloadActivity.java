@@ -13,7 +13,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
-import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Article;
@@ -21,7 +20,6 @@ import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.CalendUtls;
-import com.example.salesrecord.utls.Msg;
 
 import net.openid.appauth.AuthState;
 
@@ -45,7 +43,6 @@ public class ReloadActivity extends AppCompatActivity {
 
         //Satrted variables
         StartVar startVar = new StartVar();
-        Basic mBasic = new Basic(getApplicationContext());
 
         StartVar.reloadActivity = this;
 

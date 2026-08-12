@@ -20,6 +20,7 @@ public class Obj implements Serializable, Parcelable {
     public int click = 0;
     public int unit = 0;
     public int status = 0;
+    public int visible = 1;
 
     public double currCount = 0;
     public double maxCount = 0;
@@ -31,7 +32,7 @@ public class Obj implements Serializable, Parcelable {
 
     public long id;
 
-    public Obj(String strId, String name, String desc, String img, int click, int unit, int status, double currCount, double maxCount, double saleCount, double price, double margen, Long id) {
+    public Obj(String strId, String name, String desc, String img, int click, int unit, int status, int visible, double currCount, double maxCount, double saleCount, double price, double margen, Long id) {
         this.strId = strId;
         this.name = name;
         this.desc = desc;
@@ -40,6 +41,7 @@ public class Obj implements Serializable, Parcelable {
         this.click = click;
         this.unit = unit;
         this.status = status;
+        this.visible = visible;
 
         this.currCount = currCount;
         this.maxCount = maxCount;
@@ -59,6 +61,7 @@ public class Obj implements Serializable, Parcelable {
         click = in.readInt();
         unit = in.readInt();
         status = in.readInt();
+        visible = in.readInt();
         startDate = in.readInt();
         endDate = in.readInt();
         currDate = in.readInt();
@@ -97,6 +100,7 @@ public class Obj implements Serializable, Parcelable {
         dest.writeInt(click);
         dest.writeInt(unit);
         dest.writeInt(status);
+        dest.writeInt(visible);
         dest.writeInt(startDate);
         dest.writeInt(endDate);
         dest.writeInt(currDate);

@@ -1,23 +1,27 @@
 package com.example.salesrecord.db;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 
+import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.db.dao.QueueItemDao;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.utls.CalendUtls;
 import com.google.gson.Gson;
 
 import net.openid.appauth.AuthState;
@@ -67,18 +71,14 @@ public class GenericQueue {
 
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                AuthState authState = DriveManager.getAuthState();
-                if (authState == null || !authState.isAuthorized()) {
-                    Log.w("Queue", "No autorizado en Google Drive. No se inserta en cola.");
-                    return;
-                }
 
                 getQueueItemDao().insert(item);
 
-
-
                 // Sincronización con Drive
-                synchronizeCheck();
+                AuthState authState = DriveManager.getAuthState();
+                if (authState != null && authState.isAuthorized()) {
+                    synchronizeCheck();
+                }
 
                 // Añadir a la cola en memoria y arrancar el procesamiento con mSend
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -106,11 +106,6 @@ public class GenericQueue {
 
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                AuthState authState = DriveManager.getAuthState();
-                if (authState == null || !authState.isAuthorized()) {
-                    Log.w("Queue", "No autorizado en Google Drive. No se inserta la lista.");
-                    return;
-                }
 
                 long baseOrder = System.currentTimeMillis();
 
@@ -126,14 +121,15 @@ public class GenericQueue {
                 }
 
                 // Sincronización con Drive
-                synchronizeCheck();
+                AuthState authState = DriveManager.getAuthState();
+                if (authState != null && authState.isAuthorized()) {
+                    synchronizeCheck();
+                }
 
                 // Pasar al hilo principal para actualizar memoria e iniciar Workers
                 new Handler(Looper.getMainLooper()).post(() -> {
                     queue.addAll(objList);
                     Log.d("Queue", objList.size() + " objetos añadidos a la memoria.");
-
-                    startUsuarioQueue(mSend);
                 });
 
             } catch (Exception e) {
@@ -160,9 +156,9 @@ public class GenericQueue {
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (!queue.isEmpty()) {
                     processNext(send);
-                } else {
-                    Basic.msg("No hay elementos en cola");
-                }
+                } //else {
+                    ///Basic.msg("No hay elementos en cola");
+                //}
             });
         });
     }
@@ -172,61 +168,88 @@ public class GenericQueue {
     }
 
     private void synchronizeCheck() {
-        DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        StartVar.mWorkResult = new SetWorkResult(androidx.lifecycle.ProcessLifecycleOwner.get(), executorService, manager);
-        manager.dataSynchronizeCheck();
+        // LiveData.observe DEBE ejecutarse en el hilo principal
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
+                ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+                StartVar.mWorkResult = new SetWorkResult(
+                        ProcessLifecycleOwner.get(),
+                        executorService,
+                        manager
+                );
+
+                StartVar.mWorkResult.observeWorkResult();
+                manager.dataSynchronizeCheck();
+            } catch (Exception e) {
+                Log.e("Queue", "Error en synchronizeCheck", e);
+            }
+        });
     }
 
     private void processNext(int sendOpt) {
         if (queue.isEmpty()) {
+            if (sendOpt == 1 || sendOpt == 2 || sendOpt == 3) {
+                performFinalUpload(sendOpt);
+            }
             return;
         }
 
-        Object objetoActual = queue.peek();
+        Object current = queue.peek();
 
         Data inputData = new Data.Builder()
-                .putString("objeto_json", gson.toJson(objetoActual))
-                .putString("objeto_tipo", objetoActual.getClass().getName())
-                .putInt("send", sendOpt)   // ← aquí llega el mSend al GenericWorker
+                .putString("objeto_json", gson.toJson(current))
+                .putString("objeto_tipo", current.getClass().getName())
+                .putInt("send", sendOpt)
                 .build();
 
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(GenericWorker.class)
+        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(GenericWorker.class)
                 .setInputData(inputData)
                 .build();
 
         WorkManager.getInstance(context)
-                .getWorkInfoByIdLiveData(workRequest.getId())
-                .observe(androidx.lifecycle.ProcessLifecycleOwner.get(), workInfo -> {
+                .getWorkInfoByIdLiveData(request.getId())
+                .observe(ProcessLifecycleOwner.get(), workInfo -> {
                     if (workInfo != null && workInfo.getState().isFinished()) {
                         if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
                             queue.poll();
 
-                            QueueItem queueItem = getQueueItemDao().getFirstQueueItem();
-                            if (queueItem != null) {
-                                getQueueItemDao().delete(queueItem);
-                            }
+                            QueueItem item = getQueueItemDao().getFirstQueueItem();
+                            if (item != null) getQueueItemDao().delete(item);
 
-                            processNext(sendOpt);
+                            processNext(sendOpt);   // siguiente
                         } else {
-                            Basic.msg("Aqui fallloooo: " + StartVar.sendDate);
-
-                            WorkInfo.State state = workInfo.getState();
-                            String output = workInfo.getOutputData().toString();
-
-                            Log.e("Queue", "Work falló. Estado = " + state);
-                            Log.e("Queue", "OutputData = " + output);
-
-                            String errorMsg = workInfo.getOutputData().getString("error");
-                            if (errorMsg != null) {
-                                Log.e("Queue", "Error del Worker: " + errorMsg);
-                                Basic.msg("Error Worker: " + errorMsg);
-                            }
+                            Log.e("Queue", "Worker falló: " + workInfo.getState());
                         }
                     }
                 });
 
-        WorkManager.getInstance(context).enqueue(workRequest);
+        WorkManager.getInstance(context).enqueue(request);
+    }
+
+    private void performFinalUpload(int sendOpt) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                updateConfigTimestamp();                 // nueva fecha local
+                DBListCreator.createDbLists();           // CSV actualizados (ya fusionados)
+                new DriveManager(PreferenceHelper.getInstance()).uploadDataBase();
+                clear();
+
+                if (sendOpt == 2) {
+                    // Reiniciar activity si es necesario
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (StartVar.mActivity != null) {
+                            Intent i = new Intent(context, StartVar.mActivity.getClass());
+                            StartVar.mActivity.startActivity(i);
+                            StartVar.mActivity.finish();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Log.e("Queue", "Error en subida final", e);
+            }
+        });
     }
 
     public int size() {
@@ -240,5 +263,29 @@ public class GenericQueue {
 
     public void poll() {
         queue.poll();
+    }
+
+    private void updateConfigTimestamp() {
+        long currDate = 0L;
+        long currTime = System.currentTimeMillis();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            currDate = java.time.Instant.now().toEpochMilli();
+        } else {
+            currDate = currTime; // fallback para versiones antiguas
+        }
+
+        String strDbg = "GenericWorker: " +
+                CalendUtls.getShortDate(currDate) + " " +
+                CalendUtls.getTime(currTime);
+
+        StartVar.appDBall.daoCfg().updateDateTime(
+                StartVar.mConfID,
+                currDate,
+                currTime,
+                strDbg
+        );
+
+        StartVar.getConfigDB(); // refresca la configuración en memoria
     }
 }

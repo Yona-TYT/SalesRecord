@@ -560,7 +560,7 @@ public class EditAtrFragment extends Fragment {
             mPrice = art.preccj;
         }
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, art.currcount, art.totalcount, 0, mPrice, art.margen
+                art.staus, 1, art.currcount, art.totalcount, 0, mPrice, art.margen
                 , art.uid);
 
         return mObj;

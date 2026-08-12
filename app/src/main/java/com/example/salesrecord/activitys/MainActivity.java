@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 if (currentDestinationId == R.id.navigation_home) {
                     menuInflater.inflate(R.menu.srch, menu);
                     menuInflater.inflate(R.menu.calc, menu);
-
+                    menuInflater.inflate(R.menu.chg, menu);
 
                 }
 //[                // 💡 CASO 2: Si estás en la pestaña de AGREGAR (Add)
@@ -201,15 +201,31 @@ public class MainActivity extends AppCompatActivity {
                     sharedViewModel.toggleCalc();
                     return true;
                 } else if (id == R.id.srch) {
-                    //Basic.msg("Mostrando resumen...");
                     sharedViewModel.toggleSrch();
                     return true;
                 }
                 else if (id == R.id.margen) {
-                    //Basic.msg("Mostrando resumen...");
                     sharedViewModel.toggleMarg();
                     return true;
                 }
+
+                else if (id == R.id.chg) {
+                    return true;
+                }
+                else if (id == R.id.action_list1) {
+                    sharedViewModel.selectListValue(0);
+                    return true;
+                } else if (id == R.id.action_list2) {
+                    sharedViewModel.selectListValue(1);
+                    return true;
+                } else if (id == R.id.action_list3) {
+                    sharedViewModel.selectListValue(2);
+                    return true;
+                } else if (id == R.id.action_list4) {
+                    sharedViewModel.selectListValue(3);
+                    return true;
+                }
+
                 else if (id == R.id.summary) {
                     //Basic.msg("Mostrando resumen...");
                     return true;
