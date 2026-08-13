@@ -400,7 +400,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                                     if (!mSale.cltid.equals(idUser)) {
                                         mSale.cltid = "@null";
                                         mSale.cliente = cl.cliente;
-                                        daoSal.insertUser(mSale);
+                                        daoSal.update(mSale);
                                         mAlias = cl.nombre + " (" + cl.iduser + ")";
                                         GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
                                         break;
@@ -491,6 +491,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         mList.add(crrArt);
                     }
                 }
+
+                glData.setIsEdit(true);
+
                 //Elimina el registro selecionado
                 daoSal.removerUser(mSale.uid);
                 mList.add(mSale);
@@ -503,7 +506,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if (itemId == R.id.butt_dts3) {
 
                 mSale.status = currSel1;
-                daoSal.insertUser(mSale);
+                daoSal.update(mSale);
 
                 GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
 

@@ -10,6 +10,9 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -27,7 +30,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.AppContextProvider;
@@ -103,6 +109,7 @@ public class HomeFragment extends Fragment {
     private boolean isCalc = false;
     private double calcCount = 0;
     private SharedViewModel sharedViewModel;
+    private int menuId = R.id.action_list1;
 
     private boolean isSrch = false;
 
@@ -154,6 +161,69 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+        // Configuramos el MenuProvider moderno acoplado a la Activity
+        MenuHost menuHost = requireActivity();
+
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                // Vacío, lo infla MainActivity
+            }
+
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                // 1. Conseguimos el valor numérico activo desde tu ViewModel (0, 1 o 2)
+                Integer activeListIndex = sharedViewModel.getChgToggle().getValue();
+                if (activeListIndex == null || activeListIndex == -1) {
+                    activeListIndex = 0; // Por defecto el primero
+                }
+
+                // 2. Mapeo directo de los IDs de los 3 submenús en un arreglo ordenada
+                int[] menuIds = {R.id.action_list1, R.id.action_list2, R.id.action_list3};
+
+                // 3. Recorremos los 3 ítems para actualizar TANTO el anterior como el actual
+                for (int i = 0; i < menuIds.length; i++) {
+                    MenuItem currentItem = menu.findItem(menuIds[i]);
+
+                    if (currentItem != null) {
+                        // A) Si coincide con el índice activo de la variable, activamos su check de resalte
+                        if (i == activeListIndex) {
+                            currentItem.setChecked(true);
+                        }
+
+                        // B) Cálculo matemático de las unidades para ESTE ítem (puede ser el actual o el anterior)
+                        double count = 0.0;
+                        int listIndex = currentItem.getOrder(); // Recupera el int (0, 1 o 2) de orderInCategory
+
+                        // Validación de control sobre el arreglo de datos de tus slots
+                        if (salSlots != null && listIndex < salSlots.length && salSlots[listIndex] != null) {
+                            for (int s = 0; s < salSlots[listIndex].size(); s++) {
+                                Obj saleObj = salSlots[listIndex].get(s);
+                                if (saleObj != null) {
+                                    count += saleObj.saleCount;
+                                }
+                            }
+                        }
+
+                        // C) Construcción dinámica del título: Si tiene unidades se añaden, si no, vuelve a su estado base
+                        String dynamicTitle = (listIndex + 1) + (count > 0
+                                ? (") Lista x" + Basic.setFormatter(count) + " uds.")
+                                : ") Lista At.");
+
+                        // Se aplica el título (esto limpia el ítem anterior y actualiza el nuevo al mismo tiempo)
+                        currentItem.setTitle(dynamicTitle);
+                    }
+                }
+            }
+
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+                // Retornamos false para no interferir, la MainActivity ya procesa el clic
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
         // Inicialización de tus componentes de la interfaz
         mInput1 = binding.inputHome1;
         gridView = binding.gcImg;
@@ -177,7 +247,7 @@ public class HomeFragment extends Fragment {
         // =========================================================================
 
         if (savedInstanceState != null) {
-            initSlots(); // listas vacías base
+            initSlots(false); // listas vacías base
 
             currSlot = savedInstanceState.getInt("curr_slot", 0);
             if (currSlot < 0 || currSlot > 2) currSlot = 0;
@@ -202,7 +272,7 @@ public class HomeFragment extends Fragment {
                 }
             } catch (Exception e) {
                 Log.e("FragmentHome", "Error restaurando slots", e);
-                initSlots();
+                initSlots(false);
             }
 
             bindWorkingLists();
@@ -222,12 +292,13 @@ public class HomeFragment extends Fragment {
                 }
             });
 
-            initSlots();
-            setViwes(false);
+            boolean noClear = (!objListAll.isEmpty() || !objListSal.isEmpty()) && (!glData.getIsEdit());
+
+            initSlots(noClear);
+            setViwes(noClear);
+
+            glData.setIsEdit(false);
         }
-
-        // homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
-
         return root;
     }
 
@@ -414,9 +485,20 @@ public class HomeFragment extends Fragment {
             // Si es nulo o no se ha seleccionado ninguna lista válida, salimos
             if (pos == null || pos == -1) return;
 
-            // Evaluamos el número de lista recibido desde el XML
-           // Basic.msg(" "+pos);
+            requireActivity().invalidateOptionsMenu();
+
+            menuId = R.id.action_list1;
+            if (currSlot == 1) menuId = R.id.action_list2;
+            if (currSlot == 2) menuId = R.id.action_list3;
+
+            selectSlot(pos);
+
+            currObj = null;
+            if (mAdapter1 != null) {
+                mAdapter1.setSelectedPos(-1);
+            }
         });
+
 
         // Boton Recargar
         mButt1.setOnClickListener(new View.OnClickListener() {
@@ -1059,7 +1141,10 @@ public class HomeFragment extends Fragment {
     }
 
 
-    private void initSlots() {
+    private void initSlots(boolean noClear) {
+        if(noClear){
+            return;
+        }
         for (int i = 0; i < 3; i++) {
             allSlots[i] = new ArrayList<>();
             salSlots[i] = new ArrayList<>();

@@ -135,7 +135,7 @@ public class PayListFragment extends Fragment {
             //
             // Basic.msg(d.strdate+" "+dateOrderedList.size());
             if(CalendUtls.isSameDay(currDate, d.date)){
-                mStrFecList.add("Ventas de Hoy");
+                mStrFecList.add("Hoy");
             }
             else {
                 mStrFecList.add(d.strdate);
@@ -170,7 +170,7 @@ public class PayListFragment extends Fragment {
 
         cltList = StartVar.appDBall.daoClt().getUsers();
 
-        nameList.add("<Nombre Cliente>");
+        nameList.add("<Nombre>");
         for (Cliente mC : cltList){
             nameList.add(mC.iduser);
         }

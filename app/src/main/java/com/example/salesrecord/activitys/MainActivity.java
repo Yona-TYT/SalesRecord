@@ -215,16 +215,19 @@ public class MainActivity extends AppCompatActivity {
                 else if (id == R.id.action_list1) {
                     sharedViewModel.selectListValue(0);
                     return true;
-                } else if (id == R.id.action_list2) {
+                }
+                if (id == R.id.action_list2) {
                     sharedViewModel.selectListValue(1);
                     return true;
-                } else if (id == R.id.action_list3) {
+                }
+                else if (id == R.id.action_list3) {
                     sharedViewModel.selectListValue(2);
                     return true;
-                } else if (id == R.id.action_list4) {
-                    sharedViewModel.selectListValue(3);
-                    return true;
                 }
+//                else if (id == R.id.action_list4) {
+//                    sharedViewModel.selectListValue(3);
+//                    return true;
+//                }
 
                 else if (id == R.id.summary) {
                     //Basic.msg("Mostrando resumen...");

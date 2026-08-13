@@ -10,30 +10,23 @@
         app:showAsAction="always" >
 
         <menu>
-            <item
-                android:id="@+id/action_list1"
-                android:title="Lista de atencion 1"
-                app:value="0"
-                 />
+            <!-- Agrupamos para que actúen como botones de radio (solo uno activo) -->
+            <group android:id="@+id/list_group" android:checkableBehavior="single">
+                <item
+                    android:id="@+id/action_list1"
+                    android:title="1) Lista At."
+                    android:orderInCategory="0" />
 
-            <item
-                android:id="@+id/action_list2"
-                android:title="Lista de atencion 2"
-                app:value="1"
-                 />
+                <item
+                    android:id="@+id/action_list2"
+                    android:title="2) Lista At."
+                    android:orderInCategory="1" />
 
-            <item
-                android:id="@+id/action_list3"
-                android:title="Lista de atencion 3"
-                app:value="2"
-                 />
-
-            <item
-                android:id="@+id/action_list4"
-                android:title="Lista de atencion 4"
-                app:value="3"
-               />
+                <item
+                    android:id="@+id/action_list3"
+                    android:title="3) Lista At."
+                    android:orderInCategory="2" />
+            </group>
         </menu>
-
     </item>
 </menu>

@@ -64,7 +64,7 @@ public class GlobalData {
     public static String[] dataDbg = {""};
 
     public int optCalc = 0;
-
+    public boolean isEdit = false;
 
     private GlobalData(Context context) {
         this.context = AppContextProvider.getContext(); // Garantizamos ApplicationContext
@@ -158,6 +158,14 @@ public class GlobalData {
 
     public int getOptCalc() {
         return this.optCalc;
+    }
+
+    public void setIsEdit(boolean b) {
+        this.isEdit = b;
+    }
+
+    public boolean getIsEdit() {
+        return this.isEdit;
     }
 
     public void setListCalc(Double[] mList, int opt) {

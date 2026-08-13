@@ -491,6 +491,8 @@ public class EditAtrFragment extends Fragment {
 
                 crrArt.staus = (mSw2.isChecked() ? 1 : 0);
 
+                glData.setIsEdit(true);
+
                 daoArt.update(crrArt);
 
                 //Encola al elemento a sincronizar

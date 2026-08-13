@@ -324,6 +324,9 @@ public class AddAtrFragment extends Fragment {
 
                         1, currDate, currDate
                 );
+
+                glData.setIsEdit(true);
+
                 daoArt.insert(objA);
 
                 //Encola al elemento a sincronizar

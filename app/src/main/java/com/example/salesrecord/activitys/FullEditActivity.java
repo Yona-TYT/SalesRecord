@@ -360,6 +360,7 @@ public class FullEditActivity extends AppCompatActivity {
                     daoArt.update(crrArt);
 
                     glData.setCurrArt(crrArt);
+                    glData.setIsEdit(true);
 
                     //Basic.msg(daoArt.getUsers(crrArt.uid).nombre, true);
 
