@@ -39,6 +39,8 @@ public class StartVar {
     //Worker tags
     public static final String WORK_TAG_DOWNLOAD = "google_drive_download";
     public static final String WORK_TAG_DOWNLOAD_IMG = "google_drive_download_img";
+    public static final String WORK_TAG_UPLOAD = "google_drive_upload";
+    public static final String WORK_TAG_UPLOAD_IMG = "google_drive_upload_img";
 
     //public static final String WORK_TAG_UPLOAD = "UploadWorkCowData"; // Define WORK_TAG para cowdatadb
 

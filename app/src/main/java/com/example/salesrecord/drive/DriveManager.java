@@ -124,7 +124,7 @@ public class DriveManager {
 
     public void InternalImportDataToDrive(List<File> files, boolean img) {
 
-        String tag = img? StartVar.WORK_TAG_DOWNLOAD_IMG : StartVar.WORK_TAG_DOWNLOAD;
+        String tag = img ? StartVar.WORK_TAG_UPLOAD_IMG : StartVar.WORK_TAG_UPLOAD;
 
         HashMap<String, Object> dataMap = new HashMap<>();
         dataMap.put("filePaths", files.stream().map(File::getAbsolutePath).toArray(String[]::new));
