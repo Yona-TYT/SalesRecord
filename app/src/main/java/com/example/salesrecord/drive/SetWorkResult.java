@@ -22,6 +22,7 @@ import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.StartVar;
@@ -60,66 +61,96 @@ public class SetWorkResult {
         Context context = AppContextProvider.getContext();
         if (context == null) return;
 
+        observeDownloadTag(context, StartVar.WORK_TAG_DOWNLOAD);
+        observeDownloadTag(context, StartVar.WORK_TAG_DOWNLOAD_IMG);
+    }
+
+    private void observeDownloadTag(Context context, String uniqueName) {
         WorkManager.getInstance(context)
-                .getWorkInfosForUniqueWorkLiveData(StartVar.WORK_TAG_DOWNLOAD)
+                .getWorkInfosForUniqueWorkLiveData(uniqueName)
                 .observe(lifecycle, workInfos -> {
                     if (workInfos == null || workInfos.isEmpty()) return;
-
-                    for (WorkInfo workInfo : workInfos) {
-                        if (!workInfo.getState().isFinished()) continue;
-
-                        // Evitar reprocesar el mismo WorkInfo (p.ej. el del preloader)
-                        if (!processedWorkIds.add(workInfo.getId())) {
-                            continue;
-                        }
-
-                        //StartVar.setmMainStart(true);
-
-                        Data outputData = workInfo.getOutputData();
-                        boolean preloader = outputData.getBoolean("preloader", false);
-                        boolean isFileOk = outputData.getBoolean("file", false);
-                        boolean isImg = outputData.getBoolean("img", false);
-                        String message = outputData.getString("result_message");
-                        String[] filesDownloaded = outputData.getStringArray("files_downloaded");
-
-                        if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                            if (isImg) return;
-
-                            File mFile = Environment.getExternalStoragePublicDirectory(
-                                    Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/" + StartVar.exportName);
-
-                            if (mFile.exists()) {
-                                Uri uri = Uri.fromFile(mFile);
-                                try {
-                                    new SetDb().set(context, outputData, uri, manager);
-                                } catch (IOException e) {
-                                    android.util.Log.e("DriveSync", "Error en SetDb", e);
-                                }
-                            } else {
-                                Basic.msg("CSV no existe: " + message);
-                                // Si era preloader y no hay archivo, igual salir del preloader
-                                SetWorkResult.resetPreloader(preloader);
-                            }
-                        } else if (workInfo.getState() == WorkInfo.State.FAILED) {
-                            if (!isFileOk) {
-                                List<Article> mAccList = StartVar.appDBall.daoAtr().getUsers();
-                                if (mAccList != null && !mAccList.isEmpty()) {
-                                    if (preloader) {
-                                        resetPreloader(true);
-                                        StartVar.makeUpdate = true;
-                                    } else {
-                                        Basic.msg("Subiendo Datos...");
-                                        manager.uploadDataBase();
-                                    }
-                                } else {
-                                    resetPreloader(preloader);
-                                }
-                            } else {
-                                resetPreloader(preloader);
-                            }
-                        }
-                    }
+                    handleDownloadWorkInfos(workInfos);
                 });
+    }
+
+    private void handleDownloadWorkInfos(List<WorkInfo> workInfos) {
+        if (workInfos == null || workInfos.isEmpty()) return;
+        Context context = AppContextProvider.getContext();
+        if (context == null) return;
+
+        for (WorkInfo workInfo : workInfos) {
+            if (!workInfo.getState().isFinished()) continue;
+
+            // Evitar reprocesar el mismo WorkInfo (p.ej. el del preloader)
+            if (!processedWorkIds.add(workInfo.getId())) {
+                continue;
+            }
+            //StartVar.setmMainStart(true);
+
+            Data outputData = workInfo.getOutputData();
+            boolean preloader = outputData.getBoolean("preloader", false);
+            boolean isFileOk = outputData.getBoolean("file", false);
+            boolean isImg = outputData.getBoolean("img", false);
+            String message = outputData.getString("result_message");
+            String[] filesDownloaded = outputData.getStringArray("files_downloaded");
+
+            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                if (isImg) {
+                    // EventBus / mensaje de imágenes OK, si lo necesitas
+                    android.util.Log.d("DriveSync", "Download IMG OK: " + message);
+                    continue;
+                }
+                File mFile = Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/" + StartVar.exportName);
+
+                if (mFile.exists()) {
+                    Uri uri = Uri.fromFile(mFile);
+                    try {
+                        new SetDb().set(context, outputData, uri, manager);
+                    } catch (IOException e) {
+                        android.util.Log.e("DriveSync", "Error en SetDb", e);
+                    }
+                } else {
+                    Basic.msg("CSV no existe: " + message);
+                    // Si era preloader y no hay archivo, igual salir del preloader
+                    SetWorkResult.resetPreloader(preloader);
+                }
+            } else if (workInfo.getState() == WorkInfo.State.FAILED) {
+                if (isImg) {
+                    android.util.Log.e("DriveSync", "Download IMG failed: " + message);
+                    continue;
+                }
+                if (!isFileOk) {
+                    // No hay archivo en Drive (o no se pudo obtener)
+                    List<Article> mAccList = StartVar.appDBall.daoAtr().getUsers();
+                    boolean hasLocal = mAccList != null && !mAccList.isEmpty();
+
+                    if (hasLocal) {
+                        Basic.msg("Subiendo Datos...");
+                        try {
+                            DBListCreator.createDbLists();
+                        } catch (Exception e) {
+                            android.util.Log.e("DriveSync", "Error createDbLists", e);
+                        }
+                        manager.uploadDataBase();
+
+                        if (preloader) {
+                            StartVar.makeUpdate = true;
+                            resetPreloader(true);
+                        }
+                    } else {
+                        // Sin datos locales ni en Drive
+                        android.util.Log.w("DriveSync", "Sin archivo en Drive y sin datos locales");
+                        resetPreloader(preloader);
+                    }
+                } else {
+                    // Fallo de red/token/etc. pero el flag de archivo no indica "no encontrado"
+                    android.util.Log.e("DriveSync", "Download failed: " + message);
+                    resetPreloader(preloader);
+                }
+            }
+        }
     }
 
     public static void startWorkManagerRequest(Class<? extends ListenableWorker> workerClass, HashMap<String, Object> dataMap, String tag) {
@@ -161,14 +192,8 @@ public class SetWorkResult {
 
         // 6. Encolar con política conservadora
         try {
-            ExistingWorkPolicy policy;
-            if ("google_drive_upload".equals(tag)) {
-                // Varias subidas pueden encadenarse
-                policy = ExistingWorkPolicy.APPEND;
-            } else {
-                // Descarga / preloader / check: siempre el trabajo nuevo
-                policy = ExistingWorkPolicy.REPLACE;
-            }
+            // Misma política, tags distintas = no se pisan entre sí
+            ExistingWorkPolicy policy = ExistingWorkPolicy.REPLACE;
 
             WorkManager.getInstance(appContext)
                     .enqueueUniqueWork(tag, policy, workRequest);

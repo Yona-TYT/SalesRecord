@@ -37,7 +37,9 @@ public class StartVar {
     public static String nameDBconf = "Config-RG";
 
     //Worker tags
-    public static final String WORK_TAG_DOWNLOAD = "DownloadWorkConfigDb"; // Define WORK_TAG para configdb
+    public static final String WORK_TAG_DOWNLOAD = "google_drive_download";
+    public static final String WORK_TAG_DOWNLOAD_IMG = "google_drive_download_img";
+
     //public static final String WORK_TAG_UPLOAD = "UploadWorkCowData"; // Define WORK_TAG para cowdatadb
 
     public static List<String[]> csvList = new ArrayList<>();
@@ -226,9 +228,13 @@ public class StartVar {
 
     public static void setmMainStart(boolean mStart){mainStart = mStart;}
 
-    public static void setCsvList(List<String[]> mList){
-        StartVar.csvList.clear();
-        StartVar.csvList = mList;
+    public static synchronized void setCsvList(List<String[]> list) {
+        // Nueva referencia; no reutilizar ni clear de la lista que otro hilo puede estar leyendo
+        csvList = (list == null) ? new ArrayList<>() : new ArrayList<>(list);
+    }
+
+    public static synchronized List<String[]> getCsvListSnapshot() {
+        return (csvList == null) ? new ArrayList<>() : new ArrayList<>(csvList);
     }
 
 }

@@ -123,11 +123,8 @@ public class DriveManager {
     }
 
     public void InternalImportDataToDrive(List<File> files, boolean img) {
-        // ANTES (malo): tag distinto en cada llamada
-        // String tag = String.valueOf(Objects.hashCode(files));
 
-        // AHORA: siempre el mismo nombre único
-        String tag = "google_drive_upload";
+        String tag = img? StartVar.WORK_TAG_DOWNLOAD_IMG : StartVar.WORK_TAG_DOWNLOAD;
 
         HashMap<String, Object> dataMap = new HashMap<>();
         dataMap.put("filePaths", files.stream().map(File::getAbsolutePath).toArray(String[]::new));
@@ -170,8 +167,8 @@ public class DriveManager {
 
     public void internalDataSynchronize(boolean img, boolean preLoader, boolean newObj, boolean check, String selectId){
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+StartVar.dirAppName+"/"+StartVar.exportName);
-        // Crear un tag único para la tarea de descarga
-        String tag = StartVar.WORK_TAG_DOWNLOAD;
+
+        String tag = img? StartVar.WORK_TAG_DOWNLOAD_IMG : StartVar.WORK_TAG_DOWNLOAD;
 
         // Preparar datos de entrada
         HashMap<String, Object> dataMap = new HashMap<>();

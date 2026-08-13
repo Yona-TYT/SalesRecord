@@ -69,6 +69,8 @@ public class CsvWriterSimple {
     }
 
     private String formatCsvField(final String field, final boolean quote) {
+        //Log.d("PhotoPicker", " malayaaa!!------------------------: "+ field);
+
         String result = (field == null) ? "" : field;
 
         if (result.contains(COMMA)

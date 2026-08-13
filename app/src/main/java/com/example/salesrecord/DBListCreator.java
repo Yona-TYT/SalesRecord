@@ -412,7 +412,6 @@ public class DBListCreator extends AppCompatActivity {
         //Log.d("DB_INSTANCE", "Hash: " + System.identityHashCode(StartVar.appDBall));
         //Basic.msg("uploadDataBase.. " +mList.get(5)[1], true);
 
-        StartVar.setCsvList(mList);
 
         HashMap<String, HashMap<String, ArrayList<Object>>> allMaps = new HashMap<>();
         allMaps.put("acc", mapAtr);
@@ -420,6 +419,9 @@ public class DBListCreator extends AppCompatActivity {
         allMaps.put("deb", mapDeb);
         allMaps.put("dat", mapDat);
         allMaps.put("pay", mapSal);
+
+        StartVar.setCsvList(new ArrayList<>(mList));
+
 
         //Basic.msg("csvlist "+mList.size(), true);
 
