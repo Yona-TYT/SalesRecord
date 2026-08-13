@@ -291,15 +291,19 @@ public class Basic {
         return value.replaceAll("([;,\"<>]+)", "");
     }
 
+    public static void msg(String msg, int length){
+        msgInternal(msg, false, length);
+    }
+
     public static void msg(String msg){
-        msgInternal(msg, false);
+        msgInternal(msg, false, 0);
     }
 
     public static void msg(String msg, boolean isClipboard){
-        msgInternal(msg, isClipboard);
+        msgInternal(msg, isClipboard, 0);
     }
 
-    public static void msgInternal(String msg, boolean isClipboard)
+    public static void msgInternal(String msg, boolean isClipboard, int length)
     {
         new Handler(Looper.getMainLooper()).post(() -> {
             long currentTime = System.currentTimeMillis();
@@ -330,7 +334,7 @@ public class Basic {
 
             Toast mToast = new Toast(mContex);
             mToast.setView(cardView);
-            mToast.setDuration(Toast.LENGTH_LONG);
+            mToast.setDuration(length);
             mToast.show();
 
             //Copiar al portapapeles

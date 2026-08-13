@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -29,6 +30,7 @@ import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.SharedViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -73,9 +75,36 @@ public class MainActivity extends AppCompatActivity {
     private SharedViewModel sharedViewModel;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
+
+    // 1. Variables globales para controlar el tiempo entre clics
+    private boolean doubleBackToExitPressedOnce = false;
+    private final Handler backPressHandler = new Handler(Looper.getMainLooper());
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        // 2. Registrar el callback moderno para controlar el botón de atrás
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+
+                // Si ya se presionó una vez y está dentro del rango de 2 segundos, cierra la app
+                if (doubleBackToExitPressedOnce) {
+                    finishAffinity(); // Cierra todas las actividades y el proceso de forma limpia
+                    return;
+                }
+
+                // Primer clic: Activamos la bandera y mostramos el aviso
+                doubleBackToExitPressedOnce = true;
+                Basic.msg("Presiona atrás dos veces para salir");
+
+                // Iniciamos el temporizador: Si pasan 2 segundos, la bandera vuelve a false
+                backPressHandler.postDelayed(() -> doubleBackToExitPressedOnce = false, 2000);
+            }
+        });
 
         sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
 
