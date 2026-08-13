@@ -75,7 +75,7 @@ public class DriveUpWorker extends Worker {
         final AtomicBoolean taskDone = new AtomicBoolean(false);
         //PreferenceHelper preferenceHelper = PreferenceHelper.getInstance();
 
-        DriveUtils.copyToClipboard(mContext, filePaths.length+" ?", "tag");
+       // DriveUtils.copyToClipboard(mContext, filePaths.length+" ?", "tag");
 
 
         try {

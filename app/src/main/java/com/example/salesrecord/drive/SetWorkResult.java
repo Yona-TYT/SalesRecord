@@ -45,7 +45,7 @@ public class SetWorkResult {
     private LifecycleOwner lifecycle;
     private ExecutorService executorService;
     private DriveManager manager;
-    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+    private final java.util.Set<java.util.UUID> processedWorkIds = new java.util.HashSet<>();
 
     private Observer<WorkInfo> workObserver; // Referencia al Observer
 
@@ -58,61 +58,52 @@ public class SetWorkResult {
     // Observar los resultados del Worker
     public void observeWorkResult() {
         Context context = AppContextProvider.getContext();
-
-        if (context == null) {
-            android.util.Log.e("DriveSync", "❌ Context null en observeWorkResult(). No se puede observar WorkManager.");
-            return;
-        }
+        if (context == null) return;
 
         WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWorkLiveData(StartVar.WORK_TAG_DOWNLOAD)
-            .observe(lifecycle, workInfos -> {
-                for (WorkInfo workInfo : workInfos) {
-                    if (workInfo.getState().isFinished()) {
-                        StartVar.setmMainStart(true);
+                .getWorkInfosForUniqueWorkLiveData(StartVar.WORK_TAG_DOWNLOAD)
+                .observe(lifecycle, workInfos -> {
+                    if (workInfos == null || workInfos.isEmpty()) return;
+
+                    for (WorkInfo workInfo : workInfos) {
+                        if (!workInfo.getState().isFinished()) continue;
+
+                        // Evitar reprocesar el mismo WorkInfo (p.ej. el del preloader)
+                        if (!processedWorkIds.add(workInfo.getId())) {
+                            continue;
+                        }
+
+                        //StartVar.setmMainStart(true);
 
                         Data outputData = workInfo.getOutputData();
-                        String message = outputData.getString("result_message");
                         boolean preloader = outputData.getBoolean("preloader", false);
                         boolean isFileOk = outputData.getBoolean("file", false);
                         boolean isImg = outputData.getBoolean("img", false);
-
-                        //Basic.msg("!!!!---0 !: "+ isCheck);
-
+                        String message = outputData.getString("result_message");
                         String[] filesDownloaded = outputData.getStringArray("files_downloaded");
 
                         if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                            if (isImg) return;
 
-                            String displayMessage = message != null ? message : "Descarga completada";
-                            if (filesDownloaded != null && filesDownloaded.length > 0) {
-                                displayMessage += ": " + String.join(", ", filesDownloaded);
-                            }
-                            if(isImg){
-                                return;
-                            }
-                            File mFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+StartVar.dirAppName+"/"+StartVar.exportName);
-                            if(mFile.exists()){
-                                //Aqui se analizan los nuevos datos y se comparan con los existentes
+                            File mFile = Environment.getExternalStoragePublicDirectory(
+                                    Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/" + StartVar.exportName);
+
+                            if (mFile.exists()) {
                                 Uri uri = Uri.fromFile(mFile);
                                 try {
-                                    SetDb setDb = new SetDb();
-                                    setDb.set(context, outputData, uri,  manager);
+                                    new SetDb().set(context, outputData, uri, manager);
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
+                                    android.util.Log.e("DriveSync", "Error en SetDb", e);
                                 }
-                                //------------------------------------------------------------------
+                            } else {
+                                Basic.msg("CSV no existe: " + message);
+                                // Si era preloader y no hay archivo, igual salir del preloader
+                                SetWorkResult.resetPreloader(preloader);
                             }
-                            else {
-                                Basic.msg("CVS no Existe 1 !: "+displayMessage);
-                            }
-                        }
-                        else if (workInfo.getState() == WorkInfo.State.FAILED) {
-                            String displayMessage = message != null ? message : "Error en la descarga";
-                            //Basic.msg("CVS no Existe 2 !: "+displayMessage);
-                            //Basic.msg("Aqui hay ? "+displayMessage,true);
+                        } else if (workInfo.getState() == WorkInfo.State.FAILED) {
                             if (!isFileOk) {
                                 List<Article> mAccList = StartVar.appDBall.daoAtr().getUsers();
-                                if(!mAccList.isEmpty()) {
+                                if (mAccList != null && !mAccList.isEmpty()) {
                                     if (preloader) {
                                         resetPreloader(true);
                                         StartVar.makeUpdate = true;
@@ -120,12 +111,15 @@ public class SetWorkResult {
                                         Basic.msg("Subiendo Datos...");
                                         manager.uploadDataBase();
                                     }
+                                } else {
+                                    resetPreloader(preloader);
                                 }
+                            } else {
+                                resetPreloader(preloader);
                             }
                         }
                     }
-                }
-            });
+                });
     }
 
     public static void startWorkManagerRequest(Class<? extends ListenableWorker> workerClass, HashMap<String, Object> dataMap, String tag) {
@@ -149,7 +143,6 @@ public class SetWorkResult {
         // 4. Request
         OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(workerClass)
                 .setConstraints(constraints)
-                .setInitialDelay(1, TimeUnit.SECONDS)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
                 .setInputData(data)
                 .addTag(tag)
@@ -168,14 +161,20 @@ public class SetWorkResult {
 
         // 6. Encolar con política conservadora
         try {
-            ExistingWorkPolicy policy = "google_drive_upload".equals(tag)
-                    ? ExistingWorkPolicy.APPEND : ExistingWorkPolicy.KEEP;
+            ExistingWorkPolicy policy;
+            if ("google_drive_upload".equals(tag)) {
+                // Varias subidas pueden encadenarse
+                policy = ExistingWorkPolicy.APPEND;
+            } else {
+                // Descarga / preloader / check: siempre el trabajo nuevo
+                policy = ExistingWorkPolicy.REPLACE;
+            }
 
-            WorkManager.getInstance(appContext).enqueueUniqueWork(tag, policy, workRequest);
+            WorkManager.getInstance(appContext)
+                    .enqueueUniqueWork(tag, policy, workRequest);
 
-            android.util.Log.i("DriveSync", "✅ WorkManager encolado: " + tag);
-        }
-        catch (Exception e) {
+            android.util.Log.i("DriveSync", "✅ WorkManager encolado: " + tag + " policy=" + policy);
+        } catch (Exception e) {
             android.util.Log.e("DriveSync", "❌ Error Binder/WorkManager", e);
         }
     }
@@ -199,13 +198,35 @@ public class SetWorkResult {
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
-    public static void resetPreloader(boolean preloader){
-        if(preloader){
-            if(StartVar.mActivity != null){
-                Intent mIntent = new Intent(AppContextProvider.getContext(),  ReloadActivity.class);
-                StartVar.mActivity.startActivity(mIntent);
-                StartVar.mActivity.finish();
-            }
+    public static void resetPreloader(boolean preloader) {
+        android.util.Log.d("Preloader", "resetPreloader called | preloader=" + preloader
+                + " mainStart=" + StartVar.mainStart
+                + " activity=" + (StartVar.mActivity != null
+                ? StartVar.mActivity.getClass().getSimpleName()
+                : "null"));
+
+        if (!preloader) {
+            return;
         }
+
+        if (StartVar.mActivity == null) {
+            android.util.Log.e("Preloader", "mActivity es null");
+            StartVar.setmMainStart(true);
+            return;
+        }
+
+        String current = StartVar.mActivity.getClass().getSimpleName();
+        if (!"Preloader".equals(current)) {
+            // Ya salimos del preloader
+            StartVar.setmMainStart(true);
+            return;
+        }
+
+        // Seguimos en Preloader → cerrar de verdad
+        StartVar.setmMainStart(true);
+        Intent i = new Intent(AppContextProvider.getContext(), ReloadActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        StartVar.mActivity.startActivity(i);
+        StartVar.mActivity.finish();
     }
 }

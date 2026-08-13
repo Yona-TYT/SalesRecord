@@ -31,7 +31,7 @@ public class GlobalData {
 
     // Variables globales
     public final String glTelef = "04126850965";
-    public final String glCedula = "v11758206";
+    public final String glCedula = "V11758206";
     public final String glCodeBank = "0108";
     public final String glNameBank = "Provincial";
 

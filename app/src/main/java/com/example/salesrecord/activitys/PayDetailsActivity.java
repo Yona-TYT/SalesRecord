@@ -6,15 +6,21 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
@@ -43,6 +49,7 @@ import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
+import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
@@ -58,9 +65,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
     // DB ----------------------------------------------------------------
     private DaoSal daoSal;
+    private DaoClt daoClt;
     //--------------------------------------------------------------------
 
-    private ListView mListView;
+    private ListView mListView1;
 
     //Todos los View
     private TextView total1;
@@ -84,6 +92,14 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Button mBtton1;
     private Button mBtton2;
     private Button mBtton3;
+    private ToggleButton mBtton4;
+
+    private AutoCompleteTextView mInput1;
+    private ListView mListView2;
+
+    private ArrayAdapter<String> adapter;
+    private List<String> allNamesList = new ArrayList<>();
+    private List<String> filtreList = new ArrayList<>();
 
     private Spinner mSpinn1;
     private int currSel1 = 0;
@@ -142,12 +158,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         //------------------------------------------------------------------------------------------
 
         //mImage1 = findViewById(R.id.image_dts1);
-        mListView = findViewById(R.id.pay_dts_viewList);
+        mListView1 = findViewById(R.id.pay_dts_viewList);
+        mListView2 = findViewById(R.id.pay_dts_viewList2);
 
         total1 = findViewById(R.id.txtotal_dts1); //TOTAL
         total2 = findViewById(R.id.txtotal_dts2); //TOTAL
 
         datos = findViewById(R.id.text_dts1);
+
+        mInput1 = findViewById(R.id.input_dts1);
 
         mText2 = findViewById(R.id.txview_dts2);
         mText3 = findViewById(R.id.txview_dts3);
@@ -158,6 +177,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mBtton1 = findViewById(R.id.butt_dts1);
         mBtton2 = findViewById(R.id.butt_dts2);
         mBtton3 = findViewById(R.id.butt_dts3);
+        mBtton4 = findViewById(R.id.butt_dts4);
+
         mSw = findViewById(R.id.sw_dts1);
 
         mSpinn1 = findViewById(R.id.pay_dts_select1);
@@ -261,7 +282,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             }
 
             SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
-            mListView.setAdapter(mAdapter);
+            mListView1.setAdapter(mAdapter);
 
             total1.setText("Actual: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
 
@@ -291,8 +312,111 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 Cliente mClt = daoClt.getUsers(txAlias);
                 if (mClt != null) {
                     txAlias = mClt.nombre + " (" + mClt.iduser + ")";
+
+                    mInput1.setText(mClt.iduser);
                 }
             }
+
+            daoClt = StartVar.appDBall.daoClt();
+
+            for (Cliente mC : daoClt.getUsers()){
+                if(mC != null){
+                    allNamesList.add(mC.iduser);
+                }
+            }
+
+            // Lista dinámica que se mostrará en el ListView
+            filtreList = new ArrayList<>();
+
+            // 3. Configurar el adaptador para el ListView
+            adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filtreList);
+            mListView2.setAdapter(adapter);
+
+            // 4. Escuchar los cambios de texto en el AutoCompleteTextView
+            mInput1.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String textoEscrito = s.toString().toLowerCase().trim();
+                    filtreList.clear();
+
+                    // Filtrar solo si el usuario ha escrito texto
+                    if (!textoEscrito.isEmpty()) {
+                        for (String nombre : allNamesList) {
+                            if (nombre.toLowerCase().contains(textoEscrito)) {
+                                filtreList.add(nombre);
+                            }
+                        }
+                        mListView2.setVisibility(View.VISIBLE);
+                    } else {
+                        // Ocultar la lista si el input está vacío
+                        mListView2.setVisibility(View.GONE);
+                    }
+
+                    // Notificar al adaptador para que refresque la interfaz visual
+                    adapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+
+            // 5. Detectar cuándo el usuario selecciona un nombre de la lista de sugerencias
+            mListView2.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    // Obtener el nombre seleccionado
+                    String nombreSeleccionado = filtreList.get(position);
+
+                    // Colocar el nombre en el input y mover el cursor al final
+                    mInput1.setText(nombreSeleccionado);
+                    mInput1.setSelection(mInput1.getText().length());
+
+                    // Limpiar y ocultar el ListView de sugerencias
+                    filtreList.clear();
+                    adapter.notifyDataSetChanged();
+                    mListView2.setVisibility(View.GONE);
+                }
+            });
+
+            mBtton4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        mInput1.setVisibility(View.VISIBLE);
+                    } else {
+                        mInput1.setVisibility(View.GONE);
+
+                        String strRawName = mInput1.getText().toString();
+                        boolean b = false;
+                        String mAlias = "";
+                        if(!strRawName.isEmpty()) {
+                            String idUser = InputHelper.sanitizeText(strRawName);
+                            for (Cliente cl : daoClt.getUsers()){
+                                if(cl.iduser.equals(idUser) ){
+                                    b = true;
+                                    if (!mSale.cltid.equals(idUser)) {
+                                        mSale.cltid = "@null";
+                                        mSale.cliente = cl.cliente;
+                                        daoSal.insertUser(mSale);
+                                        mAlias = cl.nombre + " (" + cl.iduser + ")";
+                                        GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if(!b) {
+                            Basic.msg("UserID de cliente no VALIDO!");
+                        }
+                        else{
+                            mTextList.get(0).setText("Alias: " + mAlias);
+                        }
+                    }
+                }
+            });
 
             String txConc = "Pagado";
             String txMont = mSale.monto.toString();

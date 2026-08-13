@@ -33,8 +33,9 @@ import com.example.salesrecord.utls.Basic;
 
 public class CurrencyEditText extends AppCompatEditText {
     private String currencySymbolStr = null;
+	private int symbolLength = 0;
     private CurrencyInputWatcher textWatcher;
-    private Locale locale = Locale.forLanguageTag("ES");//locale; //Esto es un experimentoooooo!!!!!!!1//Locale.getDefault();
+    private Locale locale = Locale.forLanguageTag("ES");
     private int maxDP;
     private boolean isTouch = false;
     private Context mContex;
@@ -100,6 +101,8 @@ public class CurrencyEditText extends AppCompatEditText {
             currencySymbolStr = prefix.isEmpty() ? "" : prefix + " ";
         }
 
+        symbolLength = currencySymbolStr.length();
+
         if (useCurrencySymbolAsHint) setHint(currencySymbolStr);
         if (Basic.isLollipopAndAbove() && localeTag != null && !localeTag.isEmpty()) locale = getLocaleFromTag(localeTag);
         textWatcher = new CurrencyInputWatcher(this, currencySymbolStr, locale, maxDP, currencySymbolSuffix, maxValue);
@@ -129,17 +132,17 @@ public class CurrencyEditText extends AppCompatEditText {
         if (currencySymbolSuffix) {
             if (text.endsWith(currencySymbolStr) && !text.equals(currencySymbolStr)) {
                 start = 0;
-                end = text.length() - currencySymbolStr.length();
+                end = text.length() - symbolLength;
             } else {
-                start = Math.max(0, text.length() - currencySymbolStr.length());
+                start = Math.max(0, text.length() - symbolLength);
                 end = start;  // Cursor antes del sufijo si vacío
             }
         } else {
             if (text.startsWith(currencySymbolStr) && !text.equals(currencySymbolStr)) {
-                start = currencySymbolStr.length();
+                start = symbolLength;
                 end = text.length();
             } else {
-                start = currencySymbolStr.length();
+                start = symbolLength;
                 end = start;  // Cursor después del prefijo si vacío
             }
         }
@@ -161,6 +164,7 @@ public class CurrencyEditText extends AppCompatEditText {
 
     public void setCurrencySymbol(String currencySymbol) {
         currencySymbolStr = currencySymbol.isEmpty() ? "" : (this.currencySymbolSuffix ? " " + currencySymbol : currencySymbol + " ");
+        symbolLength = currencySymbolStr.length();
         invalidateTextWatcher();
     }
 
@@ -234,21 +238,21 @@ public class CurrencyEditText extends AppCompatEditText {
                 if (currencySymbolSuffix) {
                     if (text.endsWith(currencySymbolStr) && !text.equals(currencySymbolStr)) {
                         int start = 0;
-                        int end = text.length() - currencySymbolStr.length();
+                        int end = text.length() - symbolLength;
                         setSelection(start, end);
                     } else {
                         //Basic.msg(""+currencySymbolStr.length());
                         // FIXED: Clampa end >= 0 para evitar IndexOutOfBounds
-                        int end = Math.max(0, (currencySymbolStr != null ? text.length() - currencySymbolStr.length() : 0));
+                        int end = Math.max(0, (currencySymbolStr != null ? text.length() - symbolLength : 0));
                         setSelection(end);  // Cursor al inicio (antes del sufijo si vacío)
                     }
                 } else {
                     if (text.startsWith(currencySymbolStr) && !text.equals(currencySymbolStr)) {
-                        int start = currencySymbolStr.length();
+                        int start = symbolLength;
                         int end = text.length();
                         setSelection(start, end);
                     } else {
-                        int start = currencySymbolStr != null ? currencySymbolStr.length() : 0;
+                        int start = currencySymbolStr != null ? symbolLength : 0;
                         setSelection(start);  // Cursor después del prefijo si vacío
                     }
                 }
@@ -301,7 +305,7 @@ public class CurrencyEditText extends AppCompatEditText {
 
         String text = getText().toString();
         int textLength = text.length();
-        int symbolLength = currencySymbolStr.length();
+        //int symbolLength = currencySymbolStr.length();
 
         int newStart;
         int newEnd;
@@ -348,7 +352,7 @@ public class CurrencyEditText extends AppCompatEditText {
             // 4. Forzamos la selección del bloque numérico respetando tu prefijo/sufijo
             String text = getText().toString();
             int textLength = text.length();
-            int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
+            //int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
 
             if (textLength > symbolLength) {
                 if (currencySymbolSuffix) {
@@ -416,7 +420,7 @@ public class CurrencyEditText extends AppCompatEditText {
                             post(() -> {
                                 String text = getText().toString();
                                 int textLength = text.length();
-                                int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
+                                //int symbolLength = currencySymbolStr != null ? currencySymbolStr.length() : 0;
 
                                 if (textLength > symbolLength) {
                                     if (currencySymbolSuffix) {

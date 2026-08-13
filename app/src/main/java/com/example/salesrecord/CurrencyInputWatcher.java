@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 public class CurrencyInputWatcher implements TextWatcher {
     private final EditText editText;
     private final String currencySymbol;
+    private final int symbolLength;
     private final boolean isSuffix;
     private final Locale locale;
     private final int maxNumberOfDecimalPlaces;
@@ -45,6 +46,8 @@ public class CurrencyInputWatcher implements TextWatcher {
 
         this.fractionDecimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         this.decimalFormatSymbols = this.wholeNumberDecimalFormat.getDecimalFormatSymbols();
+
+		symbolLength = this.isSuffix? 0 : this.currencySymbol.length();
     }
 
     @Override
@@ -56,7 +59,7 @@ public class CurrencyInputWatcher implements TextWatcher {
     public void onTextChanged(CharSequence s, int start, int before, int count) {
         this.hasDecimalPoint = s.toString().contains(String.valueOf(this.decimalFormatSymbols.getDecimalSeparator()));
         String newInputString = s.toString().replace(this.currencySymbol, "");
-        if(newInputString.length() > this.currencySymbol.length()) {
+        if(newInputString.length() > symbolLength) {
             Pattern patt = Pattern.compile("(\\D$)");
             Matcher m = patt.matcher(newInputString);
             if(m.find()){
@@ -72,7 +75,7 @@ public class CurrencyInputWatcher implements TextWatcher {
     public void afterTextChanged(Editable s) {
 
         String newInputString = s.toString();
-        int symbolLength = this.currencySymbol.length();
+
         if(!newInputString.startsWith(this.currencySymbol)) {
             newInputString = newInputString.replaceAll("([^.,\\d])","");
         }

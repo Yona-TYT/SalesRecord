@@ -99,25 +99,77 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintTop_toBottomOf="@+id/butt_dts1"
-        app:layout_constraintBottom_toTopOf="@+id/txview_dts2"
+        app:layout_constraintBottom_toTopOf="@+id/input_dts1"
         app:layout_constraintStart_toStartOf="@+id/guideline"
         app:layout_constraintEnd_toStartOf="@+id/guideline2" />
+
+    <AutoCompleteTextView
+        android:id="@+id/input_dts1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/txview_h2"
+        android:layout_marginTop="30dp"
+        android:background="@color/text_background"
+        android:completionThreshold="1"
+        android:enabled="true"
+        android:gravity="center_vertical"
+        android:hint="Buscar Nombre:"
+        android:imeOptions="actionDone"
+        android:inputType="textPersonName|textCapWords"
+        android:maxLines="1"
+        android:padding="@dimen/txview_pad2"
+        android:textSize="@dimen/inner_text_1"
+        android:textStyle="bold"
+        android:visibility="gone"
+
+        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/pay_dts_viewList" />
+
+
+    <!-- ListView para desplegar la lista completa de sugerencias debajo del input -->
+    <ListView
+        android:id="@+id/pay_dts_viewList2"
+        android:layout_width="0dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        android:elevation="2dp"
+        app:layout_constraintTop_toBottomOf="@+id/input_dts1"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintEnd_toEndOf="@+id/guideline2" />
 
     <TextView
         android:id="@+id/txview_dts2"
         android:layout_width="0dp"
         android:layout_height="@dimen/txview_h2"
-        android:layout_marginTop="30dp"
-        android:background="@color/text_background"
         android:padding="@dimen/txview_pad2"
         android:text="Vacio"
         android:textSize="@dimen/inner_text_1"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:background="@color/text_background"
+        android:gravity="center_vertical"
+
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintTop_toBottomOf="@+id/pay_dts_viewList2"
         app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/pay_dts_viewList"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintEnd_toStartOf="@+id/butt_dts4" />
+
+    <!-- Botón copiado alineado perfectamente al Input -->
+    <ToggleButton
+        android:id="@+id/butt_dts4"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:textOn="OK"
+        android:textOff="Editar"
+        android:checked="false"
+        android:textSize="@dimen/inner_text_1"
+
+        app:layout_constraintHorizontal_weight="0.4"
+        app:layout_constraintTop_toTopOf="@id/txview_dts2"
+        app:layout_constraintBottom_toBottomOf="@id/txview_dts2"
+        app:layout_constraintStart_toEndOf="@id/txview_dts2"
+        app:layout_constraintEnd_toEndOf="@+id/guideline2" />
 
     <TextView
         android:id="@+id/txview_dts3"

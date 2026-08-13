@@ -37,6 +37,8 @@ public class SetDb {
 
         DBListCreator mListCreator = new DBListCreator(context);
 
+        //Basic.msg("Bug "+preloader,true);
+
         // Respaldo completo → reemplaza todo
         if (isId) {
             mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "Restaurando respaldo...");
@@ -84,7 +86,7 @@ public class SetDb {
         }
 
         Conf mConf = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
-        List<Article> mAccList = StartVar.appDBall.daoAtr().getUsers();
+        List<Article> mArtList = StartVar.appDBall.daoAtr().getUsers();
 
         if (mConf == null) {
             Basic.msg("Error: No hay configuración local");
@@ -94,7 +96,7 @@ public class SetDb {
 
         // ----- IDs no coinciden -----
         if (!mConf.hexid.equals(hexID)) {
-            if (mAccList == null || mAccList.isEmpty()) {
+            if (mArtList == null || mArtList.isEmpty()) {
                 mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "Los datos locales están vacios");
             } else {
                 Basic.msg("Error: Los IDs de las DB no coinciden: " + hexID + " , " + mConf.hexid);
@@ -104,7 +106,7 @@ public class SetDb {
         }
 
         // ----- Base local vacía -----
-        if (mAccList == null || mAccList.isEmpty()) {
+        if (mArtList == null || mArtList.isEmpty()) {
             mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "Los datos locales están vacios");
             SetWorkResult.resetPreloader(preloader);
             return;
@@ -173,16 +175,21 @@ public class SetDb {
                 StartVar.appDBall.daoCfg().updateDateTime(StartVar.mConfID, now, now, strDbg);
                 StartVar.getConfigDB();
                 manager.uploadDataBase();
-            } else if (!isCheck) {
-                Basic.msg("La base de datos está actualizada");
             }
+//            else if (!isCheck) {
+//                Basic.msg("La base de datos está actualizada");
+//            }
 
             if (isCheck) {
                 GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
             }
         }
 
-        // Siempre se llama al final (ya no hay return anticipado sin esto)
-        SetWorkResult.resetPreloader(preloader);
+        // Solo el flujo real de preloader debe poder cerrar
+        if (preloader && !StartVar.mainStart) {
+            SetWorkResult.resetPreloader(true);
+        } else if (preloader) {
+            Log.d(TAG, "Ignorando resetPreloader: main ya iniciado");
+        }
     }
 }

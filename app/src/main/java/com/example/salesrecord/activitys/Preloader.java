@@ -123,10 +123,10 @@ public class Preloader extends AppCompatActivity {
             //En caso de estancar se forza el inicio de mainActivity
             startMainDelayErr(15000);
 
-            if(!StartVar.mainStart) {
+            if (!StartVar.mainStart) {
                 Basic.msg("Sincronizando Datos...");
-                manager.dataSynchronizeStarting();
-                mWorkResult.observeWorkResult();
+                mWorkResult.observeWorkResult();      // primero
+                manager.dataSynchronizeStarting();    // después
                 return;
             }
         }
