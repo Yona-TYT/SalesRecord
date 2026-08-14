@@ -23,12 +23,12 @@ import androidx.work.WorkRequest;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.DBListCreator;
-import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.Msg;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -112,7 +112,7 @@ public class SetWorkResult {
                         android.util.Log.e("DriveSync", "Error en SetDb", e);
                     }
                 } else {
-                    Basic.msg("CSV no existe: " + message);
+                    Msg.m("CSV no existe: " + message);
                     // Si era preloader y no hay archivo, igual salir del preloader
                     SetWorkResult.resetPreloader(preloader);
                 }
@@ -127,7 +127,7 @@ public class SetWorkResult {
                     boolean hasLocal = mAccList != null && !mAccList.isEmpty();
 
                     if (hasLocal) {
-                        Basic.msg("Subiendo Datos...");
+                        Msg.m("Subiendo Datos...");
                         try {
                             DBListCreator.createDbLists();
                         } catch (Exception e) {

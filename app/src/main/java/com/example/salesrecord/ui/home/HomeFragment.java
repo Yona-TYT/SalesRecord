@@ -3,7 +3,6 @@ package com.example.salesrecord.ui.home;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -41,7 +40,6 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.activitys.ReloadActivity;
 import com.example.salesrecord.adapters.SaleMainAdapter;
 import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
@@ -60,6 +58,7 @@ import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.SharedViewModel;
@@ -331,7 +330,7 @@ public class HomeFragment extends Fragment {
             // Quiere abrir la calculadora
             if (visible) {
                 if (currObj == null) {
-                    Basic.msg("Debe seleccionar un producto primero!.");
+                    Msg.m("Debe seleccionar un producto primero!.");
                     // solo cerrar si estaba en true
                     sharedViewModel.setCalcVisible(false);
                     return;
@@ -649,7 +648,7 @@ public class HomeFragment extends Fragment {
                     mAdapter2.notifyDataSetChanged();
                 }
                 else {
-                    Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
+                    Msg.m("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
                 }
 
                 currObj = null;
@@ -659,7 +658,7 @@ public class HomeFragment extends Fragment {
         mButt3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Basic.msg("Mantegan precionado para limpiar la lista.");
+                Msg.m("Mantegan precionado para limpiar la lista.");
             }
         });
 
@@ -758,7 +757,7 @@ public class HomeFragment extends Fragment {
                             mAdapter1.notifyDataSetChanged();
                         }
                     } else {
-                        Basic.msg("Producto AGOTADO!");
+                        Msg.m("Producto AGOTADO!");
                         return;
                     }
                 }
@@ -843,7 +842,7 @@ public class HomeFragment extends Fragment {
                         mAdapter2.notifyDataSetChanged();
                     }
                     else {
-                        Basic.msg("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
+                        Msg.m("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
                     }
 
                     currObj = null;
@@ -860,7 +859,7 @@ public class HomeFragment extends Fragment {
                 }
             }
             else {
-                Basic.msg("Lista VACIA!");
+                Msg.m("Lista VACIA!");
             }
         });
 
@@ -1135,7 +1134,7 @@ public class HomeFragment extends Fragment {
             return true;
 
         } else {
-            Basic.msg("Aqui no hay aqui no hay !: "+crrSale );
+            Msg.m("Aqui no hay aqui no hay !: "+crrSale );
         }
         return false;
     }

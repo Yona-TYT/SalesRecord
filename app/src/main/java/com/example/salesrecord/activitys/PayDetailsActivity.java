@@ -52,6 +52,7 @@ import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
 
@@ -128,6 +129,11 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_pay_dts);
+
+        if (StartVar.appDBall == null) {
+            //Satrted variables
+            StartVar.setAllListDB();
+        }
 
         contex = AppContextProvider.getContext();
         daoSal = StartVar.appDBall.daoSal();
@@ -409,7 +415,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                             }
                         }
                         if(!b) {
-                            Basic.msg("UserID de cliente no VALIDO!");
+                            Msg.m("UserID de cliente no VALIDO!");
                         }
                         else{
                             mTextList.get(0).setText("Alias: " + mAlias);
@@ -468,7 +474,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" + glData.glCedula + "\n" + glData.glCodeBank + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
                 clipboard.setPrimaryClip(clipData);
-                Basic.msg("Datos de PAGO+MONTO copiados al portapapeles.");
+                Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
 
             if (itemId == R.id.butt_dts2) {

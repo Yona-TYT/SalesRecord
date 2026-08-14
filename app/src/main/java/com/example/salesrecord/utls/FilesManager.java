@@ -243,7 +243,7 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
                 pickMedia.launch(new PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
             }
             else{
-                Basic.msg("Error Permiso Denegado!");
+                Msg.m("Error Permiso Denegado!");
             }
         }
     }

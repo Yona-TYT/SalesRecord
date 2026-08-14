@@ -71,6 +71,7 @@ import eltos.simpledialogfragment.form.Input;
 import eltos.simpledialogfragment.form.SimpleFormDialog;
 
 import com.example.salesrecord.activitys.MainActivity;
+import com.example.salesrecord.utls.Msg;
 
 
 public class SettingsFragment extends PreferenceFragmentCompat implements
@@ -391,7 +392,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                                     setPreferencesState();
 
                                     //Inicia la sincronizacion
-                                    Basic.msg("Sincronizando Datos...");
+                                    Msg.m("Sincronizando Datos...");
                                     manager.dataSynchronize();
                                     mWorkResult.observeWorkResult();
                                 }

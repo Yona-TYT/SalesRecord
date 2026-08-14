@@ -27,6 +27,7 @@ import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.SharedViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Primer clic: Activamos la bandera y mostramos el aviso
                 doubleBackToExitPressedOnce = true;
-                Basic.msg("Presiona atrás dos veces para salir");
+                Msg.m("Presiona atrás dos veces para salir");
 
                 // Iniciamos el temporizador: Si pasan 2 segundos, la bandera vuelve a false
                 backPressHandler.postDelayed(() -> doubleBackToExitPressedOnce = false, 2000);
@@ -137,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Start File manager class
         mFile = new FilesManager();
+
+        Msg.init(this);
 
         CalendUtls calen = new CalendUtls();
 
@@ -294,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 //Para Importar archivo CSV
                 else if (id == R.id.impor) {
-                    Basic.msg("Importando datos...");
+                    Msg.m("Importando datos...");
                     if (StartVar.mPermiss) {
                         try {
                             String[] mimetype = {"text/csv", "text/comma-separated-values"};
@@ -402,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
                 mListCreator.cvsToDB(StartVar.reloadActivity, uri, 1, "");
             }
             else {
-                Basic.msg("Solicitud Denegada!");
+                Msg.m("Solicitud Denegada!");
             }
         }
     );
@@ -467,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
                         if (mTry > 0) {
                             startMainDelayTry(mTime);
                         } else {
-                            Basic.msg("Ultima tasa disponible: " + mCfg.dolar);
+                            Msg.m("Ultima tasa disponible: " + mCfg.dolar);
                             startVar.setDollar(mCfg.dolar);
                             startVar.setShortDate(mCfg.datetasa);
 

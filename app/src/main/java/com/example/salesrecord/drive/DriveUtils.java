@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.ex.Logs;
+import com.example.salesrecord.utls.Msg;
 
 import net.openid.appauth.AuthorizationService;
 
@@ -16,15 +17,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -485,7 +482,7 @@ public class DriveUtils {
                     }
 
                     LOG.error("Error API: Código " + code + " - " + errorMsg + ". Body: " + errorBody);
-                    Basic.msg("Error API: " + code + " - " + errorMsg + ". Body: " + errorBody);
+                    Msg.m("Error API: " + code + " - " + errorMsg + ". Body: " + errorBody);
 
                     throw new Exception("Error API " + code + ": " + errorMsg + ". Detalles: " + errorBody);
                 }

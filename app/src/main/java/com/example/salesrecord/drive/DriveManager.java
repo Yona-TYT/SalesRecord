@@ -16,6 +16,7 @@ import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ex.Logs;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.Msg;
 
 
 import net.openid.appauth.AppAuthConfiguration;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 
 public class DriveManager {
@@ -210,7 +210,7 @@ public class DriveManager {
 
                 if (StartVar.csvList == null || StartVar.csvList.isEmpty()) {
                     Log.e("Drive", "csvList sigue vacía: se cancela la subida");
-                    Basic.msg("Error: no hay datos para exportar");
+                    Msg.m("Error: no hay datos para exportar");
                     return;
                 }
 
@@ -223,7 +223,7 @@ public class DriveManager {
                     file = fMang.csvExport(StartVar.csvList, name);
                 } catch (IOException e) {
                     Log.e("Drive", "Error creando CSV: " + e.getMessage());
-                    Basic.msg("Error Archivo no creado: " + e.getMessage());
+                    Msg.m("Error Archivo no creado: " + e.getMessage());
                     return; // NO lanzar RuntimeException
                 }
 
@@ -234,7 +234,7 @@ public class DriveManager {
 
                 if (!FilesManager.isCsvSafeToUpload(file)) {
                     Log.e("Drive", "CSV inválido: subida cancelada");
-                    Basic.msg("Error: CSV inválido, no se subió a Drive");
+                    Msg.m("Error: CSV inválido, no se subió a Drive");
                     return;
                 }
 
@@ -265,7 +265,7 @@ public class DriveManager {
 
             } catch (Exception e) {
                 Log.e("Drive", "Error en uploadDataBase", e);
-                Basic.msg("Error al subir: " + e.getMessage());
+                Msg.m("Error al subir: " + e.getMessage());
                 // sin throw
             }
         });
@@ -295,7 +295,7 @@ public class DriveManager {
                     android.util.Log.i("DriveSync", "✅ Lista preparada: " + mFileList.size() + " imágenes.");
                 }
                 else {
-                    Basic.msg("Descargando imagenes...");
+                    Msg.m("Descargando imagenes...");
                     //Si la lista esta vacia se procede a descargar las imagenes
                     dataSynchronizeImg();
                     android.util.Log.w("DriveSync", "⚠️ No se encontraron imágenes para subir.");
@@ -305,7 +305,7 @@ public class DriveManager {
                 android.util.Log.e("DriveSync", "❌ Error en el hilo de búsqueda de imágenes", e);
                 // Si necesitas mostrar un mensaje al usuario, usa el MainLooper solo para el Toast
                 new Handler(Looper.getMainLooper()).post(() ->
-                        Basic.msg("Error al procesar imágenes: " + e.getMessage())
+                        Msg.m("Error al procesar imágenes: " + e.getMessage())
                 );
             }
         }).start();

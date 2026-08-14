@@ -6,7 +6,6 @@ import android.util.Log;
 
 import androidx.work.Data;
 
-import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
@@ -14,14 +13,12 @@ import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
+import com.example.salesrecord.utls.Msg;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,7 +65,7 @@ public class SetDb {
                         remoteTime = Long.parseLong(spl[7].trim());
                         confLineFound = true;
                     } catch (NumberFormatException e) {
-                        Basic.msg("Error: El CSV no contiene timestamps válidos");
+                        Msg.m("Error: El CSV no contiene timestamps válidos");
                         Log.e(TAG, "CSV date/time inválidos: " + spl[5] + " / " + spl[6], e);
                         SetWorkResult.resetPreloader(preloader);
                         return;
@@ -79,7 +76,7 @@ public class SetDb {
         }
 
         if (!confLineFound) {
-            Basic.msg("Error: No se encontró configuración en el CSV");
+            Msg.m("Error: No se encontró configuración en el CSV");
             Log.e(TAG, "Línea confID0 no encontrada");
             SetWorkResult.resetPreloader(preloader);
             return;
@@ -89,7 +86,7 @@ public class SetDb {
         List<Article> mArtList = StartVar.appDBall.daoAtr().getUsers();
 
         if (mConf == null) {
-            Basic.msg("Error: No hay configuración local");
+            Msg.m("Error: No hay configuración local");
             SetWorkResult.resetPreloader(preloader);
             return;
         }
@@ -99,7 +96,7 @@ public class SetDb {
             if (mArtList == null || mArtList.isEmpty()) {
                 mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "Los datos locales están vacios");
             } else {
-                Basic.msg("Error: Los IDs de las DB no coinciden: " + hexID + " , " + mConf.hexid);
+                Msg.m("Error: Los IDs de las DB no coinciden: " + hexID + " , " + mConf.hexid);
             }
             SetWorkResult.resetPreloader(preloader);
             return;
@@ -114,7 +111,7 @@ public class SetDb {
 
         // ----- Timestamps locales -----
         if (mConf.date == null || mConf.time == null) {
-            Basic.msg("Error: Datos de fecha/hora locales incompletos");
+            Msg.m("Error: Datos de fecha/hora locales incompletos");
             SetWorkResult.resetPreloader(preloader);
             return;
         }
@@ -151,7 +148,7 @@ public class SetDb {
             // B) REMOTO más nuevo
             // =====================================================
             if (newObj) {
-                Basic.msg("Error: Existen cambios más recientes en la red. Sincronizando...");
+                Msg.m("Error: Existen cambios más recientes en la red. Sincronizando...");
             }
 
             if (isCheck) {

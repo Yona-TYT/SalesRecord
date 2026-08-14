@@ -2,13 +2,11 @@ package com.example.salesrecord.activitys;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -29,23 +27,19 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.CurrencyEditText;
-import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.Launcher;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
-import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
-import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.example.salesrecord.utls.Msg;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -115,7 +109,6 @@ public class FullEditActivity extends AppCompatActivity {
 
         if (StartVar.appDBall == null) {
             //Satrted variables
-            StartVar startVar = new StartVar();
             StartVar.setAllListDB();
         }
 
@@ -173,7 +166,7 @@ public class FullEditActivity extends AppCompatActivity {
                         }
                     }
                     else {
-                        Basic.msg("No hay imagen seleccionada!");
+                        Msg.m("No hay imagen seleccionada!");
                     }
                 }
             });
@@ -346,7 +339,7 @@ public class FullEditActivity extends AppCompatActivity {
                             sImage = "";
                         }
                     } catch (IOException e) {
-                        Basic.msg("Error al guardar la IMAGEN!");
+                        Msg.m("Error al guardar la IMAGEN!");
                         e.printStackTrace();
                         sImage = "";
                     }

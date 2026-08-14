@@ -25,6 +25,7 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
 import java.io.File;
@@ -353,7 +354,7 @@ public class SaleMainAdapter extends BaseAdapter  {
                                     objList.set(idx, mitem);
                                 } else {
                                     inputCount.setText(Basic.getValueFormatter(mitem.saleCount));
-                                    Basic.msg("Valor EXCEDIDO!");
+                                    Msg.m("Valor EXCEDIDO!");
                                 }
 
                                 // 2. Ocultamos el input y regresamos al diseño del texto original

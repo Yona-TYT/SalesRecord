@@ -19,30 +19,25 @@ import net.openid.appauth.AuthState;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
-import com.example.salesrecord.db.Conf;
-import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Fecha;
-import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.utls.Msg;
 
 public class Preloader extends AppCompatActivity {
 
@@ -96,6 +91,7 @@ public class Preloader extends AppCompatActivity {
 
         //Satrted variables
         Basic mBasic = new Basic(getApplicationContext());
+        Msg.init(this);
 
         DriveManager manager = new DriveManager(PreferenceHelper.getInstance());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -124,7 +120,7 @@ public class Preloader extends AppCompatActivity {
             startMainDelayErr(15000);
 
             if (!StartVar.mainStart) {
-                Basic.msg("Sincronizando Datos...");
+                Msg.m("Sincronizando Datos...");
                 mWorkResult.observeWorkResult();      // primero
                 manager.dataSynchronizeStarting();    // después
                 return;
@@ -157,7 +153,7 @@ public class Preloader extends AppCompatActivity {
                 if(StartVar.mActivity == null || StartVar.mActivity.getClass().getSimpleName().equals("Preloader")) {
                     //Esto inicia las actividad Main despues de tiempo de espera del preloder
                     startActivity(new Intent(Preloader.this, ReloadActivity.class));
-                    Basic.msg("Algo fallo, Inicio forzado!");
+                    Msg.m("Algo fallo, Inicio forzado!");
                     finish(); //Finaliza la actividad y ya no se accede mas
                 }
             }

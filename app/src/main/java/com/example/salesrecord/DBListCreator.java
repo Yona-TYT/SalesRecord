@@ -23,6 +23,7 @@ import com.example.salesrecord.db.dao.DaoDeb;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
+import com.example.salesrecord.utls.Msg;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -572,11 +573,11 @@ public class DBListCreator extends AppCompatActivity {
             }
         }
         catch (FileNotFoundException e) {
-            Basic.msg("ErrorA: "+ e.getMessage());
+            Msg.m("ErrorA: "+ e.getMessage());
             throw new RuntimeException(e);
         }
         catch (IOException e) {
-            Basic.msg("ErrorB: "+ e.getMessage());
+            Msg.m("ErrorB: "+ e.getMessage());
             throw new RuntimeException(e);
         }
 
@@ -586,7 +587,7 @@ public class DBListCreator extends AppCompatActivity {
             }
             Intent mIntent = new Intent(AppContextProvider.getContext(), mActivity.getClass());
             mActivity.startActivity(mIntent);
-            Basic.msg(mMsg);
+            Msg.m(mMsg);
             mActivity.finish();
         }
     }

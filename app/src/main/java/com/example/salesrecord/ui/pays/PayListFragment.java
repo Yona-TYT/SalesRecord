@@ -33,6 +33,7 @@ import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -309,7 +310,7 @@ public class PayListFragment extends Fragment {
                 ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" + glData.glCedula + "\n" + glData.glCodeBank + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
                 clipboard.setPrimaryClip(clipData);
-                Basic.msg("Datos de PAGO+MONTO copiados al portapapeles.");
+                Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
         });
     }

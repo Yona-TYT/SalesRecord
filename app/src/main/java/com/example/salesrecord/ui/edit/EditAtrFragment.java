@@ -37,6 +37,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 import com.example.salesrecord.utls.SharedViewModel;
 import com.example.salesrecord.utls.StringsUtls;
@@ -440,7 +441,7 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(crrArt == null){
-                    Basic.msg("Seleccione un producto primero!");
+                    Msg.m("Seleccione un producto primero!");
                     return;
                 }
                 else {
@@ -456,7 +457,7 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(crrArt == null){
-                    Basic.msg("Seleccione un producto primero!");
+                    Msg.m("Seleccione un producto primero!");
                     return;
                 }
 
@@ -464,7 +465,7 @@ public class EditAtrFragment extends Fragment {
                 String nombre = InputHelper.cleanText(Objects.requireNonNull(mInput1.getText()).toString());
 
                 if(nombre.isEmpty()){
-                    Basic.msg("Nombre no debe estar VACIO!");
+                    Msg.m("Nombre no debe estar VACIO!");
                     return;
                 }
 

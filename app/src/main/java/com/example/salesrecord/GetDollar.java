@@ -7,9 +7,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 
-import androidx.fragment.app.FragmentActivity;
-
 import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.utls.Msg;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -67,7 +66,7 @@ public class GetDollar {
                     @SuppressLint("SetTextI18n")
                     @Override
                     public void run() {
-                        Basic.msg("Error de CONEXION!1");
+                        Msg.m("Error de CONEXION!1");
 
                         if(mInput1 != null ) {
  //                           mInput1.setFocusable(true);

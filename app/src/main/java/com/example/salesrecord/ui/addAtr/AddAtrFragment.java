@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,7 +24,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.CurrencyEditText;
@@ -39,16 +37,14 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
-import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 
 public class AddAtrFragment extends Fragment {
@@ -160,7 +156,7 @@ public class AddAtrFragment extends Fragment {
                     }
                 }
                 else {
-                    Basic.msg("No hay imagen seleccionada!");
+                    Msg.m("No hay imagen seleccionada!");
                 }
             }
         });
@@ -305,7 +301,7 @@ public class AddAtrFragment extends Fragment {
                         sImage = "";
                     }
                 } catch (IOException e) {
-                    Basic.msg("Error al guardar la IMAGEN!");
+                    Msg.m("Error al guardar la IMAGEN!");
                     e.printStackTrace();
                     sImage = "";
                 }
