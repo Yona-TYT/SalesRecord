@@ -46,15 +46,24 @@ public class Msg {
     }
 
     public static void m(String msg) {
-        msgInternal(msg, false);
+        msgInternal(msg, false, 0);
+    }
+
+    public static void m(String msg, int length) {
+        msgInternal(msg, false, length);
     }
 
     public static void m(String msg, boolean isClipboard) {
-        msgInternal(msg, isClipboard);
+        msgInternal(msg, isClipboard, 0);
+    }
+
+    //Test mark
+    public static void m() {
+        msgInternal("Aqui Hay Aqui Hay !!", true, 1);
     }
 
     // ====================== MÉTODO PRINCIPAL ======================
-    public static void msgInternal(String msg, boolean isClipboard) {
+    public static void msgInternal(String msg, boolean isClipboard, int length) {
         if (msg == null || msg.trim().isEmpty() || mContext == null) return;
 
         mainHandler.post(() -> {
@@ -68,13 +77,13 @@ public class Msg {
             messageQueue.offer(new MsgItem(msg, isClipboard));
 
             if (!isShowing) {
-                showNextToast();
+                showNextToast(length);
             }
         });
     }
 
     // ====================== MOSTRAR SIGUIENTE ======================
-    private static void showNextToast() {
+    private static void showNextToast(int length) {
         if (messageQueue.isEmpty() || isShowing || mContext == null) return;
 
         MsgItem item = messageQueue.poll();
@@ -100,7 +109,7 @@ public class Msg {
 
         Toast toast = new Toast(mContext);
         toast.setView(cardView);
-        toast.setDuration(Toast.LENGTH_LONG);
+        toast.setDuration(length);
         toast.show();
 
         // Copiar al portapapeles
@@ -116,7 +125,7 @@ public class Msg {
         mainHandler.postDelayed(() -> {
             isShowing = false;
             // Opcional: lastMessageShown = "";
-            showNextToast();
+            showNextToast(length);
         }, 2000);
     }
 }

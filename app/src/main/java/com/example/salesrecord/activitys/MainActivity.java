@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -24,6 +25,9 @@ import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.dao.DaoCfg;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.drive.SetWorkResult;
+import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
@@ -40,6 +44,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.ViewCompat;
+import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -51,15 +56,22 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 
 import com.example.salesrecord.databinding.ActivityMainBinding;
+import com.google.android.material.navigation.NavigationBarView;
 
 import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    private DriveManager driveManager;
+    private SetWorkResult mWorkResult;
+    private ExecutorService driveExecutor;
 
     private DaoCfg mDaoCfg;
     private Conf mCfg;
@@ -86,6 +98,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (DriveManager.getAuthState().isAuthorized()) {
+            driveManager = new DriveManager(PreferenceHelper.getInstance());
+            driveExecutor = Executors.newSingleThreadExecutor();
+
+            if(StartVar.mLifecycle == null) {
+                StartVar.mLifecycle = ProcessLifecycleOwner.get();
+            }
+
+            mWorkResult = new SetWorkResult(StartVar.mLifecycle, driveExecutor, driveManager);
+
+            // 🎧 Dejas el LiveData escuchando permanentemente de forma segura
+            mWorkResult.observeWorkResult();
+        }
 
         // 2. Registrar el callback moderno para controlar el botón de atrás
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -325,6 +350,22 @@ public class MainActivity extends AppCompatActivity {
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             // Le ordena a la MainActivity destruir los íconos viejos y llamar a onCreateMenu de nuevo
             invalidateOptionsMenu();
+        });
+
+        binding.navView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Msg.m();
+                boolean navego = NavigationUI.onNavDestinationSelected(item, navController);
+
+                // Solo disparamos la tarea de sincronización, el observador del onCreate ya está listo esperando
+                if (DriveManager.getAuthState().isAuthorized() && driveManager != null) {
+                    driveManager.dataSynchronize();
+                }
+
+                // 3. Retornas el resultado de la navegación
+                return navego;
+            }
         });
     }
 

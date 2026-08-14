@@ -53,6 +53,9 @@ import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.drive.SetWorkResult;
+import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.InputHelper;
@@ -67,6 +70,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
 
@@ -299,6 +304,11 @@ public class HomeFragment extends Fragment {
             glData.setIsEdit(false);
         }
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -1112,6 +1122,7 @@ public class HomeFragment extends Fragment {
             );
 
             //Se restauran los elementos
+            searchBar.setQuery("", false);
             mInput3.setText("");
             mInput3.setVisibility(View.GONE);
             mButt4.setEnabled(false);

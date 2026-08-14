@@ -36,6 +36,9 @@ import com.example.salesrecord.databinding.FragmentAddBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.drive.SetWorkResult;
+import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
@@ -46,6 +49,8 @@ import com.example.salesrecord.utls.Msg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class AddAtrFragment extends Fragment {
 
@@ -100,6 +105,12 @@ public class AddAtrFragment extends Fragment {
 
         //dashboardViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
     }
 
     private void setViwes(){

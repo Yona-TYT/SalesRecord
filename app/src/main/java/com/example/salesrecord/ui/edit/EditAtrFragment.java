@@ -33,6 +33,9 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoCfg;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.drive.SetWorkResult;
+import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
@@ -48,6 +51,8 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EditAtrFragment extends Fragment {
 

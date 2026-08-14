@@ -191,7 +191,8 @@ public class DriveUpWorker extends Worker {
                     folderId
             );
             isNew = true;
-        } else {
+        }
+        else {
             driveFileId = driveFile.id;
             LOG.info("   → Encontrado ID: " + driveFileId
                     + " | MD5: " + driveFile.md5Checksum);

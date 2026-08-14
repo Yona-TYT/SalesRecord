@@ -30,6 +30,9 @@ import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoSal;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.drive.SetWorkResult;
+import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.MoneyUtls;
@@ -40,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PayListFragment extends Fragment {
 
@@ -97,6 +102,7 @@ public class PayListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
         setViwes();
     }
 
@@ -197,6 +203,8 @@ public class PayListFragment extends Fragment {
         });
         setPayList();
     }
+
+
 
     @Override
     public void onDestroyView() {

@@ -105,11 +105,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Spinner mSpinn1;
     private int currSel1 = 0;
 
-    public String payId = StartVar.currPayId;
-    public int accIndex = StartVar.accSelect;
-
-    private List<String> mCurrencyList = Arrays.asList("$", "Bs");
-    private int mCindex = StartVar.mCurrency;
 
     private ImageView mImage1;
     private String currDir = "";
@@ -120,6 +115,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private Sale mSale;
+    private String currId;
 
     private double mTotal = 0.0;
 
@@ -129,14 +125,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_pay_dts);
-
-        if (StartVar.appDBall == null) {
-            //Satrted variables
-            StartVar.setAllListDB();
-        }
-
-        contex = AppContextProvider.getContext();
-        daoSal = StartVar.appDBall.daoSal();
 
         //Se configura el Boton nav Back -----------------------------------------------
         OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();
@@ -162,6 +150,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         myToolbar.setTitleTextColor(ContextCompat.getColor(myToolbar.getContext(), R.color.inner_button));
         //------------------------------------------------------------------------------------------
+
+        // 3. Restaurar las variables (Opción A: Desde el onCreate)
+        if (savedInstanceState != null) {
+            currId = savedInstanceState.getString("KEY_SALE", "");
+        }else {
+            currId = glData.getCurrSalId();
+        }
 
         //mImage1 = findViewById(R.id.image_dts1);
         mListView1 = findViewById(R.id.pay_dts_viewList);
@@ -201,18 +196,34 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mTextList.add(mText5);
         mTextList.add(mText6);
 
-        // Se llenan los textView
-        setTextViewList();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mSw.setFocusedByDefault(false);
         }
+
+        // Se llenan los textView
+        setViwes();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        // Guardamos los valores actuales en el objeto Bundle usando claves únicas (keys)
+        outState.putString("KEY_SALE", currId);
+
+        // Siempre debes llamar al método super al final
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Msg.init(this);
+        setViwes();
     }
 
     // MenuToolbar boton back
@@ -228,15 +239,20 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     //------------------------------------------------------------
 
     @SuppressLint("SetTextI18n")
-    public void setTextViewList() {
+    public void setViwes() {
 
         if (StartVar.appDBall == null) {
             //Satrted variables
-            StartVar startVar = new StartVar();
             StartVar.setAllListDB();
         }
 
-        mSale = daoSal.getUsers(glData.getCurrSalId());
+        contex = AppContextProvider.getContext();
+        daoSal = StartVar.appDBall.daoSal();
+
+        mSale = daoSal.getUsers(currId);
+
+        Msg.m("hhhjkk");
+
 
         if (mSale != null) {
 
@@ -472,7 +488,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             if (itemId == R.id.butt_dts1) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" + glData.glCedula + "\n" + glData.glCodeBank + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
+                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
+                        glData.glCedula + "\n" + glData.glCodeBank + "\n" +
+                        MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
