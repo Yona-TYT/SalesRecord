@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pay_item_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -18,7 +19,7 @@
         android:padding="1dp"
         android:text="+"
         android:textStyle="bold"
-        android:textSize="@dimen/inner_text_3" />
+        android:textSize="@dimen/inner_text_2" />
 
 
     <!-- Contenido de texto -->
@@ -66,14 +67,18 @@
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
                 android:padding="2dp"
-                android:textSize="@dimen/inner_text_1" />
+                android:gravity="right"
+                android:textSize="@dimen/inner_text_1"
+                tools:ignore="RtlHardcoded" />
 
             <TextView
                 android:id="@+id/pay_text4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="right"
                 android:padding="2dp"
-                android:textSize="@dimen/inner_text_1" />
+                android:textSize="@dimen/inner_text_1"
+                tools:ignore="RtlHardcoded" />
 
         </LinearLayout>
     </LinearLayout>

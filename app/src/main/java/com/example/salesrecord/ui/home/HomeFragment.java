@@ -1056,7 +1056,7 @@ public class HomeFragment extends Fragment {
                 }
             }
             String strNr = " nr"+cltNr + (" (" + CalendUtls.getShortDate(currDate) + ")");
-            strClt = "Cliente" + strNr ;
+            strClt = "Clt." + strNr ;
 
             String strRawName = mInput3.getText().toString();
             if(!strRawName.isEmpty()) {
