@@ -160,16 +160,19 @@
         android:id="@+id/butt_dts4"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:textOn="OK"
-        android:textOff="Editar"
-        android:checked="false"
-        android:textSize="@dimen/inner_text_1"
 
-        app:layout_constraintHorizontal_weight="0.4"
-        app:layout_constraintTop_toTopOf="@id/txview_dts2"
+        android:backgroundTint="@color/button"
+        android:textColor="@color/inner_button"
+        android:checked="false"
+        android:textOff="Editar"
+        android:textOn="OK"
+
+        android:textSize="@dimen/inner_text_1"
         app:layout_constraintBottom_toBottomOf="@id/txview_dts2"
+        app:layout_constraintEnd_toEndOf="@+id/guideline2"
+        app:layout_constraintHorizontal_weight="0.4"
         app:layout_constraintStart_toEndOf="@id/txview_dts2"
-        app:layout_constraintEnd_toEndOf="@+id/guideline2" />
+        app:layout_constraintTop_toTopOf="@id/txview_dts2" />
 
     <TextView
         android:id="@+id/txview_dts3"

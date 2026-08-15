@@ -421,6 +421,8 @@ public class DBListCreator extends AppCompatActivity {
         allMaps.put("dat", mapDat);
         allMaps.put("pay", mapSal);
 
+        mList.add(new String[]{"<end>"});  // marca de cierre
+
         StartVar.setCsvList(new ArrayList<>(mList));
 
 
@@ -479,6 +481,9 @@ public class DBListCreator extends AppCompatActivity {
                 int f = spl.length;
                 if(f==1){
                     String tx = spl[0];
+                    if (tx.equals("<end>")) {
+                        break;
+                    }
                     if(tx.equals(t[0])){
                         t[0] = "";
                         stringBuilder.append(line);

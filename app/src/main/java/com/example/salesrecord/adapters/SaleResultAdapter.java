@@ -31,7 +31,6 @@ public class SaleResultAdapter extends BaseAdapter  {
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
-
     private static class ViewHolder {
         TextView view1;
         TextView view2;

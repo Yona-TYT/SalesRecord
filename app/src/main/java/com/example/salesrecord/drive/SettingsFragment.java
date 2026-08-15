@@ -31,7 +31,6 @@ import androidx.preference.SwitchPreferenceCompat;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
-import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;

@@ -29,6 +29,7 @@ import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
+import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
@@ -224,22 +225,34 @@ public class PayListFragment extends Fragment {
         double oldTasa = 0;
         for (int i = 0; i < mSalList.size(); i++) {
             Sale mPay = mSalList.get(i);
-            String name = glData.saleType.get(mPay.status);
+            String status = glData.saleType.get(mPay.status);
             long fecha = mPay.fecha;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 String date = CalendUtls.getShortDate(fecha);
                 String time = CalendUtls.getTime(mPay.time);
 
+                String txAlias = mPay.cliente;
+
+                if (txAlias.startsWith("cltID")) {
+                    DaoClt daoClt = StartVar.appDBall.daoClt();
+                    Cliente mClt = daoClt.getUsers(txAlias);
+                    if (mClt != null) {
+                        txAlias = mClt.nombre;
+                    }
+                }
+
                 if(currSel2 == 0) {
                     if (CalendUtls.isSameDay(fecha, selFecha.date)) {
-                        Object[] stList = new Object[7];
+                        Object[] stList = new Object[8];
                         stList[0] = mPay.sale;
-                        stList[1] = name;
+                        stList[1] = status;
                         stList[2] = mPay.monto;
                         stList[3] = date;
                         stList[4] = mPay.status;
                         stList[5] = time;
                         stList[6] = mPay.tasa;
+                        stList[7] = txAlias;
+
                         mPayList.add(stList);
 
                         oldTasa = mPay.tasa;
@@ -249,7 +262,7 @@ public class PayListFragment extends Fragment {
                 else if(Objects.equals(mPay.cliente, cltList.get(currSel2 - 1).cliente) && mPay.status > 0){
                     Object[] stList = new Object[7];
                     stList[0] = mPay.sale;
-                    stList[1] = name;
+                    stList[1] = status;
                     stList[2] = mPay.monto;
                     stList[3] = date;
                     stList[4] = mPay.status;

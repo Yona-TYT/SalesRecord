@@ -251,9 +251,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         mSale = daoSal.getUsers(currId);
 
-        Msg.m("hhhjkk");
-
-
         if (mSale != null) {
 
             if(mSale.status > 0){

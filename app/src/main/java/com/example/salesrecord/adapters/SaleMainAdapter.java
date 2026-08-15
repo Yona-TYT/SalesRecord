@@ -21,7 +21,9 @@ import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.CurrencyEditText;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
@@ -37,6 +39,8 @@ public class SaleMainAdapter extends BaseAdapter  {
     private Context mContex;
     private List<Obj> objList = new ArrayList<>();
     private int currPos = -1;
+
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     private static class ViewHolder {
         LinearLayout layout1;
@@ -391,10 +395,13 @@ public class SaleMainAdapter extends BaseAdapter  {
             }
 
             // Textos
-            String desc = item.desc.isEmpty() ? "" : " (" + item.desc + ")";
+            String metrTag = item.unit == 0 ? "" : "Por "+glData.unitList.get(item.unit);
+            String desc = (item.desc.isEmpty() ? " ("+metrTag+")" : " (" + item.desc + " "+ metrTag +")");
+            if(metrTag.isEmpty() && item.desc.isEmpty()){
+                desc = "";
+            }
             holder.view1.setText(item.name + desc);
             holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
-
 
             double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 

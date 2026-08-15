@@ -62,6 +62,8 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         Button butt;
         TextView text1;
         TextView text2;
+        TextView text3;
+        TextView text4;
     }
 
     @Override
@@ -95,6 +97,8 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             holder.butt = convertView.findViewById(R.id.butt_paylist);
             holder.text1 = convertView.findViewById(R.id.pay_text1);
             holder.text2 = convertView.findViewById(R.id.pay_text2);
+            holder.text3 = convertView.findViewById(R.id.pay_text3);
+            holder.text4 = convertView.findViewById(R.id.pay_text4);
 
             convertView.setTag(holder);
         } else {
@@ -110,15 +114,29 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
             // Construcción y asignación de Textos
             Integer opt = (Integer) textList.get(idx)[4];
-            String txName = (String) textList.get(idx)[1];
-            String txMont = (opt == 0 ? "+" : "-") +" ("+ Basic.getMask((double) textList.get(idx)[2], 0) + " / "+
-                    Basic.getMaskConv((double) textList.get(idx)[2], (double) textList.get(idx)[6], 1)+")";
+            String txStatus = (String) textList.get(idx)[1];
+
             String txFech = (String) textList.get(idx)[3];
             String txTime = (String) textList.get(idx)[5];
+            String txName = (String) textList.get(idx)[7];
+            holder.text1.setText(txName);
+            holder.text2.setText(txStatus);
 
+            TextView monto = holder.text3;
+            String txMont ="+";
+            if(opt > 0){
+                txMont ="-";
+                monto.setTextColor(
+                        ContextCompat.getColor(monto.getContext(), R.color.alert_background)
+                );
+            }
 
-            holder.text1.setText(" " + txName + " " + txMont);
-            holder.text2.setText(txFech+" "+txTime);
+            txMont += " ("+ Basic.getMask((double) textList.get(idx)[2], 0) + " / "+
+                    Basic.getMaskConv((double) textList.get(idx)[2], (double) textList.get(idx)[6], 1)+")";
+
+            monto.setText(txMont);
+
+            holder.text4.setText(txFech+" "+txTime);
         }
 
         return convertView;

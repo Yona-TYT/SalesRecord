@@ -11,7 +11,7 @@ import android.util.Log;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.DBListCreator;
 import com.example.salesrecord.GlobalData;
-import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ex.Logs;
@@ -162,6 +162,12 @@ public class DriveManager {
 
     // Metodo para sincronizar
     public void dataSynchronize(){
+        GenericQueue q = GlobalData.getInstance(mContext).getGenericQueue();
+        if (q.hasPendingQueueItems()) {
+            Log.w("DriveSync", "Cola pendiente: se omite dataSynchronize()");
+            Msg.m("Sincronizando...");
+            return;
+        }
         internalDataSynchronize( false,false, false, false, null);
     }
 

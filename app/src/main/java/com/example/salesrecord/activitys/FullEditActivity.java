@@ -269,6 +269,7 @@ public class FullEditActivity extends AppCompatActivity {
 
             //Para el selector de metrica
             mSpin2.setAdapter(new SelecAdapter(AppContextProvider.getContext(), spinL2));
+            mSpin2.setSelection(crrArt.metrica);
             mSpin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

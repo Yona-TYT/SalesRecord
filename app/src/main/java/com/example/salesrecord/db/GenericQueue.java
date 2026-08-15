@@ -288,4 +288,13 @@ public class GenericQueue {
 
         StartVar.getConfigDB(); // refresca la configuración en memoria
     }
+
+    public boolean hasPendingQueueItems() {
+        try {
+            List<QueueItem> items = getQueueItemDao().getAllQueueItems();
+            return items != null && !items.isEmpty();
+        } catch (Exception e) {
+            return !queue.isEmpty();
+        }
+    }
 }

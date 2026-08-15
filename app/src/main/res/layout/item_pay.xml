@@ -11,38 +11,70 @@
     <Button
         android:id="@+id/butt_paylist"
         android:layout_width="@dimen/button_wss"
-        android:layout_height="@dimen/button_h1"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
+        android:textColor="@color/inner_button"
+        android:backgroundTint="@color/button"
         android:padding="1dp"
         android:text="+"
         android:textStyle="bold"
-        android:textSize="@dimen/inner_text_2" />
+        android:textSize="@dimen/inner_text_3" />
 
-    <!-- Texto 1: Nombre y Monto -->
-    <TextView
-        android:id="@+id/pay_text1"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/button_h1"
-        android:minWidth="@dimen/txview_wm2"
-        android:layout_gravity="center_vertical"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:padding="10dp"
-        android:textStyle="bold"
-        android:textSize="@dimen/inner_text_1"
-        android:textColor="@color/text_color1" />
 
-    <!-- Texto 2: Fecha -->
-    <TextView
-        android:id="@+id/pay_text2"
-        android:layout_width="@dimen/txview_ws"
-        android:layout_height="@dimen/button_h1"
-        android:layout_gravity="center_vertical"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:padding="10dp"
-        android:textStyle="bold"
-        android:textSize="@dimen/inner_text_1"
-        android:textColor="@color/text_color1" />
+    <!-- Contenido de texto -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:padding="4dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/pay_text1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+
+            <TextView
+                android:id="@+id/pay_text2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/pay_text3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+
+            <TextView
+                android:id="@+id/pay_text4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

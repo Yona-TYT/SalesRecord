@@ -345,31 +345,64 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
     }
 
     public static boolean isCsvSafeToUpload(File csvFile) {
-        if (csvFile == null || !csvFile.exists()) {
-            Log.e("CSV", "Archivo no existe");
+        if (csvFile == null || !csvFile.exists() || csvFile.length() == 0) {
             return false;
         }
-        if (csvFile.length() == 0) {
-            Log.e("CSV", "Archivo vacío");
-            return false;
-        }
+
+        boolean hasSection0 = false;
+        boolean hasConf = false;
+        boolean hasEnd = false;
+        boolean confTimestampsOk = false;
+        String firstDataLine = null;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-            String first = reader.readLine();
-            if (first == null || first.trim().isEmpty()) {
-                Log.e("CSV", "Sin contenido");
-                return false;
-            }
-
-            // Opcional: comprobar que exista la línea de configuración
             String line;
-            boolean confFound = false;
-            // volver a leer desde el inicio
+            while ((line = reader.readLine()) != null) {
+                String clean = line.replace("\"", "").trim();
+                if (clean.isEmpty()) continue;
+
+                if (firstDataLine == null) {
+                    firstDataLine = clean;
+                }
+
+                if ("<0>".equals(clean)) {
+                    hasSection0 = true;
+                }
+                if (clean.startsWith("confID0")) {
+                    hasConf = true;
+                    String[] spl = clean.split(",");
+                    if (spl.length >= 8) {
+                        try {
+                            Long.parseLong(spl[6].trim());
+                            Long.parseLong(spl[7].trim());
+                            confTimestampsOk = true;
+                        } catch (NumberFormatException ignored) {
+                            confTimestampsOk = false;
+                        }
+                    }
+                }
+                if ("<end>".equals(clean)) {
+                    hasEnd = true;
+                }
+            }
         } catch (IOException e) {
-            Log.e("CSV", "Error leyendo CSV", e);
             return false;
         }
 
+        // Inicio: la primera línea debería ser <0>
+        if (firstDataLine == null || !firstDataLine.equals("<0>")) {
+            Log.e("CSV", "Inicio inválido. Primera línea: " + firstDataLine);
+            return false;
+        }
+        if (!hasSection0 || !hasConf || !confTimestampsOk) {
+            Log.e("CSV", "Config inválida");
+            return false;
+        }
+//        if (!hasEnd) {
+//            Log.e("CSV", "Falta <end>");
+//            return false;
+//        }
         return true;
     }
+
 }

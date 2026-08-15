@@ -24,7 +24,7 @@
 
 
     <color name="alert_text">#FFFFFF</color>
-    <color name="button">#2A2A2A</color>
+    <color name="button">#CC8C949B</color>
     <color name="float_button">#2A2A2A</color>
     <color name="inner_button">#FFFFFF</color>
 </resources>

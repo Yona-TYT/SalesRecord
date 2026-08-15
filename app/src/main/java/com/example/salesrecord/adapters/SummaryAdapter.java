@@ -124,8 +124,12 @@ public class SummaryAdapter extends BaseAdapter  {
 
         // Textos
         String off = item.status == 0 ? "(RETIRADO) ":"";
-        String desc = item.desc.isEmpty() ? "" : " ("+item.desc+")";
 
+        String metrTag = item.unit == 0 ? "" : "Por "+glData.unitList.get(item.unit);
+        String desc = (item.desc.isEmpty() ? " ("+metrTag+")" : " (" + item.desc + " "+ metrTag +")");
+        if(metrTag.isEmpty() && item.desc.isEmpty()){
+            desc = "";
+        }
         holder.view1.setText(off+item.name+desc);
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 

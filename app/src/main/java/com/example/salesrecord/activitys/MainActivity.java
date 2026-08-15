@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Msg.init(this);
 
         if (DriveManager.getAuthState().isAuthorized()) {
             driveManager = new DriveManager(PreferenceHelper.getInstance());
@@ -104,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
             if(StartVar.mLifecycle == null) {
                 StartVar.mLifecycle = ProcessLifecycleOwner.get();
+                Msg.m("Sincronizando Datos...");
+                driveManager.dataSynchronize();
             }
 
             mWorkResult = new SetWorkResult(StartVar.mLifecycle, driveExecutor, driveManager);
@@ -163,8 +166,6 @@ public class MainActivity extends AppCompatActivity {
 
         //Start File manager class
         mFile = new FilesManager();
-
-        Msg.init(this);
 
         CalendUtls calen = new CalendUtls();
 
@@ -355,7 +356,6 @@ public class MainActivity extends AppCompatActivity {
         binding.navView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Msg.m();
                 boolean navego = NavigationUI.onNavDestinationSelected(item, navController);
 
                 // Solo disparamos la tarea de sincronización, el observador del onCreate ya está listo esperando
