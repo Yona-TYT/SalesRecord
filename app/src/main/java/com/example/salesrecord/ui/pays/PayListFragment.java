@@ -280,9 +280,6 @@ public class PayListFragment extends Fragment {
                     mTotal += mPay.monto;
                 }
 
-//                if(currSel3 > 0) {
-//                    Basic.msg(mPay.cltid + " " + cltList.get(currSel3 - 1).cliente);
-//                }
             }
         }
 
@@ -332,10 +329,7 @@ public class PayListFragment extends Fragment {
         mListView.setAdapter(mAdapter3);
         mAdapter3.getFilter().filter("");
 
-
-
-
-        mBtn0.setOnClickListener(new View.OnClickListener() {
+        mBtn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Application application = (Application) contex.getApplicationContext();
@@ -346,13 +340,13 @@ public class PayListFragment extends Fragment {
             }
         });
 
-        mBtn1.setOnClickListener(new View.OnClickListener() {
+        mBtn0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
-                        glData.glCedula + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
-                        glData.glCodeBank + "\n" + "\n" +glData.glNameBank);
+                        glData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
+                        glData.glCodeBank + "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }

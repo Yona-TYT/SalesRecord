@@ -502,8 +502,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if (itemId == R.id.butt_dts0) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
-                        glData.glCedula + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
-                        glData.glCodeBank + "\n" + "\n" +glData.glNameBank);
+                        glData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
+                        glData.glCodeBank + "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }

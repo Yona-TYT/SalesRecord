@@ -145,6 +145,8 @@
             android:minHeight="45dp"
             android:textSize="@dimen/inner_text_2"
             android:padding="0dp"
+            android:textColor="@color/inner_button"
+            android:backgroundTint="@color/button"
             android:text="X" />
 
     </LinearLayout>
