@@ -1,9 +1,11 @@
 package com.example.salesrecord.ui.pays;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -21,6 +24,7 @@ import androidx.fragment.app.Fragment;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.activitys.QrActivity;
 import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentPaysBinding;
@@ -70,7 +74,8 @@ public class PayListFragment extends Fragment {
     private SelecAdapter mAdapter2;
     private int currSel2 = 0;
 
-    private Button mBtn1;
+    private ImageButton mBtn0;
+    private ImageButton mBtn1;
 
     private ListView mListView;
     private PayAdapter mAdapter3;
@@ -118,6 +123,7 @@ public class PayListFragment extends Fragment {
             StartVar.setAllListDB();
         }
 
+        mBtn0 = binding.buttPays0;
         mBtn1 = binding.buttPays1;
         mSpinn1 = binding.paySelect1;
         mSpinn2 = binding.paySelect2;
@@ -192,6 +198,7 @@ public class PayListFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 mView3.setVisibility(View.GONE);
+                mBtn0.setVisibility(View.GONE);
                 mBtn1.setVisibility(View.GONE);
                 currSel2 = position;
                 setPayList();
@@ -204,8 +211,6 @@ public class PayListFragment extends Fragment {
         });
         setPayList();
     }
-
-
 
     @Override
     public void onDestroyView() {
@@ -260,7 +265,7 @@ public class PayListFragment extends Fragment {
                     }
                 }
                 else if(Objects.equals(mPay.cliente, cltList.get(currSel2 - 1).cliente) && mPay.status > 0){
-                    Object[] stList = new Object[7];
+                    Object[] stList = new Object[8];
                     stList[0] = mPay.sale;
                     stList[1] = status;
                     stList[2] = mPay.monto;
@@ -268,6 +273,7 @@ public class PayListFragment extends Fragment {
                     stList[4] = mPay.status;
                     stList[5] = time;
                     stList[6] = mPay.tasa;
+                    stList[7] = txAlias;
                     mPayList.add(stList);
 
                     oldTasa = mPay.tasa;
@@ -291,6 +297,7 @@ public class PayListFragment extends Fragment {
             if(currSel2 > 0 ) {
                 strTotal = "Deuda Total: ";
                 mView3.setVisibility(View.VISIBLE);
+                mBtn0.setVisibility(View.VISIBLE);
                 mBtn1.setVisibility(View.VISIBLE);
             }
             mView1.setText(strTotal + Basic.getMaskConv(mTotal, oldTasa, 0) + " / " + Basic.getMaskConv(mTotal, oldTasa, 1));
@@ -325,11 +332,27 @@ public class PayListFragment extends Fragment {
         mListView.setAdapter(mAdapter3);
         mAdapter3.getFilter().filter("");
 
+
+
+
+        mBtn0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Application application = (Application) contex.getApplicationContext();
+                Intent mIntent = new Intent(contex, QrActivity.class);
+                mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                application.startActivity(mIntent);
+            }
+        });
+
         mBtn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" + glData.glCedula + "\n" + glData.glCodeBank + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
+                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
+                        glData.glCedula + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        glData.glCodeBank + "\n" + "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }

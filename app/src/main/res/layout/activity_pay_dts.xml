@@ -70,7 +70,7 @@
         android:layout_marginEnd="10dp"
         android:gravity="center_vertical"
         android:maxLines="1"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintHorizontal_weight="1.5"
 
         app:layout_constraintBottom_toTopOf="@+id/pay_dts_viewList"
@@ -88,14 +88,13 @@
         android:scaleType="centerInside"
         android:padding="0dp"
         android:background="@color/button"
-        android:visibility="visible"
+        android:visibility="gone"
 
         app:layout_constraintHorizontal_weight="0.3"
         app:layout_constraintTop_toTopOf="@id/text_dts1"
         app:layout_constraintBottom_toBottomOf="@id/text_dts1"
         app:layout_constraintStart_toEndOf="@id/text_dts1"
-        app:layout_constraintEnd_toStartOf="@id/butt_dts1"
- />
+        app:layout_constraintEnd_toStartOf="@id/butt_dts1" />
 
     <ImageButton
         android:id="@+id/butt_dts1"
@@ -105,9 +104,9 @@
         android:enabled="true"
         android:src="@drawable/ic_qr_scan"
         android:scaleType="centerInside"
-        android:padding="0dp"
+        android:padding="3dp"
         android:background="@color/button"
-        android:visibility="visible"
+        android:visibility="gone"
 
         app:layout_constraintHorizontal_weight="0.3"
         app:layout_constraintTop_toTopOf="@id/butt_dts0"
@@ -121,7 +120,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@+id/butt_dts1"
         app:layout_constraintBottom_toTopOf="@+id/input_dts1"
         app:layout_constraintStart_toStartOf="@+id/guideline"

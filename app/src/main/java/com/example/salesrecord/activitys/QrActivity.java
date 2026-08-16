@@ -109,6 +109,7 @@ public class QrActivity extends AppCompatActivity {
     };
     private ActivityQrBinding binding;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,15 +121,14 @@ public class QrActivity extends AppCompatActivity {
         mControlsView = binding.fullscreenContentControls;
 
         // Recuperar el monto enviado desde la otra Activity
-        String amount = getIntent().getStringExtra("amount");
+        double amount = getIntent().getDoubleExtra("amount", 0);
 
         TextView txAmount = findViewById(R.id.qrAmount);
 
         txAmount.setText(MoneyUtls.setFormatterEs(amount)+" Bs");
 
-
         // Renderizar la matriz de ZXing en el ImageView
-        displayGeneratedQr(amount);
+        displayGeneratedQr(MoneyUtls.formatPlainDecimal(amount));
 
         // ¡SOLUCIÓN!: Reemplaza el TouchListener de la plantilla por un ClickListener real
         binding.dummyButton.setOnClickListener(v -> {

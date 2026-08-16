@@ -141,7 +141,7 @@ public class MoneyUtls {
 
     public static String formatPlainDecimal(Double value){
         if (value == null) return "";
-        DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.US);
+        DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("es", "VE"));
         df.applyPattern("0.00");
         return df.format(value);
     }

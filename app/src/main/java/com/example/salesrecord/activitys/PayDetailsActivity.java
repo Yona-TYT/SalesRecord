@@ -272,8 +272,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             if(mSale.status > 0){
                 datos.setVisibility(View.VISIBLE);
+                mBtton0.setVisibility(View.VISIBLE);
                 mBtton1.setVisibility(View.VISIBLE);
-
             }
 
             mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
@@ -502,9 +502,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if (itemId == R.id.butt_dts0) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
-                        glData.glCedula + "\n" + glData.glCodeBank + "\n" +
-                        MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
-                        "\n" +glData.glNameBank);
+                        glData.glCedula + "\n" + MoneyUtls.setFormatterEs(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        glData.glCodeBank + "\n" + "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
@@ -513,7 +512,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                 Application application = (Application) contex.getApplicationContext();
                 Intent mIntent = new Intent(contex, QrActivity.class);
-                mIntent.putExtra("amount", MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
+                mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
                 mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 application.startActivity(mIntent);
             }
