@@ -39,6 +39,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <queries>
+        <package android:name="com.google.android.gms" />
+
+        <intent>
+            <action android:name="com.google.android.gms.drive.action.HANDLE_DRIVE_RESUME" />
+        </intent>
+    </queries>
+
     <application
         android:name=".AppContextProvider"
         android:allowBackup="true"
@@ -50,6 +58,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SalesRecord"
         tools:targetApi="31">
+        <activity
+            android:name=".activitys.QrActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="@string/title_activity_qr"
+            android:theme="@style/Theme.SalesRecord.Fullscreen" />
         <activity
             android:name=".activitys.FullEditActivity"
             android:exported="false" />
@@ -76,7 +90,6 @@
             android:name=".activitys.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings" />
-
         <activity
             android:name=".activitys.PayDetailsActivity"
             android:exported="false"
@@ -92,36 +105,30 @@
                 android:resource="@xml/path" />
         </provider>
 
-
         <activity
             android:name="net.openid.appauth.RedirectUriReceiverActivity"
             android:exported="true">
-
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
-                    android:scheme="com.mendhak.gpslogger"
-                    android:path="/oauth2googledrive"/>
+                    android:path="/oauth2googledrive"
+                    android:scheme="com.mendhak.gpslogger" />
             </intent-filter>
-
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="oauth2openstreetmap"
                     android:scheme="com.mendhak.gpslogger" />
             </intent-filter>
         </activity>
-
     </application>
-    <queries>
-        <package android:name="com.google.android.gms" />
-        <intent>
-            <action android:name="com.google.android.gms.drive.action.HANDLE_DRIVE_RESUME" />
-        </intent>
-    </queries>
 
 </manifest>

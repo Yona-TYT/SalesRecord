@@ -1,13 +1,18 @@
 package com.example.salesrecord.activitys;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -15,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -54,11 +60,19 @@ import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
+import com.example.salesrecord.utls.QrPagoMovilCodec;
 
+import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.annotations.NonNull;
 
@@ -90,7 +104,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Switch mSw;
     private boolean swDel = false;
     private String mUser = "";
-    private Button mBtton1;
+    private ImageButton mBtton0;
+    private ImageButton mBtton1;
     private Button mBtton2;
     private Button mBtton3;
     private ToggleButton mBtton4;
@@ -175,6 +190,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mText5 = findViewById(R.id.txview_dts5);
         mText6 = findViewById(R.id.txview_dts6);
 
+        mBtton0 = findViewById(R.id.butt_dts0);
         mBtton1 = findViewById(R.id.butt_dts1);
         mBtton2 = findViewById(R.id.butt_dts2);
         mBtton3 = findViewById(R.id.butt_dts3);
@@ -184,6 +200,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         mSpinn1 = findViewById(R.id.pay_dts_select1);
 
+        mBtton0.setOnClickListener(this);
         mBtton1.setOnClickListener(this);
         mBtton2.setOnClickListener(this);
         mBtton3.setOnClickListener(this);
@@ -482,8 +499,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                     mBtton2.setEnabled(false);
                 }
             }
-
-            if (itemId == R.id.butt_dts1) {
+            if (itemId == R.id.butt_dts0) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
                         glData.glCedula + "\n" + glData.glCodeBank + "\n" +
@@ -491,6 +507,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         "\n" +glData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
+            }
+
+            if (itemId == R.id.butt_dts1) {
+
+                Application application = (Application) contex.getApplicationContext();
+                Intent mIntent = new Intent(contex, QrActivity.class);
+                mIntent.putExtra("amount", MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1)));
+                mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                application.startActivity(mIntent);
             }
 
             if (itemId == R.id.butt_dts2) {
@@ -541,4 +566,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 //        }
         }
     }
+
+
 }

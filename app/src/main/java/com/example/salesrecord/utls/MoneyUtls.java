@@ -139,6 +139,13 @@ public class MoneyUtls {
         return df.format(value);
     }
 
+    public static String formatPlainDecimal(Double value){
+        if (value == null) return "";
+        DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.US);
+        df.applyPattern("0.00");
+        return df.format(value);
+    }
+
     public static double getQuantity(double price, double currPrice ){
         return price == 0? 0 : currPrice/price;
     }
