@@ -161,7 +161,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                 String latestFolderId = null;
 
                 for (String part : pathParts) {
-                    latestFolderId = DriveUtils.getFileIdFromFileName(googleDriveAccessToken, part, parentFolderId);
+                    latestFolderId = DriveUtils.getFileIdFromFileName(googleDriveAccessToken, part, parentFolderId, "application/vnd.google-apps.folder");
                     if (DriveUtils.isNullOrEmpty(latestFolderId)) {
                         latestFolderId = DriveUtils.createEmptyFile(googleDriveAccessToken, part,
                                 "application/vnd.google-apps.folder",

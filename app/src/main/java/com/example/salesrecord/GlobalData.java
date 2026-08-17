@@ -30,12 +30,16 @@ public class GlobalData {
     private GenericQueue genericQueue;
 
     // Variables globales
-    public final String glTelef = "04126850965";
-    public final String glPhone= "584126850965";
+    public static String glName = "";
+    public static String glTelef = "";
+    public static String glPhone= "";
 
-    public final String glCedula = "V11758206";
-    public final String glCodeBank = "0108";
-    public final String glNameBank = "Provincial";
+    public static String glCedula = "";
+    public static String glCodeBank = "";
+    public static String glNameBank = "";
+
+    public static final int glCritical = 3;
+
 
     public Article currArt = null;
     public String currSalId = "";

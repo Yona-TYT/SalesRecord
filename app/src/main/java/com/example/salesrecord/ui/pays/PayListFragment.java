@@ -332,11 +332,16 @@ public class PayListFragment extends Fragment {
         mBtn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Application application = (Application) contex.getApplicationContext();
-                Intent mIntent = new Intent(contex, QrActivity.class);
-                mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
-                mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                application.startActivity(mIntent);
+                if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+                    Application application = (Application) contex.getApplicationContext();
+                    Intent mIntent = new Intent(contex, QrActivity.class);
+                    mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    application.startActivity(mIntent);
+                }
+                else {
+                    Msg.m("Los datos de pago estan incompletos!.");
+                }
             }
         });
 

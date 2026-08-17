@@ -20,10 +20,12 @@ public class Conf {
     public Integer moneda;
     public Integer mes;
     public Integer show;
+    public String datos;
     public String dbg;
 
-
-    public Conf(@NonNull String config, String version, String hexid, String datetasa, Double dolar, Double margen, Long date, Long time, Integer curr, Integer moneda, Integer mes, Integer show, String dbg) {
+    public Conf(@NonNull String config, String version, String hexid, String datetasa, Double dolar,
+                Double margen, Long date, Long time, Integer curr, Integer moneda, Integer mes,
+                Integer show, String datos, String dbg) {
         this.config = config;
         this.version = version;
         this.hexid = hexid;
@@ -36,6 +38,7 @@ public class Conf {
         this.margen = margen;
         this.mes = mes;
         this.show = show;
+        this.datos = datos;
         this.dbg = dbg;
     }
 }

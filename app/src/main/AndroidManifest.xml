@@ -59,6 +59,10 @@
         android:theme="@style/Theme.SalesRecord"
         tools:targetApi="31">
         <activity
+            android:name=".activitys.ConfigActivity"
+            android:exported="false"
+            android:label="@string/title_activity_config" />
+        <activity
             android:name=".activitys.QrActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"

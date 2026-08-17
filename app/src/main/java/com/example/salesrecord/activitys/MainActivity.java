@@ -162,6 +162,17 @@ public class MainActivity extends AppCompatActivity {
         mDaoCfg = StartVar.appDBall.daoCfg();
         mCfg = mDaoCfg.getUsers(StartVar.mConfID);
 
+        String[] mDat = mCfg.datos.split("\\|", -1); // -1 conserva vacíos
+        if (mDat.length >= 5) {
+            GlobalData.glName = mDat[0];;
+            GlobalData.glTelef = mDat[1];;
+            GlobalData.glPhone= mDat[1].replaceFirst("^0", "58");
+
+            GlobalData.glCedula = mDat[2];;
+            GlobalData.glCodeBank = mDat[3];;
+            GlobalData.glNameBank = mDat[4];;
+        }
+
         startMainDelayTry(mTime);
 
         //Start File manager class
@@ -247,6 +258,7 @@ public class MainActivity extends AppCompatActivity {
                 menuInflater.inflate(R.menu.impor, menu);
                 menuInflater.inflate(R.menu.save, menu);
                 menuInflater.inflate(R.menu.sync, menu);
+                menuInflater.inflate(R.menu.confg, menu);
             }
 
             @Override
@@ -339,11 +351,16 @@ public class MainActivity extends AppCompatActivity {
                     if (id == R.id.marge) {
                     //Basic.msg("Combinando registros...");
                     return true;
-                } else {
-                        Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                        startActivity(intent);
-                        return id == R.id.sync;
-                    }
+                } else if(id == R.id.sync){
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                    return true;
+                }
+                else {
+                    Intent intent = new Intent(MainActivity.this, ConfigActivity.class);
+                    startActivity(intent);
+                    return id == R.id.confg;
+                }
             }
         });
 

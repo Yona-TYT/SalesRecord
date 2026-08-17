@@ -501,20 +501,25 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             }
             if (itemId == R.id.butt_dts0) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData clipData = ClipData.newPlainText("Clip Data", glData.glTelef + "\n" +
-                        glData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
-                        glData.glCodeBank + "\n" +glData.glNameBank);
+                ClipData clipData = ClipData.newPlainText("Clip Data", GlobalData.glTelef + "\n" +
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
+                        GlobalData.glCodeBank + "\n" +GlobalData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
 
             if (itemId == R.id.butt_dts1) {
 
-                Application application = (Application) contex.getApplicationContext();
-                Intent mIntent = new Intent(contex, QrActivity.class);
-                mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
-                mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                application.startActivity(mIntent);
+                if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+                    Application application = (Application) contex.getApplicationContext();
+                    Intent mIntent = new Intent(contex, QrActivity.class);
+                    mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    application.startActivity(mIntent);
+                }
+                else {
+                    Msg.m("Los datos de pago estan incompletos!.");
+                }
             }
 
             if (itemId == R.id.butt_dts2) {

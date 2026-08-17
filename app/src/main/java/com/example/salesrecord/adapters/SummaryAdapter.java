@@ -109,7 +109,7 @@ public class SummaryAdapter extends BaseAdapter  {
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
                 );
             }
-            else if (item.currCount <= 3 || item.maxCount <= 3){
+            else if (item.currCount <= GlobalData.glCritical || item.maxCount <= GlobalData.glCritical){
                 holder.layout1.setBackgroundColor(
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
                 );

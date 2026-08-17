@@ -1,35 +1,45 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="@string/messages_header">
+    <PreferenceCategory app:title="Datos de Pago Móvil">
 
+        <!-- Nombre del Titular -->
         <EditTextPreference
-            app:key="signature"
-            app:title="@string/signature_title"
+            app:key="pm_nombre"
+            app:title="Nombre del Titular"
             app:useSimpleSummaryProvider="true" />
 
-        <ListPreference
-            app:defaultValue="reply"
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
-            app:title="@string/reply_title"
-            app:useSimpleSummaryProvider="true" />
+        <!-- Número de Teléfono -->
+        <EditTextPreference
+            android:inputType="phone"
+            app:key="pm_telefono"
+            app:summary="Ejemplo: 04141234567"
+            app:title="Número de Teléfono"
+            app:useSimpleSummaryProvider="true"/>
+
+        <!-- Cédula / ID -->
+        <EditTextPreference
+            android:inputType="number"
+            app:key="pm_cedula"
+            app:summary="Solo números, sin letras ni guiones"
+            app:title="Cédula de Identidad"
+            app:useSimpleSummaryProvider="true"/>
+
+        <!-- Código del Banco -->
+        <EditTextPreference
+            android:inputType="number"
+            app:key="pm_codigo_banco"
+            app:summary="Los primeros 4 números (Ej: 0102)"
+            app:title="Código del Banco"
+            app:useSimpleSummaryProvider="true"/>
+
+        <!-- Nombre del Banco -->
+        <EditTextPreference
+            app:key="pm_bank_name"
+            app:summary="El nombre del Banco, Ejemplo: Provincial"
+            app:title="Nombre del Banco"
+            app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
-
-    <PreferenceCategory app:title="@string/sync_header">
-
-        <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
-
-        <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
-
-    </PreferenceCategory>
-
 </PreferenceScreen>

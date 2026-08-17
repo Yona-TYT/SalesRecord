@@ -398,10 +398,10 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
             Log.e("CSV", "Config inválida");
             return false;
         }
-//        if (!hasEnd) {
-//            Log.e("CSV", "Falta <end>");
-//            return false;
-//        }
+        if (!hasEnd) {
+            Log.e("CSV", "Falta <end>");
+            return false;
+        }
         return true;
     }
 

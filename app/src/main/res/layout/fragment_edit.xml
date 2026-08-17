@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         tools:ignore="MissingConstraints">
@@ -41,6 +41,7 @@
             android:padding="5dp"
             android:gravity="center_vertical"
 
+
             app:localeTag="ES"
             app:maxNumberOfDecimalDigits="2"
             app:currencySymbolSuffix="true"
@@ -56,11 +57,33 @@
         android:iconifiedByDefault="false"
         android:queryHint="Buscar Lista"
         android:translationZ="5dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/top_panel"
+        android:visibility="visible"
+        app:layout_constraintHorizontal_weight="0.3"
 
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+        app:layout_constraintBottom_toTopOf="@+id/edit_viewList"
+        app:layout_constraintTop_toTopOf="@id/top_panel"
+        app:layout_constraintBottom_toBottomOf="@id/top_panel"
+        app:layout_constraintEnd_toStartOf="@id/swCritical"
+
+        />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/swCritical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:enabled="true"
+        android:text="Por Reponer"
+        app:layout_constraintHorizontal_weight="0.3"
+        app:layout_constraintBottom_toBottomOf="@+id/searchBar"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintTop_toTopOf="@id/searchBar"
+        app:layout_constraintStart_toEndOf="@id/searchBar"
+
+
+        />
 
 
     <!-- LISTVIEW (Ocupa la mitad superior) -->

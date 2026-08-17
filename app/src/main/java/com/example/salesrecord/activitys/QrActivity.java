@@ -197,18 +197,16 @@ public class QrActivity extends AppCompatActivity {
     private void displayGeneratedQr(String amount) {
         // 1. Instanciar y rellenar los datos de tu Pago Móvil
         QrPagoMovilCodec.QrData qrData = new QrPagoMovilCodec.QrData();
-        qrData.phone = glData.glPhone;
+        qrData.phone = GlobalData.glPhone;
         qrData.amount = amount;
-        qrData.name = "Nohemi Vargas";
-        qrData.description = "Pago Bodega Mejia";
-        qrData.dni = glData.glCedula;
-        qrData.bank = glData.glCodeBank;
+        qrData.name = GlobalData.glName;
+        qrData.dni = GlobalData.glCedula;
+        qrData.bank = GlobalData.glCodeBank;
 
         // 2. Ejecutar de forma asíncrona en segundo plano
         new Thread(() -> {
             try {
                 // Generar el String encriptado con tu método actual
-
 
                 String payload = QrPagoMovilCodec.encode(qrData);
 

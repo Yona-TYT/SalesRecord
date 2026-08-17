@@ -33,9 +33,6 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoCfg;
-import com.example.salesrecord.drive.DriveManager;
-import com.example.salesrecord.drive.SetWorkResult;
-import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.InputHelper;
 import com.example.salesrecord.utls.MathUtls;
@@ -51,8 +48,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class EditAtrFragment extends Fragment {
 
@@ -81,6 +76,7 @@ public class EditAtrFragment extends Fragment {
 
     private SwitchMaterial mSw1;
     private SwitchMaterial mSw2;
+    private SwitchMaterial mSw3;
 
     private boolean swCurrency = false;
 
@@ -118,8 +114,9 @@ public class EditAtrFragment extends Fragment {
         mTil1 = binding.tilReponer;
         mTil2 = binding.tilMargen;
 
-        mSw1 = binding.swBolivares;
-        mSw2 = binding.swDisponible;
+        mSw1 = binding.swCritical;
+        mSw2 = binding.swBolivares;
+        mSw3 = binding.swDisponible;
 
         editButt = binding.buttHome3;
         acepButt = binding.buttHome2;
@@ -146,7 +143,7 @@ public class EditAtrFragment extends Fragment {
                 // Mueve el scroll visualmente hacia el ítem
                 mListView.setSelection(currSel1);
 
-                mSw1.setChecked(true);
+                mSw2.setChecked(true);
 
                 // SIMULA EL CLIC: Ejecuta el código dentro de tu onItemClick
                 mListView.performItemClick(
@@ -274,6 +271,13 @@ public class EditAtrFragment extends Fragment {
             }
         });
 
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reloadList();
+            }
+        });
+
         // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
         int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);
         View searchButton = searchBar.findViewById(searchButtonId);
@@ -310,7 +314,7 @@ public class EditAtrFragment extends Fragment {
                 mTil1.setHint("Reponer");
                 mTil2.setHint("Ganancia");
 
-                mSw1.setChecked(false);
+                mSw2.setChecked(false);
                 swCurrency = false;
                 mInput2.setCurrencySymbol("$");
 
@@ -345,21 +349,21 @@ public class EditAtrFragment extends Fragment {
                         mInput3.setEnabled(true);
                         mInput4.setEnabled(true);
 
-                        mSw1.setEnabled(true);
                         mSw2.setEnabled(true);
+                        mSw3.setEnabled(true);
                         editButt.setEnabled(true);
                         acepButt.setEnabled(true);
 
-                        mSw2.setChecked(crrArt.staus != 0);
+                        mSw3.setChecked(crrArt.staus != 0);
 
                         //Termina el proceso
                         return;
                     }
                 }
-                mSw1.setChecked(false);
-                mSw1.setEnabled(false);
                 mSw2.setChecked(false);
                 mSw2.setEnabled(false);
+                mSw3.setChecked(false);
+                mSw3.setEnabled(false);
                 editButt.setEnabled(false);
 
             }
@@ -427,7 +431,7 @@ public class EditAtrFragment extends Fragment {
             }
         });
 
-        mSw1.setOnClickListener(new View.OnClickListener() {
+        mSw2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 swCurrency = !swCurrency;
@@ -495,7 +499,7 @@ public class EditAtrFragment extends Fragment {
 
                 crrArt.margen = mInput4.getNumericValue();
 
-                crrArt.staus = (mSw2.isChecked() ? 1 : 0);
+                crrArt.staus = (mSw3.isChecked() ? 1 : 0);
 
                 glData.setIsEdit(true);
 
@@ -518,10 +522,10 @@ public class EditAtrFragment extends Fragment {
                 mInput3.setEnabled(false);
                 mInput4.setEnabled(false);
 
-                mSw1.setChecked(false);
-                mSw1.setEnabled(false);
                 mSw2.setChecked(false);
                 mSw2.setEnabled(false);
+                mSw3.setChecked(false);
+                mSw3.setEnabled(false);
                 editButt.setEnabled(false);
                 acepButt.setEnabled(false);
 
@@ -544,6 +548,9 @@ public class EditAtrFragment extends Fragment {
         //Para la lista de Articulos ----------------------------
         //Para la lista de todos los productos
         for (Article obj : mArtList) {
+            if(mSw1.isChecked() && obj.totalcount > GlobalData.glCritical){
+                continue;
+            }
             if(InputHelper.hasWordMatch(obj.nombre+obj.descr, strValidate) ){
                 objListSal.add(setGalleryArray(obj));
             }

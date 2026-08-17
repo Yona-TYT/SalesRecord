@@ -40,8 +40,6 @@ public class DBListCreator extends AppCompatActivity {
     // Classs para la gestion de archivos
     private FilesManager fmang = new FilesManager();
 
-
-
     private GlobalData glData ;
 
     private final Context context;
@@ -64,7 +62,6 @@ public class DBListCreator extends AppCompatActivity {
         //Lista general de todos los objetos db
         List<String[]> mList = new ArrayList<>();
 
-
         //=================================== Config DB Lista =====================================================
         mList.add(new String[]{"<0>"});// Etiqueta para config
         //Instancia de la base de datos
@@ -72,7 +69,7 @@ public class DBListCreator extends AppCompatActivity {
         mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.datetasa,
                 String.valueOf(mConf.dolar), String.valueOf(mConf.margen), String.valueOf(mConf.date),
                 String.valueOf(mConf.time), mConf.curr.toString(), mConf.moneda.toString(),
-                mConf.mes.toString(), mConf.show.toString(), mConf.dbg
+                mConf.mes.toString(), mConf.show.toString(), mConf.datos, mConf.dbg
         });
 
         //=================================== Cuenta DB Lista =====================================================
@@ -524,16 +521,17 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 if(opt==0) {
                     version = spl[1];
-                    if(version.equals("2")) {
+                    if(version.equals("3")) {
                         daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
                                 Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
                                 Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
-                                Integer.parseInt(spl[11]), spl[12]);
+                                Integer.parseInt(spl[11]), spl[12], spl[13]);
                     }
                     else{
-                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]), 0.0,
-                                Long.parseLong(spl[5]), Long.parseLong(spl[6]), Integer.parseInt(spl[7]), Integer.parseInt(spl[8]),
-                                Integer.parseInt(spl[9]), Integer.parseInt(spl[10]), spl[11]);
+                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
+                                Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
+                                Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
+                                Integer.parseInt(spl[11]), "", spl[12]);
                     }
                 }
                 else if(opt==1){

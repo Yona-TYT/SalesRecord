@@ -2,7 +2,9 @@ package com.example.salesrecord.ui.home;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Spinner;
@@ -40,6 +43,7 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.activitys.QrActivity;
 import com.example.salesrecord.adapters.SaleMainAdapter;
 import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
@@ -100,6 +104,8 @@ public class HomeFragment extends Fragment {
     private Button mButt2;
     private Button mButt3;
     private Button mButt4;
+    private ImageButton mButt0;
+
 
     private Spinner mSpinn1;
     private int currSel1 = 0;
@@ -118,6 +124,8 @@ public class HomeFragment extends Fragment {
     private boolean isSrch = false;
 
     private EditText mInput3;
+
+    private double mTotal = 0;
 
     // Almacenamiento real (3 cajas independientes)
     private final ArrayList<Obj>[] allSlots = new ArrayList[3];
@@ -241,6 +249,7 @@ public class HomeFragment extends Fragment {
         mButt2 = binding.buttHome2;
         mButt3 = binding.buttHome3;
         mButt4 = binding.buttHome4;
+        mButt0 = binding.buttHome0;
         mInput2 = binding.calcInput;
         mInput3 = binding.inputClient;
         mSpinn1 = binding.homeSelect1;
@@ -672,6 +681,22 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        mButt0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+                    Application application = (Application) contex.getApplicationContext();
+                    Intent mIntent = new Intent(contex, QrActivity.class);
+                    mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    application.startActivity(mIntent);
+                }
+                else {
+                    Msg.m("Los datos de pago estan incompletos!.");
+                }
+            }
+        });
+
         //Para la lista de todos los productos
         if(!isSave) {
             for (int i = 0; i < 3; i++) {
@@ -997,6 +1022,7 @@ public class HomeFragment extends Fragment {
             viewTotal.setVisibility(View.INVISIBLE);
             mInput3.setVisibility(View.GONE);
             mButt3.setVisibility(View.GONE);
+            mButt0.setVisibility(View.GONE);
             mButt4.setEnabled(false);
             mSpinn1.setEnabled(false);
 
@@ -1005,6 +1031,7 @@ public class HomeFragment extends Fragment {
             viewTotal.setVisibility(View.VISIBLE);
             mInput3.setVisibility(View.VISIBLE);
             mButt3.setVisibility(View.VISIBLE);
+            mButt0.setVisibility(View.VISIBLE);
             mButt4.setEnabled(true);
             mSpinn1.setEnabled(true);
         }
@@ -1014,6 +1041,8 @@ public class HomeFragment extends Fragment {
             double price = MathUtls.addPercentage(obj.price, obj.margen);
             total = total + ( price * obj.saleCount);
         }
+
+        mTotal = total;
         return total;
     }
 
@@ -1127,6 +1156,7 @@ public class HomeFragment extends Fragment {
             mInput3.setVisibility(View.GONE);
             mButt4.setEnabled(false);
             mSpinn1.setEnabled(false);
+            mTotal = 0;
 
             //Se guarda la venta
             daoSal.insertUser(mSal);

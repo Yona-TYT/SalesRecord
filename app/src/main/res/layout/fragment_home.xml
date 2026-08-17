@@ -153,7 +153,7 @@
                     android:id="@+id/input_client"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/input_hs"
-                    android:layout_weight="1"
+                    android:layout_weight="0.6"
                     android:background="@color/text_background"
                     android:hint="Nombre (Opcional)"
                     android:imeOptions="actionDone"
@@ -161,16 +161,32 @@
                     android:maxLines="1"
                     android:padding="5dp"
                     android:textSize="@dimen/inner_text_1"
-                    android:visibility="gone"/>
+                    android:visibility="visible"/>
 
                 <Button
                     android:id="@+id/butt_home3"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/button_h1"
                     android:layout_marginStart="10dp"
-                    android:layout_weight="0.4"
+                    android:layout_weight="0.3"
                     android:text="Limpiar"
-                    android:visibility="gone"/>
+                    android:visibility="visible"/>
+
+                <ImageButton
+                    android:id="@+id/butt_home0"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_hs"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="0.2"
+
+                    android:enabled="true"
+                    android:src="@drawable/ic_qr_scan"
+                    android:scaleType="centerInside"
+                    android:padding="3dp"
+                    android:background="@color/button"
+                    android:visibility="visible"
+                    />
+
             </LinearLayout>
 
         </LinearLayout>

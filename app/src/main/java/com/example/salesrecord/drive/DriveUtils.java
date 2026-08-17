@@ -46,6 +46,8 @@ public class DriveUtils {
 
     private static final String TAG = "GoogleDriveFileHelper";
 
+    public static final String MIME_FOLDER = "application/vnd.google-apps.folder";
+
     private static final OkHttpClient HTTP = new OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(120, TimeUnit.SECONDS)
@@ -94,85 +96,6 @@ public class DriveUtils {
 
         return token;
     }
-
-    /**
-     * Obtiene metadatos de un archivo en Google Drive (ID, nombre, MD5 y fecha de modificación)
-     *
-     * @param accessToken Token de acceso de Google
-     * @param fileName    Nombre exacto del archivo
-     * @param folderId    ID de la carpeta donde buscar
-     * @return DriveFileMeta con la información, o null si no se encuentra
-     */
-//    public static DriveFileMeta getFileMetaFromDrive(String accessToken, String fileName, String folderId) {
-//        try {
-//            // Construir query
-//            String query = "name = '" + fileName + "' " +
-//                    "and '" + folderId + "' in parents " +
-//                    "and trashed = false";
-//
-//            String encodedQuery = URLEncoder.encode(query, "UTF-8");
-//
-//            // URL con los campos necesarios
-//            String urlString = "https://www.googleapis.com/drive/v3/files" +
-//                    "?q=" + encodedQuery +
-//                    "&fields=files(id,name,md5Checksum,modifiedTime)";
-//
-//            URL url = new URL(urlString);
-//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//
-//            conn.setRequestMethod("GET");
-//            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-//            conn.setRequestProperty("Accept", "application/json");
-//
-//            int responseCode = conn.getResponseCode();
-//
-//            if (responseCode == 200) {
-//                // Leer respuesta
-//                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//                StringBuilder sb = new StringBuilder();
-//                String line;
-//                while ((line = br.readLine()) != null) {
-//                    sb.append(line);
-//                }
-//                br.close();
-//
-//                String response = sb.toString();
-//
-//                if (response.isEmpty() || response.equals("{}")) {
-//                    Log.d(TAG, "Respuesta vacía para archivo: " + fileName);
-//                    return null;
-//                }
-//
-//                JSONObject json = new JSONObject(response);
-//
-//                if (!json.has("files") || json.isNull("files")) {
-//                    return null;
-//                }
-//
-//                JSONArray files = json.getJSONArray("files");
-//
-//                if (files.length() > 0) {
-//                    JSONObject fileJson = files.getJSONObject(0);
-//
-//                    String id          = fileJson.optString("id", null);
-//                    String name        = fileJson.optString("name", "Unknown");
-//                    String md5         = fileJson.optString("md5Checksum", "");
-//                    String modifiedTime = fileJson.optString("modifiedTime", "");
-//
-//                    if (id != null && !id.isEmpty()) {
-//                        Log.d(TAG, "Archivo encontrado: " + name + " | MD5: " + md5 + " | Modified: " + modifiedTime);
-//                        return new DriveFileMeta(id, name, md5, modifiedTime);
-//                    }
-//                }
-//            } else {
-//                Log.e(TAG, "Error HTTP " + responseCode + " buscando archivo: " + fileName);
-//            }
-//        } catch (Exception e) {
-//            Log.e(TAG, "Error en getFileMetaFromDrive para " + fileName, e);
-//        }
-//
-//        return null;
-//    }
 
 
     public static DriveFileMeta getFileMetaFromDrive(String accessToken, String fileName, String folderId) {
@@ -281,110 +204,83 @@ public class DriveUtils {
         }
     }
 
-    public static String getFileIdFromFileName2(String accessToken, String fileName, String inFolderId) throws Exception {
-        if (DriveUtils.isNullOrEmpty(fileName)) {
-            return "";
-        }
 
-        try {
-            // 1. Construimos la consulta "cruda" primero
-            // name = 'archivo.bin' and trashed = false
-            String query = "name = '" + fileName.replace("'", "\\'") + "' and trashed = false";
+    /**
+     * Busca carpeta por nombre exacto en el padre.
+     * Si hay varias, devuelve la más antigua (primera creada) para estabilizar.
+     */
+    public static String findFolderId(String accessToken, String folderName, String parentId) throws Exception {
+        if (isNullOrEmpty(folderName)) return "";
 
-            if (!DriveUtils.isNullOrEmpty(inFolderId)) {
-                query += " and '" + inFolderId + "' in parents";
+        String escaped = folderName.replace("\\", "\\\\").replace("'", "\\'");
+        String parent = isNullOrEmpty(parentId) ? "root" : parentId;
+
+        String query = "name = '" + escaped + "'"
+                + " and mimeType = '" + MIME_FOLDER + "'"
+                + " and trashed = false"
+                + " and '" + parent + "' in parents";
+
+        String url = "https://www.googleapis.com/drive/v3/files"
+                + "?q=" + URLEncoder.encode(query, "UTF-8")
+                + "&spaces=drive"
+                + "&fields=files(id,name,createdTime)"
+                + "&orderBy=createdTime"
+                + "&pageSize=10";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        try (Response response = HTTP.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String err = response.body() != null ? response.body().string() : "";
+                LOG.warn("findFolderId HTTP {} - {}", response.code(), err);
+                // Importante: NO devolver "" como si "no existiera" si fue error de red
+                throw new Exception("Error buscando carpeta '" + folderName + "': " + response.code());
             }
 
-            // 2. Codificamos TODA la consulta de forma segura
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
-            String searchUrl = "https://www.googleapis.com/drive/v3/files?q=" + encodedQuery;
-
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url(searchUrl)
-                    .addHeader("Authorization", "Bearer " + accessToken)
-                    .build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    String errorBody = response.body() != null ? response.body().string() : "";
-                    LOG.warn("Error API Drive '{}': {} - {}", fileName, response.code(), errorBody);
-                    return "";
-                }
-
-                String responseData = response.body().string();
-                JSONObject json = new JSONObject(responseData);
-                JSONArray files = json.optJSONArray("files");
-
-                if (files != null && files.length() > 0) {
-                    // PRIORIDAD: Si hay varios con el mismo nombre, buscamos el que sea binario
-                    for (int i = 0; i < files.length(); i++) {
-                        JSONObject file = files.getJSONObject(i);
-                        if ("application/octet-stream".equals(file.optString("mimeType"))) {
-                            return file.getString("id");
-                        }
-                    }
-                    // Si no hay ninguno binario explícito, devolvemos el primero encontrado
-                    return files.getJSONObject(0).getString("id");
-                }
+            String body = response.body() != null ? response.body().string() : "{}";
+            JSONArray files = new JSONObject(body).optJSONArray("files");
+            if (files == null || files.length() == 0) {
+                return "";
             }
-        } catch (Exception e) {
-            LOG.error("Fallo al buscar el ID de: {}", fileName, e);
+
+            if (files.length() > 1) {
+                LOG.warn("Hay {} carpetas llamadas '{}'. Se usará la más antigua.", files.length(), folderName);
+            }
+            return files.getJSONObject(0).getString("id");
         }
-        return "";
     }
 
+    /**
+     * Obtiene la carpeta o la crea. Evita duplicados en el caso normal.
+     */
+    public static synchronized String getOrCreateFolder(
+            String accessToken, String folderName, String parentId) throws Exception {
 
-    public static String getFileIdFromFileName(String accessToken, String fileName, String inFolderId) throws Exception {
-        if (DriveUtils.isNullOrEmpty(fileName)) {
-            return "";
+        String parent = isNullOrEmpty(parentId) ? "root" : parentId;
+
+        // 1. Buscar
+        String id = findFolderId(accessToken, folderName, parent);
+        if (!isNullOrEmpty(id)) {
+            return id;
         }
 
-        try {
-            String escapedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
+        // 2. Crear
+        LOG.info("Creando carpeta '{}' bajo {}", folderName, parent);
+        id = createEmptyFile(accessToken, folderName, MIME_FOLDER, parent);
 
-            String inFolderParam = "";
-            if (!DriveUtils.isNullOrEmpty(inFolderId)) {
-                inFolderParam = "+and+'" + inFolderId + "'+in+parents";
+        // 3. Por si otro hilo creó otra a la vez: volver a listar y quedarte con la antigua
+        String stable = findFolderId(accessToken, folderName, parent);
+        if (!isNullOrEmpty(stable)) {
+            if (!stable.equals(id)) {
+                LOG.warn("Se detectó carpeta duplicada al crear '{}'. Usando ID estable {}", folderName, stable);
             }
-
-            String searchUrl = "https://www.googleapis.com/drive/v3/files?q=name%20%3D%20%27"
-                    + escapedFileName
-                    + "%27%20and%20trashed%20%3D%20false"
-                    + inFolderParam;
-
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url(searchUrl)
-                    .addHeader("Authorization", "Bearer " + accessToken)
-                    .build();
-
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    String errorBody = response.body() != null ? response.body().string() : "";
-                    LOG.warn("Error buscando archivo '{}': HTTP {} - {}", fileName, response.code(), errorBody);
-                    return "";
-                }
-
-                String fileMetadata = response.body().string();
-                LOG.debug("Respuesta búsqueda archivo '{}': {}", fileName, fileMetadata);
-
-                JSONObject fileMetadataJson = new JSONObject(fileMetadata);
-                JSONArray filesArray = fileMetadataJson.optJSONArray("files");
-
-                if (filesArray != null && filesArray.length() > 0) {
-                    String fileId = filesArray.getJSONObject(0).getString("id");
-                    LOG.debug("Archivo encontrado: {} → ID: {}", fileName, fileId);
-                    return fileId;
-                } else {
-                    LOG.debug("No se encontró el archivo: {}", fileName);
-                }
-            }
-        } catch (Exception e) {
-            LOG.error("Excepción buscando archivo '{}'", fileName, e);
+            return stable;
         }
-
-        return "";  // No encontrado
+        return id;
     }
 
     public static String getFileIdFromFileName(String accessToken, String fileName, String inFolderId, String mimeType) throws Exception {
