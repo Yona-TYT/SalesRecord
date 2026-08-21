@@ -60,7 +60,7 @@ public class StartVar {
     // DB Config
     public static Conf mConfigDB;
     public static final String mConfID = "confID0";
-    public static final String mDateVersion = "3";
+    public static final String mDateVersion = "5";
 
     // Var redundants
     public static boolean mPermiss = false;     //Permisos de gestion multimedia
@@ -86,7 +86,12 @@ public class StartVar {
 
     public static final String dirAppName = ".salesrecord";
     public static final String csvAppName = "DataSave.csv";
-    public static final String exportName = "DataSave.bin";
+    public static final String fileName = "DataSave";
+
+    public static final String EXPORT_NAME = "DataSave.bin";           // lógico / Drive
+    public static final String LOCAL_UPLOAD = "DataSave.upload.bin";   // solo subida
+    public static final String LOCAL_DOWNLOAD = "DataSave.download.bin"; // solo bajada
+
 
     //Root View
     public static View mRootView;

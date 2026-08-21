@@ -19,6 +19,7 @@ import net.openid.appauth.AuthState;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +29,10 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.db.Cliente;
+import com.example.salesrecord.db.Sale;
+import com.example.salesrecord.db.dao.DaoClt;
+import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
@@ -63,6 +68,31 @@ public class Preloader extends AppCompatActivity {
         //Satrted variables
         StartVar startVar = new StartVar();
         StartVar.setAllListDB();
+
+        DaoClt daoClt = StartVar.appDBall.daoClt();
+        DaoSal daoSal = StartVar.appDBall.daoSal();
+        final List<Sale> mSalList = daoSal.getUsers();
+        List<Object> mList = new ArrayList<>();
+        for (Cliente mC : daoClt.getUsers()){
+            String mCltId = mC.cliente;
+            boolean hasSal = false;
+            for (Sale mS : mSalList){
+                if(mS.cliente.equals(mCltId)){
+                    hasSal = true;
+                    break;
+                }
+            }
+
+            if(!hasSal){
+                mC.cliente = "@null";
+                mList.add(mC);
+            }
+        }
+        if(!mList.isEmpty()){
+            Msg.m("Borrando Clientes Sin Ventas...");
+            GlobalData.getInstance(this).getGenericQueue().enqueueList(mList, 3);
+        }
+
         StartVar.setmActivity(this);
         new Basic(AppContextProvider.getContext());
 

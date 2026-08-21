@@ -7,6 +7,9 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
@@ -23,30 +26,46 @@ import androidx.work.WorkRequest;
 
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.DBListCreator;
-import com.example.salesrecord.utls.Basic;
+import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.db.GenericQueue;
+import com.example.salesrecord.db.QueueItem;
+import com.example.salesrecord.db.dao.QueueItemDao;
+import com.example.salesrecord.db.QueueProcessor;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.ReloadActivity;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Msg;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.File;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class SetWorkResult {
-    private static final Log log = LogFactory.getLog(SetWorkResult.class);
+    private static final String TAG = "SetWorkResult";
     private LifecycleOwner lifecycle;
     private ExecutorService executorService;
     private DriveManager manager;
-    private final java.util.Set<java.util.UUID> processedWorkIds = new java.util.HashSet<>();
+    private final Set<UUID> processedWorkIds = new HashSet<>();
+    private final Set<UUID> processedUploadIds = new HashSet<>();
+
+
+    private static final String KEY_RESULT_MESSAGE = "result_message";
+    private static final String KEY_FILES_DOWNLOADED = "files_downloaded";
+    private static final String KEY_IS_PRELOADER = "preloader";
+    private static final String KEY_IS_NEW_OBJ = "newobj";
+    private static final String KEY_IS_FILE_OK = "file";
+    private static final String KEY_IS_CHECK = "check";
+    private static final String KEY_IS_IMG = "img";
+    private static final String KEY_IS_ID = "isId";
 
     private Observer<WorkInfo> workObserver; // Referencia al Observer
 
@@ -63,6 +82,10 @@ public class SetWorkResult {
 
         observeDownloadTag(context, StartVar.WORK_TAG_DOWNLOAD);
         observeDownloadTag(context, StartVar.WORK_TAG_DOWNLOAD_IMG);
+
+        WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWorkLiveData(StartVar.WORK_TAG_UPLOAD)
+                .observe(lifecycle, this::handleUploadWorkInfos);
     }
 
     private void observeDownloadTag(Context context, String uniqueName) {
@@ -72,6 +95,82 @@ public class SetWorkResult {
                     if (workInfos == null || workInfos.isEmpty()) return;
                     handleDownloadWorkInfos(workInfos);
                 });
+    }
+    private void handleUploadWorkInfos(List<WorkInfo> workInfos) {
+        if (workInfos == null || workInfos.isEmpty()) return;
+        Context context = AppContextProvider.getContext();
+        if (context == null) return;
+
+        for (WorkInfo workInfo : workInfos) {
+            if (!workInfo.getState().isFinished()) continue;
+            if (!processedUploadIds.add(workInfo.getId())) continue;
+
+            Data out = workInfo.getOutputData();
+            int uploaded = out.getInt("uploaded", 0);
+            int skipped = out.getInt("skipped", 0);
+            int missing = out.getInt("missing", 0);
+            boolean mainUploaded = out.getBoolean("main_uploaded", false);
+            String message = out.getString(KEY_RESULT_MESSAGE);
+
+            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                Log.d(TAG, "Upload OK uploaded=" + uploaded
+                        + " main=" + mainUploaded
+                        + " skipped=" + skipped
+                        + " missing=" + missing
+                        + " msg=" + message);
+
+                // Confirmar recepción real en Drive → limpiar cola
+                if (uploaded > 0 || mainUploaded) {
+
+                    // 1. Abrimos un hilo de fondo rápido para aplicar los borrados físicos en Room antes de vaciar la cola
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        try {
+                            Log.d(TAG, "Iniciando QueueProcessor desde SetWorkResult...");
+
+                            // Obtenemos los elementos que están actualmente en tránsito en la cola de Room
+                            QueueItemDao queueItemDao = StartVar.appDBall.daoQueue();
+                            List<QueueItem> itemsEnCola = queueItemDao.getAllQueueItems();
+
+                            if (itemsEnCola != null && !itemsEnCola.isEmpty()) {
+                                QueueProcessor processor = new QueueProcessor();
+
+                                // Procesamos cada JSON para aplicar mDao.removerUser(mUser.uid) de forma real por ID
+                                for (QueueItem item : itemsEnCola) {
+                                    processor.applyQueueObject(item.json, item.tipo);
+                                }
+                                Log.d(TAG, "Purga física de objetos '@null' completada con éxito.");
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error ejecutando la purga física de base de datos", e);
+                        } finally {
+                            // 2. Una vez purgado Room, regresamos al hilo principal para vaciar la cola de tránsito
+                            // y desbloquear la pantalla del usuario de forma instantánea
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                // Tu lógica original de limpieza
+                                GlobalData.getInstance(context).getGenericQueue().clear();
+                                Log.d(TAG, "Cola limpiada tras confirmación Drive e impacto físico.");
+
+                                // NOTIFICACIÓN MAESTRA: Le avisamos a la Activity de Ventas que ya puede cerrarse solo
+                                GenericQueue queue = GlobalData.getInstance(AppContextProvider.getContext()).getGenericQueue();
+                                queue.notifySyncComplete();
+                            });
+                        }
+                    });
+
+                } else {
+                    Log.w(TAG, "Upload SUCCESS pero nada subido → cola intacta");
+
+                    // RESPALDO: Si no subió nada porque las marcas ya eran iguales, liberamos la interfaz igualmente
+                    GenericQueue queue = GlobalData.getInstance(AppContextProvider.getContext()).getGenericQueue();
+                    queue.notifySyncComplete();
+                }
+            } else {
+                Log.e(TAG, "Upload falló: " + workInfo.getState() + " " + message);
+                // Si el Worker falla de forma definitiva, liberamos la pantalla para no congelar al usuario
+                GenericQueue queue = GlobalData.getInstance(AppContextProvider.getContext()).getGenericQueue();
+                queue.notifySyncComplete();
+            }
+        }
     }
 
     private void handleDownloadWorkInfos(List<WorkInfo> workInfos) {
@@ -89,36 +188,46 @@ public class SetWorkResult {
             //StartVar.setmMainStart(true);
 
             Data outputData = workInfo.getOutputData();
-            boolean preloader = outputData.getBoolean("preloader", false);
-            boolean isFileOk = outputData.getBoolean("file", false);
-            boolean isImg = outputData.getBoolean("img", false);
-            String message = outputData.getString("result_message");
-            String[] filesDownloaded = outputData.getStringArray("files_downloaded");
+            boolean preloader = outputData.getBoolean(KEY_IS_PRELOADER, false);
+            boolean isFileOk = outputData.getBoolean(KEY_IS_FILE_OK, false);
+            boolean isImg = outputData.getBoolean(KEY_IS_IMG, false);
+            String message = outputData.getString(KEY_RESULT_MESSAGE);
+            String[] filesDownloaded = outputData.getStringArray(KEY_FILES_DOWNLOADED);
 
             if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
                 if (isImg) {
                     // EventBus / mensaje de imágenes OK, si lo necesitas
-                    android.util.Log.d("DriveSync", "Download IMG OK: " + message);
+                    android.util.Log.d(TAG, "Download IMG OK: " + message);
                     continue;
                 }
-                File mFile = Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/" + StartVar.exportName);
+
+                // 1) Preferir path que devolvió el Worker
+                File mFile = null;
+                if (filesDownloaded != null && filesDownloaded.length > 0
+                        && filesDownloaded[0] != null && !filesDownloaded[0].isEmpty()) {
+                    mFile = new File(filesDownloaded[0]);
+                }
+
+                // 2) Si no viene, usar siempre LOCAL_DOWNLOAD (DataSave.download.bin)
+                if (mFile == null || !mFile.exists()) {
+                    mFile = DriveManager.getLocalDownloadFile();
+                }
 
                 if (mFile.exists()) {
                     Uri uri = Uri.fromFile(mFile);
                     try {
                         new SetDb().set(context, outputData, uri, manager);
                     } catch (IOException e) {
-                        android.util.Log.e("DriveSync", "Error en SetDb", e);
+                        android.util.Log.e(TAG, "Error en SetDb", e);
                     }
                 } else {
                     Msg.m("CSV no existe: " + message);
-                    // Si era preloader y no hay archivo, igual salir del preloader
                     SetWorkResult.resetPreloader(preloader);
                 }
+
             } else if (workInfo.getState() == WorkInfo.State.FAILED) {
                 if (isImg) {
-                    android.util.Log.e("DriveSync", "Download IMG failed: " + message);
+                    android.util.Log.e(TAG, "Download IMG failed: " + message);
                     continue;
                 }
                 if (!isFileOk) {
@@ -131,7 +240,7 @@ public class SetWorkResult {
                         try {
                             DBListCreator.createDbLists();
                         } catch (Exception e) {
-                            android.util.Log.e("DriveSync", "Error createDbLists", e);
+                            android.util.Log.e(TAG, "Error createDbLists", e);
                         }
                         manager.uploadDataBase();
 
@@ -141,12 +250,12 @@ public class SetWorkResult {
                         }
                     } else {
                         // Sin datos locales ni en Drive
-                        android.util.Log.w("DriveSync", "Sin archivo en Drive y sin datos locales");
+                        android.util.Log.w(TAG, "Sin archivo en Drive y sin datos locales");
                         resetPreloader(preloader);
                     }
                 } else {
                     // Fallo de red/token/etc. pero el flag de archivo no indica "no encontrado"
-                    android.util.Log.e("DriveSync", "Download failed: " + message);
+                    android.util.Log.e(TAG, "Download failed: " + message);
                     resetPreloader(preloader);
                 }
             }
@@ -158,7 +267,7 @@ public class SetWorkResult {
         Context appContext = AppContextProvider.getContext();
 
         if (appContext == null) {
-            android.util.Log.e("DriveSync", "❌ Sin contexto disponible.");
+            android.util.Log.e(TAG, "❌ Sin contexto disponible.");
             return;
         }
 
@@ -181,7 +290,7 @@ public class SetWorkResult {
 
         // 5. Verificar conexión (usando la versión segura)
         if (!isNetworkAvailable(appContext)) {
-            android.util.Log.w("DriveSync", "Sin conexión a internet. Se encolará cuando vuelva la conexión.");
+            android.util.Log.w(TAG, "Sin conexión a internet. Se encolará cuando vuelva la conexión.");
             // Solo forzamos el preloader si es el flujo inicial
             if (!StartVar.mainStart) {
                 StartVar.setmMainStart(true);
@@ -198,15 +307,15 @@ public class SetWorkResult {
             WorkManager.getInstance(appContext)
                     .enqueueUniqueWork(tag, policy, workRequest);
 
-            android.util.Log.i("DriveSync", "✅ WorkManager encolado: " + tag + " policy=" + policy);
+            android.util.Log.i(TAG, "✅ WorkManager encolado: " + tag + " policy=" + policy);
         } catch (Exception e) {
-            android.util.Log.e("DriveSync", "❌ Error Binder/WorkManager", e);
+            android.util.Log.e(TAG, "❌ Error Binder/WorkManager", e);
         }
     }
     public static boolean isNetworkAvailable(Context context) {
 
         if (context == null) {
-            android.util.Log.e("NetworkCheck", "Context pasado es null");
+            android.util.Log.e(TAG, "Context pasado es null");
             return false;
         }
 
@@ -224,7 +333,7 @@ public class SetWorkResult {
     }
 
     public static void resetPreloader(boolean preloader) {
-        android.util.Log.d("Preloader", "resetPreloader called | preloader=" + preloader
+        android.util.Log.d(TAG, "resetPreloader called | preloader=" + preloader
                 + " mainStart=" + StartVar.mainStart
                 + " activity=" + (StartVar.mActivity != null
                 ? StartVar.mActivity.getClass().getSimpleName()
@@ -235,7 +344,7 @@ public class SetWorkResult {
         }
 
         if (StartVar.mActivity == null) {
-            android.util.Log.e("Preloader", "mActivity es null");
+            android.util.Log.e(TAG, "mActivity es null");
             StartVar.setmMainStart(true);
             return;
         }

@@ -95,22 +95,27 @@ public class ConfigFragment extends PreferenceFragmentCompat {
                     Log.w("Conf", "datList incompleta");
                     return;
                 }
-
                 String name     = safe(datList.get(0));
                 String phone    = safe(datList.get(1));
                 String cardId   = safe(datList.get(2));
                 String bankCode = safe(datList.get(3));
                 String bankName = safe(datList.get(4));
 
+                String nuevo = "";
                 // Opcional: si ya había datos en mConf, rellenar solo los vacíos del form
-                if (mConf.datos != null && !mConf.datos.isEmpty()) {
-                    String[] old = mConf.datos.split("\\|", -1); // -1 conserva vacíos
-                    if (old.length >= 5) {
-                        if (name.isEmpty())     name = safe(old[0]);
-                        if (phone.isEmpty())    phone = safe(old[1]);
-                        if (cardId.isEmpty())   cardId = safe(old[2]);
-                        if (bankCode.isEmpty()) bankCode = safe(old[3]);
-                        if (bankName.isEmpty()) bankName = safe(old[4]);
+                if (mConf.datos != null) {
+                    if (mConf.datos.isEmpty()){
+                         nuevo = name + "|" + phone + "|" + cardId + "|" + bankCode + "|" + bankName;
+                    }
+                    else {
+                        String[] old = mConf.datos.split("\\|", -1); // -1 conserva vacíos
+                        if (old.length >= 5) {
+                            if (name.isEmpty()) name = safe(old[0]);
+                            if (phone.isEmpty()) phone = safe(old[1]);
+                            if (cardId.isEmpty()) cardId = safe(old[2]);
+                            if (bankCode.isEmpty()) bankCode = safe(old[3]);
+                            if (bankName.isEmpty()) bankName = safe(old[4]);
+                        }
                     }
                 }
 
@@ -121,7 +126,7 @@ public class ConfigFragment extends PreferenceFragmentCompat {
                     cardId = "V" + cardId;
                 }
 
-                String nuevo = name + "|" + phone + "|" + cardId + "|" + bankCode + "|" + bankName;
+                nuevo = name + "|" + phone + "|" + cardId + "|" + bankCode + "|" + bankName;
 
                 // Evitar guardar/enviar completamente vacío
                 if (isAllEmpty(name, phone, cardId, bankCode, bankName)) {
@@ -139,7 +144,7 @@ public class ConfigFragment extends PreferenceFragmentCompat {
 
                 // Evitar encolar si no hubo cambio
                 if (nuevo.equals(mConf.datos)) {
-                    Log.d("Conf", "Sin cambios en datos");
+                    //Log.d("Conf", "Sin cambios en datos");
                     return;
                 }
 
@@ -151,8 +156,6 @@ public class ConfigFragment extends PreferenceFragmentCompat {
                 Log.e("Conf", "Error guardando datos", e);
             }
         }).start();
-
-
     }
 
     private void cargarDatosPagoMovil() {

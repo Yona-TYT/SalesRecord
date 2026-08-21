@@ -32,7 +32,7 @@ public interface DaoSal extends GenericDao<Sale>{
     @Update
     void update(Sale pago);
 
-    @Query("UPDATE Sale SET cliente= :nombre, artclist= :concep, monto= :monto, tasa= :oper, status= :porc, imagen= :imagen, fecha= :fecha, time= :time, cltid= :cltid, more4= :more4, more5= :more5 WHERE sale= :user")
+    @Query("UPDATE Sale SET cliente= :nombre, artclist= :concep, monto= :monto, tasa= :oper, status= :porc, imagen= :imagen, fecha= :fecha, time= :time, cltid= :cltid, cltnr= :more4, more5= :more5 WHERE sale= :user")
     void updateUser(String user, String nombre, String concep, Double monto, Integer oper, Integer porc, String imagen, Long fecha, Long time , String cltid, Integer more4, String more5 );
 
     // Para actualizar valores individuales --------------------------------------------------------

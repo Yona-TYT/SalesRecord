@@ -25,12 +25,26 @@ import java.util.Objects;
 public class SetDb {
     private static final String TAG = "SetDb";
 
+    private static final String KEY_RESULT_MESSAGE = "result_message";
+    private static final String KEY_FILES_DOWNLOADED = "files_downloaded";
+    private static final String KEY_IS_PRELOADER = "preloader";
+    private static final String KEY_IS_NEW_OBJ = "newobj";
+    private static final String KEY_IS_FILE_OK = "file";
+    private static final String KEY_IS_CHECK = "check";
+    private static final String KEY_IS_IMG = "img";
+    private static final String KEY_IS_ID = "isId";
+
     public void set(Context context, Data outputData, Uri uri, DriveManager manager) throws IOException {
 
-        boolean preloader = outputData.getBoolean("preloader", false);
-        boolean newObj    = outputData.getBoolean("newobj", false);
-        boolean isCheck   = outputData.getBoolean("check", false);
-        boolean isId      = outputData.getBoolean("isId", false);
+        boolean preloader = outputData.getBoolean(KEY_IS_PRELOADER, false);
+        boolean newObj    = outputData.getBoolean(KEY_IS_NEW_OBJ, false);
+        boolean isCheck   = outputData.getBoolean(KEY_IS_CHECK, false);
+        boolean isId      = outputData.getBoolean(KEY_IS_ID, false);
+
+        boolean hasQueue = GlobalData.getInstance(context)
+                .getGenericQueue().hasPendingQueueItems();
+
+        Log.d("SetDb", "hasQueue=" + hasQueue );
 
         DBListCreator mListCreator = new DBListCreator(context);
 
@@ -48,6 +62,7 @@ public class SetDb {
         long remoteDate = 0L;
         long remoteTime = 0L;
         boolean confLineFound = false;
+
 
         try (InputStream inputStream = context.getContentResolver().openInputStream(uri);
              BufferedReader reader = new BufferedReader(
@@ -116,6 +131,8 @@ public class SetDb {
             return;
         }
 
+        //Msg.m(outputData.getString(KEY_RESULT_MESSAGE)+" " +hasQueue+" "+mConf.date+" "+mConf.time, true);
+
         // Comparación: primero date, si empatan usa time
         int comparison;
         if (mConf.date.equals(remoteDate)) {
@@ -133,30 +150,25 @@ public class SetDb {
             // =====================================================
             // A) LOCAL más nuevo
             // =====================================================
-            if (newObj) {
-                // El usuario acaba de guardar algo → subir DB completa
+
+            if (isCheck || hasQueue) {
+                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
+            } else if (newObj) {
                 manager.uploadDataBase();
             }
-            if (isCheck) {
-                // Hay elementos en cola → procesarlos (send = 1)
-                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
-
-            }
-
         } else if (comparison < 0) {
             // =====================================================
             // B) REMOTO más nuevo
             // =====================================================
+
             if (newObj) {
                 Msg.m("Error: Existen cambios más recientes en la red. Sincronizando...");
             }
 
-            if (isCheck) {
-                // Descargar sin cerrar y luego procesar cola con send = 2
+            if (isCheck || hasQueue) {
                 mListCreator.cvsToDbNotFinish(StartVar.mActivity, uri, 1, "");
                 GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(2);
             } else {
-                // Descarga completa (preloader, check manual, etc.)
                 mListCreator.cvsToDB(StartVar.mActivity, uri, 1, "");
             }
 
@@ -164,21 +176,14 @@ public class SetDb {
             // =====================================================
             // C) IGUALES
             // =====================================================
-            if (newObj) {
-                // Mismo versionado → actualizar timestamps y subir
+            if (isCheck || hasQueue) {
+                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
+            } else if (newObj) {
                 long now = System.currentTimeMillis();
                 String strDbg = TAG + ": " + CalendUtls.getShortDate(now) + " " + CalendUtls.getTime(now);
-
                 StartVar.appDBall.daoCfg().updateDateTime(StartVar.mConfID, now, now, strDbg);
                 StartVar.getConfigDB();
                 manager.uploadDataBase();
-            }
-//            else if (!isCheck) {
-//                Basic.msg("La base de datos está actualizada");
-//            }
-
-            if (isCheck) {
-                GlobalData.getInstance(context).getGenericQueue().startUsuarioQueue(1);
             }
         }
 

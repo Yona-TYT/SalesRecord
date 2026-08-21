@@ -12,11 +12,14 @@ import androidx.work.WorkManager;
 public class AppContextProvider extends Application {
     private static AppContextProvider sInstance;
     private Activity currentActivity; // Guardamos la actividad actual
+    private static Context workersContext;
 
     @Override
     public void onCreate() {
         super.onCreate();
         sInstance = this;
+
+        workersContext = this.getApplicationContext();
 
         // Registramos un listener que detecta cuando una Activity se crea o resume
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
@@ -70,6 +73,17 @@ public class AppContextProvider extends Application {
                     "¿Olvidaste registrarlo en el AndroidManifest.xml?");
         }
         return sInstance.getApplicationContext();
+    }
+
+    public static Context getWorkersContext() {
+        if (workersContext == null) {
+            if (sInstance != null) {
+                workersContext = sInstance.getApplicationContext();
+            } else {
+                throw new IllegalStateException("El contexto global no está listo.");
+            }
+        }
+        return workersContext;
     }
 
     public static Activity getCurrentActivity() {

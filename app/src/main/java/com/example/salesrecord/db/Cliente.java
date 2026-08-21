@@ -16,12 +16,12 @@ public class Cliente {
     public Long fecha;
     public Float level;
     public Long ulfech;
-    public Integer oper;
-    public String bits;
+    public Integer status;
+    public Integer count;
 
     public Cliente(@NonNull String cliente, String nombre, String iduser, String defaulacc,
                    Integer priority, Long fecha, Float level, Long ulfech,
-                   Integer oper, String bits
+                   Integer status, Integer count
             )
     {
         this.cliente = cliente;
@@ -32,7 +32,7 @@ public class Cliente {
         this.fecha = fecha;
         this.level = level;
         this.ulfech = ulfech;
-        this.oper = oper;
-        this.bits = bits;
+        this.status = status;
+        this.count = count;
     }
 }

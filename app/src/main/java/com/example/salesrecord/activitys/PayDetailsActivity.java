@@ -6,8 +6,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -48,10 +46,13 @@ import com.example.salesrecord.adapters.SaleResultAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
+import com.example.salesrecord.db.DatabaseUtils;
+import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
+import com.example.salesrecord.ex.Dialogs;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
@@ -60,19 +61,9 @@ import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
-import com.example.salesrecord.utls.QrPagoMovilCodec;
-
-import com.google.mlkit.vision.barcode.BarcodeScanner;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.common.BitMatrix;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import io.reactivex.annotations.NonNull;
 
@@ -81,6 +72,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     // DB ----------------------------------------------------------------
     private DaoSal daoSal;
     private DaoClt daoClt;
+    private Sale mSale;
+    private Sale oldSal;
+
     //--------------------------------------------------------------------
 
     private ListView mListView1;
@@ -129,7 +123,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private Context contex;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
-    private Sale mSale;
     private String currId;
 
     private double mTotal = 0.0;
@@ -146,7 +139,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                PayDetailsActivity.this.finish();
+                finishActivity();
             }
         };
         onBackPressedDispatcher.addCallback(this, callback);
@@ -248,7 +241,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == android.R.id.home) {
-            this.finish();
+            finishActivity();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -267,6 +260,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         daoSal = StartVar.appDBall.daoSal();
 
         mSale = daoSal.getUsers(currId);
+
+        oldSal = new Sale(mSale);
 
         if (mSale != null) {
 
@@ -355,6 +350,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             daoClt = StartVar.appDBall.daoClt();
 
+            Cliente fakeClt = new Cliente("@null", "<Vacio>" ,"","",0,
+                    0L,0f, 0L,0,0);
+            allNamesList.add(fakeClt.nombre);
             for (Cliente mC : daoClt.getUsers()){
                 if(mC != null){
                     allNamesList.add(mC.iduser);
@@ -422,33 +420,41 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
                         mInput1.setVisibility(View.VISIBLE);
-                    } else {
+                    }
+                    else {
                         mInput1.setVisibility(View.GONE);
 
                         String strRawName = mInput1.getText().toString();
-                        boolean b = false;
-                        String mAlias = "";
-                        if(!strRawName.isEmpty()) {
-                            String idUser = InputHelper.sanitizeText(strRawName);
-                            for (Cliente cl : daoClt.getUsers()){
-                                if(cl.iduser.equals(idUser) ){
-                                    b = true;
-                                    if (!mSale.cltid.equals(idUser)) {
-                                        mSale.cltid = "@null";
-                                        mSale.cliente = cl.cliente;
-                                        daoSal.update(mSale);
-                                        mAlias = cl.nombre + " (" + cl.iduser + ")";
-                                        GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
-                                        break;
+                        if (strRawName.equals("<Vacio>") || strRawName.isEmpty()) {
+                            String strNr = " nr"+mSale.cltnr;
+                            mSale.cliente = "Clt." + strNr ;
+                            mSale.cltid = "@null";
+                            GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
+                        }
+                        else {
+                            boolean b = false;
+                            String mAlias = "";
+                            if (!strRawName.isEmpty()) {
+                                String idUser = InputHelper.sanitizeText(strRawName);
+                                for (Cliente cl : daoClt.getUsers()) {
+                                    if (cl.iduser.equals(idUser)) {
+                                        b = true;
+                                        if (!mSale.cltid.equals(idUser)) {
+                                            mSale.cltid = "@null";
+                                            mSale.cliente = cl.cliente;
+                                            daoSal.update(mSale);
+                                            mAlias = cl.nombre + " (" + cl.iduser + ")";
+                                            GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if(!b) {
-                            Msg.m("UserID de cliente no VALIDO!");
-                        }
-                        else{
-                            mTextList.get(0).setText("Alias: " + mAlias);
+                            if (!b) {
+                                Msg.m("UserID de cliente no VALIDO!");
+                            } else {
+                                mTextList.get(0).setText("Alias: " + mAlias);
+                            }
                         }
                     }
                 }
@@ -522,6 +528,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
+            //Remove Sale
             if (itemId == R.id.butt_dts2) {
 
                 //fmang.RemoveFile(saveImage, this.getContentResolver());
@@ -542,26 +549,96 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         mList.add(crrArt);
                     }
                 }
+                Cliente mClt = daoClt.getUsers(mSale.cliente);
+                if (mClt != null) {
+                    float oldPoints = 0f;
+
+                    int oldSt = mSale.status;
+
+                    // 1. Calcular cuántos puntos le habíamos dado con el estatus viejo
+                    switch (oldSt) {
+                        case 0: oldPoints = (float) (mTotal * GlobalData.pointPay); break;
+                        case 1: oldPoints = (float) (mTotal * GlobalData.pointNoPay); break;
+                        case 2: oldPoints = (float) (mTotal * GlobalData.pointLost); break;
+                    }
+
+                    // 3. MATEMÁTICA SEGURA: Restamos el viejo del récord y sumamos el nuevo
+                    float points = mClt.level - oldPoints ;
+
+                    mClt.level -= points;
+
+                    // Guardamos el cliente actualizado en Room
+                    daoClt.insertUser(mClt);
+                    mList.add(mClt);
+
+                }
 
                 glData.setIsEdit(true);
 
                 //Elimina el registro selecionado
-                daoSal.removerUser(mSale.uid);
+                mSale.sale = "@null";
+                daoSal.update(mSale);
+
                 mList.add(mSale);
 
-                GlobalData.getInstance(contex).getGenericQueue().enqueueList(mList, 3);
+                // 2. Apagamos el reload
+                GlobalData.shouldReload = false;
 
-                finish(); //Finaliza la actividad y ya no se accede mas
+                finishActivity(mList);
 
             }
             if (itemId == R.id.butt_dts3) {
 
-                mSale.status = currSel1;
+                int oldSt = mSale.status;
+                List<Object> mList = new ArrayList<>();
+
+                if (oldSt != currSel1){
+
+                    Cliente mClt = daoClt.getUsers(mSale.cliente);
+                    if (mClt != null) {
+                        float oldPoints = 0f;
+                        float newPoints = 0f;
+
+                        // 1. Calcular cuántos puntos le habíamos dado con el estatus viejo
+                        switch (oldSt) {
+                            case 0: oldPoints = (float) (mTotal * GlobalData.pointPay); break;
+                            case 1: oldPoints = (float) (mTotal * GlobalData.pointNoPay); break;
+                            case 2: oldPoints = (float) (mTotal * GlobalData.pointLost); break;
+                        }
+
+                        // 2. Calcular cuántos puntos le corresponden con el nuevo estatus
+                        switch (currSel1) {
+                            case 0: newPoints = (float) (mTotal * GlobalData.pointPay); break;
+                            case 1: newPoints = (float) (mTotal * GlobalData.pointNoPay); break;
+                            case 2: newPoints = (float) (mTotal * GlobalData.pointLost); break;
+                        }
+
+                        // 3. MATEMÁTICA SEGURA: Restamos el viejo del récord y sumamos el nuevo
+                        float points = mClt.level - oldPoints + newPoints;
+                        
+                        mClt.level = points > 0 ? ( mClt.level - oldPoints + newPoints ) :  newPoints;
+
+                        // Guardamos el cliente actualizado en Room
+                        mClt.count = mClt.count > 0 ? (mClt.count -1) : 0;
+                        daoClt.insertUser(mClt);
+                        mList.add(mClt);
+
+                    }
+                    mSale.status = currSel1;
+                }
+
+                // Evitar encolar si no hubo cambio
+                if (mList.isEmpty() && DatabaseUtils.isIdentical(mSale, oldSal)) {
+                    //Msg.d("Sale", "Sin cambios en datos");
+                    finish(); //Finaliza la actividad y ya no se accede mas
+                    return;
+                }
+
                 daoSal.update(mSale);
 
-                GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
+                mList.add(mSale);
 
-                finish(); //Finaliza la actividad y ya no se accede mas
+                finishActivity(mList);
 
             }
 //        if(itemId == R.id.image_dts1) {
@@ -571,5 +648,52 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         }
     }
 
+    private void finishActivity() {
+        finishActivity(null);
+    }
+    private void finishActivity(List<Object> mList){
+        if(GlobalData.shouldReload && (mList == null || mList.isEmpty())){
+            finish(); // Cierre instantáneo y seguro
+            return;
+        }
 
+        GlobalData.shouldReload = false;
+
+        // 1. Mostrar el diálogo de carga (Sin tiempo fijo)
+        // 1. MOSTRAR EL DIÁLOGO CENTRALIZADO: Usando tu propia clase Dialogs
+        Dialogs.progress(this, "Sincronizando con Google Drive");
+
+        // 2. Obtener la cola de sincronización
+        GenericQueue queue = GlobalData.getInstance(AppContextProvider.getContext()).getGenericQueue();
+
+        // 3. CONDICIÓN DE PARADA: Configuramos el Callback dinámico
+        queue.setOnSyncCompleteListener(new GenericQueue.OnSyncCompleteListener() {
+            @Override
+            public void onSyncComplete() {
+                // ¡ÉXITO! Drive confirmó la subida. Cancelamos la espera de inmediato.
+                Dialogs.hideProgress();
+                finish(); // Cierre instantáneo y seguro
+            }
+        });
+
+        // 4. Enviar los datos a la cola para que empiece a procesar
+        queue.enqueueList(mList, 3);
+
+        // 5. RESPALDO DE SEGURIDAD (Timeout): Si la red falla, liberamos la interfaz tras 8 segundos
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Verificamos de forma segura y cerramos si se alcanzó el tiempo límite
+                // Nota: Como simpleProgress es privado en tu clase Dialogs, llamamos directamente a hideProgress()
+                Dialogs.hideProgress();
+
+                // Si el callback sigue activo significa que no terminó a tiempo, lo limpiamos para evitar cierres duplicados
+                queue.setOnSyncCompleteListener(null);
+
+                android.util.Log.w("Ventas", "Timeout de red alcanzado. Liberando pantalla.");
+                finish(); // Cerramos la actividad; la cola Room reintentará en background de todas formas
+            }
+        }, 8000); // 8 segundos máximos de tolerancia
+
+    }
 }

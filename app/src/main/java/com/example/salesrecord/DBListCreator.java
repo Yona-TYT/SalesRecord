@@ -21,7 +21,6 @@ import com.example.salesrecord.db.Deuda;
 import com.example.salesrecord.db.dao.DaoDat;
 import com.example.salesrecord.db.dao.DaoDeb;
 import com.example.salesrecord.db.dao.DaoSal;
-import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.Msg;
 
@@ -66,6 +65,7 @@ public class DBListCreator extends AppCompatActivity {
         mList.add(new String[]{"<0>"});// Etiqueta para config
         //Instancia de la base de datos
         Conf mConf =  daoConf.getUsers(StartVar.mConfID);
+
         mList.add(new String[]{mConf.config, mConf.version, mConf.hexid, mConf.datetasa,
                 String.valueOf(mConf.dolar), String.valueOf(mConf.margen), String.valueOf(mConf.date),
                 String.valueOf(mConf.time), mConf.curr.toString(), mConf.moneda.toString(),
@@ -183,12 +183,12 @@ public class DBListCreator extends AppCompatActivity {
             txList[1] = myClt.nombre;
             txList[2] = myClt.iduser;
             txList[3] = myClt.defaulacc;
-            txList[4] = myClt.priority.toString();
+            txList[4] = String.valueOf(myClt.priority);
             txList[5] = String.valueOf(myClt.fecha);
-            txList[6] = myClt.level.toString();
+            txList[6] = String.valueOf(myClt.level);
             txList[7] = String.valueOf(myClt.ulfech);
-            txList[8] = myClt.oper.toString();
-            txList[9] = String.valueOf(myClt.bits);
+            txList[8] = String.valueOf(myClt.status);
+            txList[9] = String.valueOf(myClt.count);
 
             mList.add(txList);
 
@@ -201,8 +201,8 @@ public class DBListCreator extends AppCompatActivity {
             cltLmF.add(myClt.fecha);
             cltLmG.add(myClt.level);
             cltLmH.add(myClt.ulfech);
-            cltLmI.add(myClt.oper);
-            cltLmJ.add(myClt.bits);
+            cltLmI.add(myClt.status);
+            cltLmJ.add(myClt.count);
             //------------------------------------------
         }
 
@@ -380,7 +380,7 @@ public class DBListCreator extends AppCompatActivity {
             txList[9] = mySal.imagen;
             txList[10] = String.valueOf(mySal.time);
             txList[11] = mySal.cltid;
-            txList[12] = String.valueOf(mySal.more4);
+            txList[12] = String.valueOf(mySal.cltnr);
             txList[13] = mySal.more5;
             txList[14] = String.valueOf(mySal.fecha);
 
@@ -400,7 +400,7 @@ public class DBListCreator extends AppCompatActivity {
 
             salLmJ.add(mySal.imagen);
             salLmK.add(String.valueOf(mySal.time));
-            salLmM.add(String.valueOf(mySal.more4));
+            salLmM.add(String.valueOf(mySal.cltnr));
             salLmN.add(mySal.more5);
             salLmL.add(String.valueOf(mySal.fecha));
 
@@ -521,18 +521,12 @@ public class DBListCreator extends AppCompatActivity {
                 }
                 if(opt==0) {
                     version = spl[1];
-                    if(version.equals("3")) {
-                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
-                                Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
-                                Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
-                                Integer.parseInt(spl[11]), spl[12], spl[13]);
-                    }
-                    else{
-                        daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
-                                Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
-                                Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
-                                Integer.parseInt(spl[11]), "", spl[12]);
-                    }
+
+                    daoConf.updateUser("confID0", StartVar.mDateVersion, spl[2], spl[3], Double.parseDouble(spl[4]),
+                            Double.parseDouble(spl[5]), Long.parseLong(spl[6]), Long.parseLong(spl[7]),
+                            Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Integer.parseInt(spl[10]),
+                            Integer.parseInt(spl[11]), spl[12], spl[13]);
+
                 }
                 else if(opt==1){
                     Article obj = new Article(
@@ -545,11 +539,21 @@ public class DBListCreator extends AppCompatActivity {
                     daoArt.insertUser(obj);
                 }
                 else if(opt==2) {
-                    Cliente obj = new Cliente(
-                            spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
-                            Long.parseLong(spl[7]), Integer.parseInt(spl[8]), "0"
-                    );
-                    daoCliente.insertUser(obj);
+                    if(version.equals("5")) {
+
+                        Cliente obj = new Cliente(
+                                spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
+                                Long.parseLong(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9])
+                        );
+                        daoCliente.insertUser(obj);
+                    }
+                    else{
+                        Cliente obj = new Cliente(
+                                spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
+                                Long.parseLong(spl[7]), 1, 0
+                        );
+                        daoCliente.insertUser(obj);
+                    }
                 }
                 else if(opt==3){
                     Deuda obj = new Deuda(

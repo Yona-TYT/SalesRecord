@@ -1,11 +1,14 @@
 package com.example.salesrecord;
 
+import android.os.Build;
 import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -127,24 +130,40 @@ public class CsvWriterSimple {
             }
         }
 
-        // Lambda explícita → evita el error de method reference
         List<String> collect = list.stream()
-                .map(row -> convertToCsvFormat(row))  // llama a la de 1 parámetro
+                .map(this::convertToCsvFormat)
                 .collect(Collectors.toList());
 
         File temp = new File(file.getAbsolutePath() + ".tmp");
+        if (temp.exists() && !temp.delete()) {
+            throw new IOException("No se pudo borrar tmp previo");
+        }
+
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
             for (String line : collect) {
                 bw.write(line);
                 bw.newLine();
             }
+            bw.flush();
         }
 
         if (file.exists() && !file.delete()) {
             throw new IOException("No se pudo reemplazar el CSV anterior");
         }
+
+        // renameTo puede fallar en algunos dispositivos
         if (!temp.renameTo(file)) {
-            throw new IOException("No se pudo renombrar el CSV temporal");
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Files.move(
+                            temp.toPath(),
+                            file.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                    );
+                }
+            } catch (IOException e) {
+                throw new IOException("No se pudo mover el CSV temporal a destino", e);
+            }
         }
     }
 
@@ -165,27 +184,6 @@ public class CsvWriterSimple {
         String[] record2 = {"Dell", "", "Alienware 38 Curved \"Gaming Monitor\"", "6699.00"};
         String[] record3 = {"Samsung", "", "49\" Dual QHD, QLED, HDR1000", "6199.00"};
         String[] record4 = {"Samsung", "", "Promotion! Special Price\n49\" Dual QHD, QLED, HDR1000", "4999.00"};
-
-//        List<String[]> mlist = new ArrayList<>();
-
-//        for (int i = 0 ; i < listA.size(); i++){
-//            List<List> listB = listA.get(i);
-//            int sizB = listB.size();
-//            String[] txList= new String[sizB];
-//            for (int j = 0; j < sizB; j++){
-//                txList[j] = listB.get(j).toString();
-//            }
-//            mlist.add(txList);
-//        }
-
-
-//        list.add(mlist);
-//        list.get(0).add("")
-
-  //      mlist.add(record1);
-//        list.add(record2);
-//        list.add(record3);
-//        list.add(record4);
 
         return list;
 

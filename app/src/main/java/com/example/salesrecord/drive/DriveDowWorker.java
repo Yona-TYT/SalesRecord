@@ -7,6 +7,7 @@ import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ex.DownloadEvents;
 import com.example.salesrecord.ex.Logs;
 import com.example.salesrecord.ex.PreferenceHelper;
@@ -140,37 +141,31 @@ public class DriveDowWorker extends Worker {
                                     .build());
                         }
                         File currFile = new File(filePath + "/" + fName);
-                        downloadFileContents(googleDriveAccessToken, imgFolderId, fId, currFile, fileType, false);
+                        downloadFileContents(
+                                googleDriveAccessToken,
+                                imgFolderId,
+                                fId,
+                                currFile,
+                                fileType,
+                                false,
+                                fName
+                        );
                     }
                 }
             } else {
-                // ===== Archivo DB / CSV / bin =====
+                // ===== Archivo DB =====
                 String driveFileId;
                 if (isId) {
                     driveFileId = fileId;
                 } else {
-                    // Buscar por nombre + mime del archivo (no folder)
                     String fileMime = DriveUtils.getMimeTypeFromFileName(fileName);
-                    // Si getMimeTypeFromFileName devuelve spreadsheet para .csv y en Drive
-                    // lo guardas como octet-stream, prueba así:
                     driveFileId = DriveUtils.getFileIdFromFileName(
-                            googleDriveAccessToken,
-                            fileName,
-                            mFolderId,
-                            fileMime
-                    );
-                    // Fallback: sin filtrar mime (por si el tipo en Drive no coincide)
+                            googleDriveAccessToken, fileName, mFolderId, fileMime);
+
                     if (DriveUtils.isNullOrEmpty(driveFileId)) {
                         driveFileId = DriveUtils.getFileIdFromFileName(
-                                googleDriveAccessToken,
-                                fileName,
-                                mFolderId,
-                                null  // o un método findFileIdByName sin mime
-                        );
+                                googleDriveAccessToken, fileName, mFolderId, null);
                     }
-                    // Mejor aún si tienes getFileMetaFromDrive:
-                    // DriveFileMeta meta = DriveUtils.getFileMetaFromDrive(...);
-                    // driveFileId = meta != null ? meta.id : "";
                 }
 
                 if (DriveUtils.isNullOrEmpty(driveFileId)) {
@@ -185,13 +180,16 @@ public class DriveDowWorker extends Worker {
                             .build());
                 }
 
+                // fileToDownload = path local (DataSave.download.bin)
+                // fileName       = nombre en Drive (DataSave.bin)
                 downloadFileContents(
                         googleDriveAccessToken,
                         mFolderId,
                         driveFileId,
                         fileToDownload,
                         fileType,
-                        isId || isCheck || isPreloader  // forzar descarga en check/preloader si aplica
+                        isId || isCheck || isPreloader,
+                        fileName
                 );
             }
         } catch (Exception e) {
@@ -203,11 +201,17 @@ public class DriveDowWorker extends Worker {
 
         if (success) {
             if (isImg) {
-                EventBus.getDefault().post(
-                        new DownloadEvents.GoogleDrive().succeeded(" Archivos Descargados: ", count));
+                LOG.info("Google Drive - Archivos Descargados: " + count);
+
+                // Retornamos el éxito empaquetando el conteo de forma nativa
+                return Result.success(new Data.Builder()
+                        .putString("result_message", "Imágenes descargadas con éxito")
+                        .putInt("downloaded_count", count)
+                        .putBoolean("is_img", true)
+                        .build());
             }
             return Result.success(new Data.Builder()
-                    .putString(KEY_RESULT_MESSAGE, "")
+                    .putString(KEY_RESULT_MESSAGE, "DriveDowWorker")
                     .putBoolean(KEY_IS_PRELOADER, isPreloader)
                     .putBoolean(KEY_IS_NEW_OBJ, isNewObj)
                     .putBoolean(KEY_IS_CHECK, isCheck)
@@ -235,47 +239,58 @@ public class DriveDowWorker extends Worker {
     }
 
     // Método para descargar un archivo desde Google Drive
-    public int downloadFileContents(String accessToken, String folderId, String mFileId, File mFile, String mType, boolean isId) throws Exception {
+    public int downloadFileContents(
+            String accessToken,
+            String folderId,
+            String mFileId,
+            File mFile,
+            String mType,
+            boolean forceDownload,
+            String remoteName
+    ) throws Exception {
 
+        // Nombre en Drive (DataSave.bin). NUNCA uses mFile.getName() si es .download.bin
+        if (remoteName == null || remoteName.isEmpty()) {
+            remoteName = StartVar.EXPORT_NAME;
+        }
 
-        if(!isId) {
-            // 1. Obtener metadatos del archivo en Drive (incluye modifiedTime)
+        if (!forceDownload) {
             DriveFileMeta driveFile = DriveUtils.getFileMetaFromDrive(
                     accessToken,
-                    mFile.getName(),   // Usamos el nombre del archivo
+                    remoteName,
                     folderId
             );
+
             if (driveFile == null) {
-                LOG.warn("No se pudieron obtener metadatos del archivo en Drive. Se procederá a descargar.");
+                LOG.warn("Sin metadatos en Drive para " + remoteName + ". Se descarga igual.");
             } else {
                 LOG.debug("Fecha en Drive: {}", driveFile.modifiedTime);
 
-                //DriveUtils.copyToClipboard(mContext, mFile.getName()+driveFile.md5Checksum+" ?"+ driveFile.md5Checksum +" "+DriveUtils.getLocalFileMd5(mFile), mFile.getName());
-                //copyToClipboard(mContext, localFile.getName()+" "+ driveFile.md5Checksum +" "+GoogleDriveFileHelper.getLocalFileMd5(localFile), localFile.getName());
-
-                // 2. Comparar fechas si el archivo local existe
                 if (mFile.exists() && driveFile.hasModifiedTime()) {
-                    long localLastModified = mFile.lastModified();           // milisegundos
-                    long driveLastModified = DriveUtils.parseGoogleDriveTime(driveFile.modifiedTime); // milisegundos
-
-                    LOG.debug("Fecha local : {}", new java.util.Date(localLastModified));
+                    long localLastModified = mFile.lastModified();
+                    long driveLastModified = DriveUtils.parseGoogleDriveTime(driveFile.modifiedTime);
 
                     if (driveLastModified <= localLastModified) {
-                        LOG.info("✅ Archivo local está actualizado. No se descargará.");
+                        LOG.info("Local actualizado. No se descarga: " + mFile.getName());
                         count--;
-                        return 0;   // No necesita descargar
-                    } else {
-                        if (driveFile.md5Checksum.equals(DriveUtils.getLocalFileMd5(mFile))) {
-                            count--;
-                            return 0;   // No necesita descargar
-                        }
-
-                        LOG.info("🔄 Archivo en Drive es más reciente. Procediendo a descargar...");
+                        return 0;
                     }
+
+                    String localMd5 = DriveUtils.getLocalFileMd5(mFile);
+                    if (driveFile.md5Checksum != null
+                            && localMd5 != null
+                            && driveFile.md5Checksum.equalsIgnoreCase(localMd5)) {
+                        LOG.info("MD5 igual. No se descarga: " + mFile.getName());
+                        count--;
+                        return 0;
+                    }
+
+                    LOG.info("Drive más reciente. Descargando → " + mFile.getAbsolutePath());
                 }
             }
         }
 
+        // Escribe en mFile = DataSave.download.bin (path que vino en input "path")
         return DriveUtils.downloadFileFromDrive(accessToken, mFileId, mFile, mType);
     }
 }

@@ -46,6 +46,7 @@ import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.QrActivity;
 import com.example.salesrecord.adapters.SaleMainAdapter;
 import com.example.salesrecord.adapters.SaleResultAdapter;
+import com.example.salesrecord.adapters.SearchAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.databinding.FragmentHomeBinding;
 import com.example.salesrecord.db.Article;
@@ -126,6 +127,7 @@ public class HomeFragment extends Fragment {
     private EditText mInput3;
 
     private double mTotal = 0;
+    private double saveDollar = 0.0;
 
     // Almacenamiento real (3 cajas independientes)
     private final ArrayList<Obj>[] allSlots = new ArrayList[3];
@@ -154,6 +156,7 @@ public class HomeFragment extends Fragment {
         super.onSaveInstanceState(outState);
 
         outState.putInt("curr_slot", currSlot);
+        outState.putDouble("curr_doll", StartVar.mDollar);
 
         for (int i = 0; i < 3; i++) {
             if (allSlots[i] != null) {
@@ -261,6 +264,8 @@ public class HomeFragment extends Fragment {
 
         if (savedInstanceState != null) {
             initSlots(false); // listas vacías base
+
+            StartVar.mDollar = savedInstanceState.getDouble("curr_doll", 0.0);;
 
             currSlot = savedInstanceState.getInt("curr_slot", 0);
             if (currSlot < 0 || currSlot > 2) currSlot = 0;
@@ -913,7 +918,7 @@ public class HomeFragment extends Fragment {
 
 
         // 2. Crear y asignar el adaptador
-        ArrayAdapter<String> clientAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, clientNames);
+        SearchAdapter clientAdapter = new SearchAdapter(requireContext(), clientNames);
         mListV2.setAdapter(clientAdapter);
 
         // 3. Filtrado dinámico y control de visibilidad en tiempo real
@@ -941,7 +946,7 @@ public class HomeFragment extends Fragment {
 
         // 4. Guardar selección al hacer click en un nombre de la lista
         mListV2.setOnItemClickListener((parent, view1, position, id) -> {
-            String selectedName = clientAdapter.getItem(position);
+            String selectedName = (String) clientAdapter.getItem(position);
             mInput3.setText(selectedName);
             mInput3.setSelection(mInput3.getText().length()); // Mueve el cursor al final
             mListV2.setVisibility(View.GONE); // Ocultamos la lista ya seleccionada
@@ -1035,13 +1040,11 @@ public class HomeFragment extends Fragment {
             mButt4.setEnabled(true);
             mSpinn1.setEnabled(true);
         }
-
         double total = 0.0;
         for (Obj obj : list) {
             double price = MathUtls.addPercentage(obj.price, obj.margen);
             total = total + ( price * obj.saleCount);
         }
-
         mTotal = total;
         return total;
     }
@@ -1106,7 +1109,7 @@ public class HomeFragment extends Fragment {
                 }
                 if(b){
                 String cltId = DatabaseUtils.generateId("cltID", daoClt);
-                mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 0, "");
+                mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 1, 0);
                 }
             }
 
@@ -1141,13 +1144,36 @@ public class HomeFragment extends Fragment {
             String strCltId = "@null";
             if (mCl != null){
                 strClt = mCl.cliente;
+
+                float points = 0f;
+
+                switch (currSel1) {
+                    case 0: // PAGADO
+                        points = (float) (total * GlobalData.pointPay);
+                        break;
+                    case 1: // SIN PAGAR
+                        points = (float) (total * GlobalData.pointNoPay);
+                        break;
+                    case 2: // PÉRDIDA
+                        points = (float) (total * GlobalData.pointLost);
+                        break;
+                    default:
+                        points = 0f;
+                        break;
+                }
+
+                // Sumamos los nuevos puntos a los puntos que el cliente ya tenía acumulados
+                mCl.level += points;
+                mCl.ulfech = currDate;
+                mCl.count += 1;
+
                 daoClt.insertUser(mCl);
                 mList.add(mCl);
             }
 
             Sale mSal = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
-                    total, StartVar.mDollar, currSel1, "", currTime, strCltId, 0, "", currDate
+                    total, StartVar.mDollar, currSel1, "", currTime, strCltId, cltNr, "", currDate
             );
 
             //Se restauran los elementos
@@ -1167,19 +1193,14 @@ public class HomeFragment extends Fragment {
 
             //Se actualiza la lista de fechas si esta no existe
             Fecha objB = CalendUtls.getAndCreateDate(contex, 0);
-
             mList.add(objB);
-
             GlobalData.getInstance(getContext()).getGenericQueue().enqueueList(mList, 3);
-
             return true;
-
         } else {
             Msg.m("Aqui no hay aqui no hay !: "+crrSale );
         }
         return false;
     }
-
 
     private void initSlots(boolean noClear) {
         if(noClear){
@@ -1215,7 +1236,6 @@ public class HomeFragment extends Fragment {
             mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
             mListV1.setAdapter(mAdapter2);
         }
-
         refreshAllUI();
     }
 

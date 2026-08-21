@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activitys.ClientListActivity">
+
+
+    <Spinner
+        android:id="@+id/clt_select1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/spinner_hs"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@+id/clt_select2" />
+
+    <Spinner
+        android:id="@+id/clt_select2"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/spinner_hs"
+        android:layout_marginTop="10dp"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/clt_select1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+    <!-- TextView posicionado justo debajo de clt_select1 -->
+    <TextView
+        android:id="@+id/txview_clts1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="2dp"
+        android:text="Total:"
+        android:textSize="@dimen/inner_text_2"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/clt_select1" />
+
+    <TextView
+        android:id="@+id/txview_clts2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="2dp"
+        android:text="Inflación:"
+        android:textSize="@dimen/inner_text_2"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/txview_clts1" />
+
+
+    <TextView
+        android:id="@+id/txview_clts3"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:padding="2dp"
+        android:text="Datos de Pago con QR:"
+        android:textSize="@dimen/inner_text_2"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="10dp"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:visibility="gone"
+        app:layout_constraintHorizontal_weight="1.5"
+
+        app:layout_constraintBottom_toTopOf="@+id/clt_viewList"
+        app:layout_constraintEnd_toStartOf="@id/butt_clts0"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/txview_clts2" />
+
+    <ImageButton
+        android:id="@+id/butt_clts0"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:layout_marginStart="0dp"
+        android:enabled="true"
+        android:src="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
+        android:scaleType="centerInside"
+        android:padding="0dp"
+        android:background="@color/button"
+        android:visibility="gone"
+
+        app:layout_constraintHorizontal_weight="0.3"
+        app:layout_constraintTop_toTopOf="@id/txview_clts3"
+        app:layout_constraintBottom_toBottomOf="@id/txview_clts3"
+        app:layout_constraintStart_toEndOf="@id/txview_clts3"
+        app:layout_constraintEnd_toStartOf="@id/butt_clts1" />
+
+    <ImageButton
+        android:id="@+id/butt_clts1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:layout_marginStart="5dp"
+        android:enabled="true"
+        android:src="@drawable/ic_qr_scan"
+        android:scaleType="centerInside"
+        android:padding="3dp"
+        android:background="@color/button"
+        android:visibility="gone"
+
+        app:layout_constraintHorizontal_weight="0.3"
+        app:layout_constraintTop_toTopOf="@id/butt_clts0"
+        app:layout_constraintBottom_toBottomOf="@id/butt_clts0"
+        app:layout_constraintStart_toEndOf="@id/butt_clts0"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+
+
+
+
+    <!-- ListView ahora inicia correctamente debajo de txview_clts1 y llena el espacio restante -->
+    <ListView
+        android:id="@+id/clt_viewList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/butt_clts1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="10dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="10dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

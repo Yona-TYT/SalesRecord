@@ -38,8 +38,12 @@ public class GlobalData {
     public static String glCodeBank = "";
     public static String glNameBank = "";
 
-    public static final int glCritical = 3;
+    public static  boolean shouldReload = true;
 
+    public static final int glCritical = 3;
+    public static final float pointPay = 0.05f;
+    public static final float pointNoPay = 0.01f;
+    public static final float pointLost = 0.001f;
 
     public Article currArt = null;
     public String currSalId = "";

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Msg {
+    private static final String TAG = "Msg";
 
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static final Queue<MsgItem> messageQueue = new LinkedList<>();
@@ -61,9 +63,26 @@ public class Msg {
     public static void m() {
         msgInternal("Aqui Hay Aqui Hay !!", true, 1);
     }
+    public static void d(String tag, String msg) {
+        msgInternal(tag+": "+msg, true, 1);
+    }
+
 
     // ====================== MÉTODO PRINCIPAL ======================
     public static void msgInternal(String msg, boolean isClipboard, int length) {
+        String claseExterna = "Desconocido";
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        if (stackTrace.length > 3) {
+            StackTraceElement caller = stackTrace[3];
+
+            // Obtenemos el nombre simple de la clase (ej: "SetDb" en lugar de "com.example...SetDb")
+            claseExterna = caller.getClassName();
+            if (claseExterna.contains(".")) {
+                claseExterna = claseExterna.substring(claseExterna.lastIndexOf(".") + 1);
+            }
+        }
+        Log.e(TAG, claseExterna+" Message: "+ msg);
+
         if (msg == null || msg.trim().isEmpty() || mContext == null) return;
 
         mainHandler.post(() -> {

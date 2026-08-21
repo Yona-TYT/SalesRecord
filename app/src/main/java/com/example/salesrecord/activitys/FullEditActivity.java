@@ -33,6 +33,7 @@ import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
@@ -49,6 +50,8 @@ public class FullEditActivity extends AppCompatActivity {
 
     // DB
     private DaoArt daoArt;
+    private Article crrArt;
+    private Article oldArt;
 
     private EditText mInput1;
     private EditText mInput2;
@@ -77,8 +80,6 @@ public class FullEditActivity extends AppCompatActivity {
     private int currSel2 = 0;
 
     private Button mBtn1;
-
-    private Article crrArt;
 
     private Context contex;
 
@@ -140,6 +141,7 @@ public class FullEditActivity extends AppCompatActivity {
         mBtn1 = findViewById(R.id.full_btn_1);
 
         crrArt = glData.getCurrArt();
+        oldArt = new Article(crrArt);
 
         spinL1 = glData.categ;
         spinL2 = glData.unitList;
@@ -332,7 +334,7 @@ public class FullEditActivity extends AppCompatActivity {
                         // Nueva imagen elegida con el picker
                         if (currUri != null) {
                             bitmap = MediaStore.Images.Media.getBitmap(contex.getContentResolver(), currUri);
-                            sImage = mFileM.SavePhoto(bitmap, crrArt.article, oldFile, contex, contex.getContentResolver());
+                            sImage = mFileM.SavePhoto(bitmap, crrArt.article);
                         } else if (sImage != null && !sImage.isEmpty()) {
                             // Se mantiene la imagen anterior
                             oldFile = Uri.parse(sImage);
@@ -351,10 +353,17 @@ public class FullEditActivity extends AppCompatActivity {
 
                     Log.d("DB_INSTANCE", "Hash: " + System.identityHashCode(StartVar.appDBall));
 
-                    daoArt.update(crrArt);
-
                     glData.setCurrArt(crrArt);
                     glData.setIsEdit(true);
+                    GlobalData.shouldReload = false;
+                    // Evitar encolar si no hubo cambio
+                    if (DatabaseUtils.isIdentical(crrArt, oldArt)) {
+                        //Msg.d("Art", "Sin cambios en datos");
+                        finish();
+                        return;
+                    }
+
+                    daoArt.update(crrArt);
 
                     //Basic.msg(daoArt.getUsers(crrArt.uid).nombre, true);
 

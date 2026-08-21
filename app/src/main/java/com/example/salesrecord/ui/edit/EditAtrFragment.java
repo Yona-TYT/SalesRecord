@@ -31,6 +31,7 @@ import com.example.salesrecord.adapters.SummaryAdapter;
 import com.example.salesrecord.databinding.FragmentEditBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Conf;
+import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoCfg;
 import com.example.salesrecord.utls.Basic;
@@ -84,6 +85,7 @@ public class EditAtrFragment extends Fragment {
     private Button acepButt;
 
     private Article crrArt;
+    private Article oldArt;
     private Conf mConf;
     private DaoCfg daoCfg;
 
@@ -190,13 +192,16 @@ public class EditAtrFragment extends Fragment {
             // Quiere abrir la calculadora
             if (visible) {
                 isMarg = true;
-                binding.searchBar.setVisibility(View.GONE);
+                searchBar.setVisibility(View.GONE);
+                mSw1.setVisibility(View.GONE);
+
                 binding.topPanel.setVisibility(View.VISIBLE);
                 return;
             }
 
             // Quiere cerrar (visible == false)
-            binding.searchBar.setVisibility(View.VISIBLE);
+            searchBar.setVisibility(View.VISIBLE);
+            mSw1.setVisibility(View.VISIBLE);
             binding.topPanel.setVisibility(View.GONE);
         });
 
@@ -323,7 +328,9 @@ public class EditAtrFragment extends Fragment {
                 mAdapter1.setSelectedPos(position);
 
                 if (item != null){
-                    crrArt = daoArt.getUsers(item.id);
+                    Article tempArt = daoArt.getUsers(item.id);
+                    crrArt = tempArt;
+                    oldArt = new Article(tempArt);
 
                     if (crrArt != null){
 
@@ -502,6 +509,11 @@ public class EditAtrFragment extends Fragment {
                 crrArt.staus = (mSw3.isChecked() ? 1 : 0);
 
                 glData.setIsEdit(true);
+                // Evitar encolar si no hubo cambio
+                if (DatabaseUtils.isIdentical(crrArt, oldArt)) {
+                    //Msg.d("Art", "Sin cambios en datos");
+                    return;
+                }
 
                 daoArt.update(crrArt);
 

@@ -1,6 +1,5 @@
 package com.example.salesrecord.utls;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,15 +7,10 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.PickVisualMediaRequest;
-import androidx.activity.result.contract.ActivityResultContracts;
-
 import com.example.salesrecord.CsvWriterSimple;
+import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.activitys.MainActivity;
 import com.opencsv.CSVReader;
@@ -29,311 +23,70 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
-public class FilesManager extends MainActivity implements View.OnClickListener{
+public class FilesManager {
 
-    public static ImageView mImgPrev;
-    public static Uri currUri;
+    private final Context context;
 
-    public FilesManager(){
+    /**
+     * Constructor vacío para tareas de fondo (como DriveManager, WorkManager o hilos pool).
+     */
+    public FilesManager() {
+        this.context = null;
     }
 
-    public void setImgPicker(ImageView mImg, View mView){
-        mView.setTag("pick");
-        mView.setOnClickListener(this);
-        FilesManager.mImgPrev = mImg;
+    /**
+     * Constructor con Context para cuando requieras interactuar con la UI o lógica local.
+     */
+    public FilesManager(Context context) {
+        this.context = context != null ? context.getApplicationContext() : null;
     }
 
     public String getImage(String sImage, ImageView mImgPrev) {
-        if (!sImage.isEmpty()) {
-            Uri mUri = Uri.fromFile(new File(sImage));
-            try {
-                if (isBlockedPath(this, sImage)) {
-                    mImgPrev.setImageURI(mUri);
-                    return  sImage;
-                }
-                else {
-                    Log.d("PhotoPicker", "noooooo hayyyyyyyyyy: " + sImage);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        // Si no hay contexto o el string está vacío, no procesamos la UI
+        if (context == null || sImage.isEmpty()) return sImage;
+
+        Uri mUri = Uri.fromFile(new File(sImage));
+        try {
+            if (isBlockedPath(sImage)) {
+                mImgPrev.setImageURI(mUri);
+                return sImage;
+            } else {
+                Log.d("PhotoPicker", "noooooo hayyyyyyyyyy: " + sImage);
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return sImage;
     }
 
-    public String SavePhoto(Bitmap bmp, String fName, Uri oldFile, Context contex, ContentResolver resolver){
+    /**
+     * Guarda un objeto Bitmap en el almacenamiento local dentro de la carpeta Documents de la app.
+     */
+    public String SavePhoto(Bitmap bmp, String fName) {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/");
+        boolean isDiralloway = path.exists() || path.mkdir();
 
-        //Creamos el directorio para los archivos
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+ StartVar.dirAppName+"/");
-        boolean isDiralloway = true;
-        if(!path.exists()){
-            isDiralloway = path.mkdir();
-        }
-        //------------------------------------------
-
-        //Si se crea correctamente entonces procede a escribir
-        if(isDiralloway) {
+        if (isDiralloway) {
             File file = new File(path, fName);
-            FileOutputStream stream = null;
-
-//            Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy 11100------------------------: " );
-
-            try {
-                stream = new FileOutputStream(file);
-
-                // Use the compress method on the BitMap object to write image to the OutputStream
-                if(!bmp.compress(Bitmap.CompressFormat.JPEG, 95, stream)){
-                    throw new RuntimeException("Could Save Bit map");
-                }
-                else {
+            try (FileOutputStream stream = new FileOutputStream(file)) {
+                if (!bmp.compress(Bitmap.CompressFormat.JPEG, 95, stream)) {
+                    throw new RuntimeException("Could Not Save Bit map");
+                } else {
                     return file.getAbsolutePath();
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-            }
-            finally {
-                try {
-                    stream.close();
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
         return "";
     }
 
-    public File csvExport(List<String[]> list) throws IOException {
-        // Definimos la class
-        CsvWriterSimple write = new CsvWriterSimple();
-
-        //Creamos el directorio para los archivos
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+ StartVar.dirAppName+"/");
-        boolean isDiralloway = true;
-        if(!path.exists()){
-            isDiralloway = path.mkdir();
-        }
-        //------------------------------------------
-
-        //Si se crea correctamente entonces procede a escribir
-        if(isDiralloway) {
-            LocalDate currdate = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                currdate = LocalDate.now();
-            }
-            String name = (currdate == null? StartVar.csvAppName : "DataSave_"+currdate.toString()+".csv" );
-            File file = new File(path, name);
-            write.writeToCsvFile(list, file);
-            return file;
-        }
-        //-----------------------------------------------------------
-        return null;
-    }
-
-    public File csvExport(List<String[]> list, String fileName) throws IOException {
-        // Definimos la class
-        CsvWriterSimple write = new CsvWriterSimple();
-
-        File path = directoryCreate();
-
-        //Si se crea correctamente entonces procede a escribir
-        if (path != null) {
-            String myName = "CowData_Save.csv";
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                myName = "CowData_" + LocalDate.now().toString() + "_" + (LocalTime.now().toString().replaceAll("\\D", "_")) + ".csv";
-            }
-            File file = new File(path, fileName.isEmpty() ? myName : fileName);
-            write.writeToCsvFile(list, file);
-            return file;
-        }
-        //-----------------------------------------------------------
-        return null;
-    }
-
-    public static File directoryCreate() {
-        //Creamos el directorio para los archivos
-
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS+"/"+StartVar.dirAppName+"/");
-        boolean isDiralloway = true;
-        if (!path.exists()) {
-            isDiralloway = path.mkdir();
-        }
-
-        if(!isDiralloway){
-            return null;
-        }
-        return path;
-    }
-
-    public boolean csvImport(String dir) throws IOException, CsvValidationException {
-        Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy ------------------------: "+ dir );
-
-        //Se detecta si el archivo existe
-        File file = new File(dir);
-        if(file.exists()){
-            CSVReader reader = new CSVReader(new FileReader(file));
-            String[] nextLine;
-            while ((nextLine = reader.readNext()) != null) {
-                // nextLine[] is an array of values from the line
-                //System.out.println(nextLine[0] + nextLine[1] + "etc...");
-                Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy ------------------------: "+ nextLine[0] );
-            }
-        }
-        //-----------------------------------------------------------
-        return true;
-    }
-
-    public static void DeleteFile(File file) {
-
-        if (file.isDirectory()) {
-            String[] children = file.list();
-            for (int i = 0; i < children.length; i++) {
-                File currFile = new File(file, children[i]);
-                String name = currFile.getName();
-                if(name.endsWith(".csv")) {
-                    //Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy ------------------------: " + name);
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                        boolean threis = currFile.exists();
-                        if(threis) {
-                            currFile.delete();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-    public void RemoveFile(String dir, ContentResolver resolver) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-           // Log.d("PhotoPicker", " =======================Aquiiiiiiiiii Hayyyyyy 11100------------------------: " );
-            File file = new File(dir);
-            boolean threis = file.exists();
-            if(threis) {
-                file.delete();
-            }
-        }
-    }
-    public boolean nameCompare(String a, String b) {
-        // Paths that should rarely be exposed
-        if (a.startsWith(b)){
-            return true;
-        }
-        return false;
-    }
-
-    boolean isBlockedPath(Context ctx, String dir) {
-        // Paths that should rarely be exposed
-        return dir.startsWith("content://media/" + MediaStore.VOLUME_EXTERNAL_PRIMARY) || dir.startsWith("/storage/emulated/0/Documents/");
-    }
-
-    @Override
-    public void onClick(View view) {
-        Object itemTag = view.getTag();
-        if (Objects.equals((String)itemTag, "pick")) {
-            if (StartVar.mPermiss){
-                // Launch the photo picker and let the user choose only images.
-                //fmang.FilesManager();
-                pickMedia.launch(new PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
-            }
-            else{
-                Msg.m("Error Permiso Denegado!");
-            }
-        }
-    }
-
-    // Registers a photo picker activity launcher in single-select mode.
-    ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
-            registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
-                // Callback is invoked after the user selects a media item or closes the
-                // photo picker.
-                if (uri != null) {
-                    Log.d("PhotoPicker", "Selected URI: " + uri);
-                    FilesManager.mImgPrev.setImageURI(uri);
-                    FilesManager.currUri = uri;
-                }
-                else {
-                    Log.d("PhotoPicker", "No media selected");
-                }
-            });
-
-
-    // Método para copiar el archivo con un nuevo nombre
-    public static File getNewFile(String rutaOriginal, String newName, Context context) throws IOException {
-        File originalFile = new File(rutaOriginal);
-        if (!originalFile.exists()) {
-            return null; // El archivo original no existe
-        }
-
-        // Crear un nuevo archivo en el directorio de caché o almacenamiento interno
-        File newFile = new File(context.getCacheDir(), newName);
-        // Copiar contenido del archivo original al nuevo archivo
-        try (FileInputStream in = new FileInputStream(originalFile);
-             FileOutputStream out = new FileOutputStream(newFile)) {
-            byte[] buffer = new byte[1024];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
-        }
-        return newFile;
-    }
-
-    public static File getFileFromUri(Context context, Uri uri) throws IOException {
-        // Verificar si la Uri es null
-        if (uri == null) {
-            throw new IOException("Uri es null");
-        }
-
-        // Obtener el ContentResolver
-        String fileName = getFileName(context, uri);
-        File file = new File(context.getCacheDir(), fileName != null ? fileName : "temp_file");
-
-        // Copiar el contenido de la Uri a un archivo temporal
-        try (InputStream inputStream = context.getContentResolver().openInputStream(uri);
-             FileOutputStream outputStream = new FileOutputStream(file)) {
-            if (inputStream != null) {
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-            }
-        }
-
-        return file;
-    }
-
-    // Método para obtener el nombre del archivo desde la Uri (opcional)
-    private static String getFileName(Context context, Uri uri) {
-        String fileName = null;
-        String[] projection = { android.provider.MediaStore.MediaColumns.DISPLAY_NAME };
-
-        try (android.database.Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int nameIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.MediaColumns.DISPLAY_NAME);
-                fileName = cursor.getString(nameIndex);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return fileName;
-    }
-
-    public static String getMimeType(File file) {
-        String extension = MimeTypeMap.getFileExtensionFromUrl(file.getAbsolutePath());
-        if (extension != null) {
-            return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-        }
-        return "application/octet-stream";
-    }
 
     public static void setImageView(String path, ImageView view){
         File imgFile = new File(path);
@@ -342,6 +95,152 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             view.setImageBitmap(myBitmap);
         }
+    }
+
+    public File csvExport(List<String[]> list, String fileName) throws IOException {
+        if (list == null || list.isEmpty()) {
+            Log.e("FilesManager", "csvExport: lista vacía");
+            return null;
+        }
+
+        File path = directoryCreate();
+        if (path == null) {
+            Log.e("FilesManager", "csvExport: no se pudo crear directorio");
+            return null;
+        }
+
+        String myName = StartVar.csvAppName;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            myName = StartVar.fileName
+                    + LocalDate.now()
+                    + "_"
+                    + LocalTime.now().toString().replaceAll("\\D", "_")
+                    + ".csv";
+        }
+
+        File file = new File(path, (fileName == null || fileName.isEmpty()) ? myName : fileName);
+
+        // 1) Quitar el archivo anterior (mismo nombre = DataSave.bin siempre)
+        if (file.exists() && !file.delete()) {
+            Log.w("FilesManager", "No se pudo borrar previo: " + file.getAbsolutePath());
+        }
+
+        // 2) Escritura limpia (CsvWriterSimple debe crear el file de cero)
+        CsvWriterSimple write = new CsvWriterSimple();
+        write.writeToCsvFile(list, file);
+
+        if (!file.exists() || file.length() == 0) {
+            Log.e("FilesManager", "csvExport: archivo vacío o no creado");
+            return null;
+        }
+
+        // 3) Sync REAL sobre el file ya escrito (append = false, solo para forzar flush a disco)
+        try (FileOutputStream fos = new FileOutputStream(file, true)) {
+            // no escribir bytes; solo obtener el FD del file existente
+            fos.getFD().sync();
+        } catch (Exception e) {
+            Log.w("FilesManager", "sync opcional falló: " + e.getMessage());
+        }
+
+        file.setLastModified(System.currentTimeMillis());
+
+        Log.d("FilesManager", "csvExport OK: " + file.getName()
+                + " size=" + file.length());
+
+        return file;
+    }
+
+    public File csvExport(List<String[]> list) throws IOException {
+        CsvWriterSimple write = new CsvWriterSimple();
+
+
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/");
+        boolean isDiralloway = path.exists() || path.mkdir();
+
+        if (isDiralloway) {
+            LocalDate currdate = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                currdate = LocalDate.now();
+            }
+            String name = (currdate == null ? StartVar.csvAppName : StartVar.fileName+"_" + currdate.toString() + ".csv");
+            File file = new File(path, name);
+            write.writeToCsvFile(list, file);
+            return file;
+        }
+        return null;
+    }
+    public static File directoryCreate() {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS + "/" + StartVar.dirAppName + "/");
+        boolean isDiralloway = path.exists() || path.mkdir();
+        return isDiralloway ? path : null;
+    }
+
+    public boolean csvImport(String dir) throws IOException, CsvValidationException {
+        Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy ------------------------: " + dir);
+        File file = new File(dir);
+        if (file.exists()) {
+            try (CSVReader reader = new CSVReader(new FileReader(file))) {
+                String[] nextLine;
+                while ((nextLine = reader.readNext()) != null) {
+                    Log.d("PhotoPicker", " Aquiiiiiiiiii Hayyyyyy ------------------------: " + nextLine[0]);
+                }
+            }
+        }
+        return true;
+    }
+
+    public static void DeleteFile(File file) {
+        if (file.isDirectory()) {
+            String[] children = file.list();
+            if (children != null) {
+                for (String child : children) {
+                    File currFile = new File(file, child);
+                    if (currFile.getName().endsWith(".csv") && currFile.exists()) {
+                        currFile.delete();
+                    }
+                }
+            }
+        }
+    }
+
+    public void RemoveFile(String dir) {
+        File file = new File(dir);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    public boolean nameCompare(String a, String b) {
+        return a.startsWith(b);
+    }
+
+    private boolean isBlockedPath(String dir) {
+        return dir.startsWith("content://media/" + MediaStore.VOLUME_EXTERNAL_PRIMARY) || dir.startsWith("/storage/emulated/0/Documents/");
+    }
+
+    /**
+     * Copia un archivo original y lo guarda con un nuevo nombre en el directorio de la aplicación.
+     */
+    public static File getNewFile(String rutaOriginal, String newName) throws IOException {
+        File originalFile = new File(rutaOriginal);
+        if (!originalFile.exists()) {
+            return null;
+        }
+
+        File destinationDir = directoryCreate();
+        if (destinationDir == null) {
+            return null;
+        }
+
+        File destFile = new File(destinationDir, newName);
+
+        // Copiado de archivos rápido a nivel de canales de NIO
+        try (FileChannel sourceChannel = new FileInputStream(originalFile).getChannel();
+             FileChannel destChannel = new FileOutputStream(destFile).getChannel()) {
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        }
+
+        return destFile;
     }
 
     public static boolean isCsvSafeToUpload(File csvFile) {
@@ -404,5 +303,4 @@ public class FilesManager extends MainActivity implements View.OnClickListener{
         }
         return true;
     }
-
 }

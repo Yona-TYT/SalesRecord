@@ -48,5 +48,28 @@ public class DatabaseUtils {
         // dao.deleteAll();  // Implementa si lo necesitas
     }
 
-    // Puedes agregar más: validaciones de schema, backups, migraciones helpers, etc.
+    /**
+     * Compares two entities safely to check if their data is identical.
+     * Prevents unnecessary Room database writes if no changes occurred.
+     *
+     * @param oldEntity The currently stored object (can be null)
+     * @param newEntity The object with new data (can be null)
+     * @return true if data is identical, false if there are changes
+     */
+    public static <T> boolean isIdentical(T oldEntity, T newEntity) {
+        return java.util.Objects.equals(oldEntity, newEntity);
+    }
+
+    /**
+     * Compares two lists of entities to check if database content has changed.
+     * Useful before executing bulk inserts or sync operations.
+     *
+     * @param oldList Current list in Room
+     * @param newList New list received (e.g., from server API)
+     * @return true if lists contain the exact same data in the same order
+     */
+    public static <T> boolean isListIdentical(List<T> oldList, List<T> newList) {
+        return java.util.Objects.equals(oldList, newList);
+    }
+
 }

@@ -14,138 +14,111 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SearchAdapter extends BaseAdapter implements Filterable {
-    //Test------------------------------------------------------------
-    private Context mContex;
 
-    private List<String[]> textList = new ArrayList<>();
-    private List<String[]>  currList = new ArrayList<>(); // Original Values
+    private final Context mContext;
+    private final List<String> originalList;      // Lista original
+    private List<Integer> filteredIndexes;        // Índices filtrados
 
-    private ArrayList<Integer> newList = new ArrayList<>();    // Values to be displayed
+    public SearchAdapter(Context context, List<String> textList) {
+        this.mContext = context;
+        this.originalList = textList != null ? textList : new ArrayList<>();
+        this.filteredIndexes = new ArrayList<>();
 
-    public  SearchAdapter(Context mContex, List<String[]> textList){
-        this.mContex = mContex;
-        this.textList = textList;
-        this.currList = textList;
+        // Al inicio mostramos todos
+        for (int i = 0; i < originalList.size(); i++) {
+            filteredIndexes.add(i);
+        }
     }
 
     @Override
-    public int getCount(){
-        return newList.size();
+    public int getCount() {
+        return filteredIndexes.size();
     }
 
     @Override
-    public Object getItem(int pos){
-        return newList;
+    public Object getItem(int position) {
+        int originalIndex = filteredIndexes.get(position);
+        return originalList.get(originalIndex);
     }
 
     @Override
-    public long getItemId(int i) {
-        return newList.get(i);
+    public long getItemId(int position) {
+        return filteredIndexes.get(position);
     }
 
     @Override
-    public View getView(int pos, View convertView, ViewGroup parent){
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
 
-        //Log.d("PhotoPicker", "Ya hay ? 11111------------------------: "+ newList.size() + " ::" + pos);
-        TextView text = new TextView(mContex);
-        LinearLayout layout = new LinearLayout(mContex);
-        // Se ajustan los parametros del Texto ----------------------------------
+        if (convertView == null) {
+            LinearLayout layout = new LinearLayout(mContext);
+            layout.setOrientation(LinearLayout.HORIZONTAL);
+            layout.setPadding(10, 8, 10, 8);
 
-        text.setText(textList.get(newList.get(pos))[0]);
-        text.setTypeface(Typeface.DEFAULT_BOLD);
-        text.setGravity(Gravity.CENTER);
-        text.setTextSize(18);
-        text.setPadding(10,5,10,5);
-        layout.setOrientation(LinearLayout.HORIZONTAL);
-        layout.addView(text);
-        layout.setVisibility(View.VISIBLE);
+            TextView text = new TextView(mContext);
+            text.setTypeface(Typeface.DEFAULT_BOLD);
+            text.setGravity(Gravity.CENTER);
+            text.setTextSize(18);
+            text.setPadding(10, 5, 10, 5);
 
-        //-----------------------------------------------------------------------
+            layout.addView(text);
 
-//        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(20, 20);
-///       params.topMargin = 0;
-////        params.bottomMargin = 0;
-//        text.setLayoutParams(params);
-//        layout.removeAllViews();
-        return layout;
+            holder = new ViewHolder();
+            holder.textView = text;
+            layout.setTag(holder);
+
+            convertView = layout;
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
+
+        int originalIndex = filteredIndexes.get(position);
+        String item = originalList.get(originalIndex);
+
+        holder.textView.setText(item);
+
+        return convertView;
     }
 
-//    @Override
-//    public View getView(int pos, View convertView, ViewGroup parent){
-//
-//        // Log.d("PhotoPicker", "Ya hay ? 11111------------------------: "+ newList.size());
-//        TextView text = new TextView(mContex);
-//        LinearLayout layout = new LinearLayout(mContex);
-//        // Se ajustan los parametros del Texto ----------------------------------
-//        layout.setVisibility(View.INVISIBLE);
-//        for(int i = 0; i < newList.size(); i++) {
-//            if(pos == newList.get(i)){
-//                //Log.d("PhotoPicker", "Name test ------------------------: " + pos + " -- "+ textList.get(pos));
-//                text.setText(textList.get(pos)[0]);
-//                text.setTypeface(Typeface.DEFAULT_BOLD);
-//                text.setGravity(Gravity.CENTER);
-//                text.setTextSize(18);
-//                text.setPadding(10,5,10,5);
-//                layout.setOrientation(LinearLayout.HORIZONTAL);
-//                layout.addView(text);
-//                layout.setVisibility(View.VISIBLE);
-//                return layout;
-//            }
-//        }
-//
-//        //-----------------------------------------------------------------------
-//
-////        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(20, 20);
-/////       params.topMargin = 0;
-//////        params.bottomMargin = 0;
-////        text.setLayoutParams(params);
-////        layout.removeAllViews();
-//        return layout;
-//    }
-//
+    private static class ViewHolder {
+        TextView textView;
+    }
+
     @Override
     public Filter getFilter() {
-        Filter filter = new Filter() {
+        return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults results = new FilterResults();
+                List<Integer> filtered = new ArrayList<>();
 
-                FilterResults results = new FilterResults();        // Holds the results of a filtering operation in values
-                ArrayList<Integer> FilteredArrList = new ArrayList<Integer>();
-                /********
-                 *
-                 *  If constraint(CharSequence that is received) is null returns the mOriginalValues(Original) values
-                 *  else does the Filtering and returns FilteredArrList(Filtered)
-                 *
-                 ********/
-                //Log.d("PhotoPicker", "Constrain ------------------------: " + constraint);
                 if (constraint == null || constraint.length() == 0) {
-                    // set the Original result to return
-                    results.count = newList.size();
-                    results.values = newList;
-                }
-                else {
-                    constraint = constraint.toString().toLowerCase();
-                    for (int i = 0; i < currList.size(); i++) {
-                        String data = currList.get(i)[0];
-                        if (data.toLowerCase().startsWith(constraint.toString())) {
-                            FilteredArrList.add(i);
-                            //Log.d("PhotoPicker", "Constrain ------------------------: " + i);
+                    // Sin texto → mostrar todos
+                    for (int i = 0; i < originalList.size(); i++) {
+                        filtered.add(i);
+                    }
+                } else {
+                    String filterPattern = constraint.toString().toLowerCase().trim();
+
+                    for (int i = 0; i < originalList.size(); i++) {
+                        String data = originalList.get(i);
+                        if (data != null && data.toLowerCase().contains(filterPattern)) {
+                            filtered.add(i);
                         }
                     }
-                    // set the Filtered result to return
-                    results.count = FilteredArrList.size();
-                    results.values = FilteredArrList;
                 }
-               // Log.d("PhotoPicker", "11111------------------------: " + FilteredArrList.size());
+
+                results.values = filtered;
+                results.count = filtered.size();
                 return results;
             }
+
             @Override
+            @SuppressWarnings("unchecked")
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                //Log.d("PhotoPicker", "2222------------------------: " +constraint);
-                newList = (ArrayList<Integer>) results.values;   // has the filtered values
-                notifyDataSetChanged();                         // notifies the data with new filtered values
+                filteredIndexes = (List<Integer>) results.values;
+                notifyDataSetChanged();
             }
         };
-        return filter;
     }
 }

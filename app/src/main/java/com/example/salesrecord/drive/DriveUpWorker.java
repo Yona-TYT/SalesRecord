@@ -4,14 +4,14 @@ import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.example.salesrecord.StartVar;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.ex.Logs;
 import com.example.salesrecord.ex.PreferenceHelper;
-import com.example.salesrecord.ex.UploadEvents;
-
 
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationService;
@@ -43,6 +43,9 @@ public class DriveUpWorker extends Worker {
     private final Context mContext;
     private int count = 0;
 
+    private static final String KEY_RESULT_MESSAGE = "result_message";
+    private static final String KEY_IS_IMG = "img";
+
     public DriveUpWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         this.mContext = context;
@@ -54,7 +57,7 @@ public class DriveUpWorker extends Worker {
 
         //String filePath = getInputData().getString("filePath");
         boolean isList = getInputData().getBoolean("list", false);
-        boolean isImg = getInputData().getBoolean("img", false);
+        boolean isImg = getInputData().getBoolean(KEY_IS_IMG, false);
 
 
         String[] filePaths = getInputData().getStringArray("filePaths");
@@ -65,17 +68,27 @@ public class DriveUpWorker extends Worker {
         boolean success = true;
         String failureMessage = "";
         Throwable failureThrowable = null;
+        int uploaded = 0;
+        int skipped = 0;
+        int missing = 0;
+        boolean mainUploaded = false;
 
 
         AuthState authState = DriveManager.getAuthState();
         if (!authState.isAuthorized()) {
-            EventBus.getDefault().post(new UploadEvents.GoogleDrive().failed("Could not upload to Google Drive. Not Authorized."));
+            LOG.error("Google Drive - No autorizado para subir archivos.");
+            // Devolvemos un fallo inmediato con el mensaje incrustado en el mapa de datos
+            return Result.failure(new Data.Builder()
+                    .putString(KEY_RESULT_MESSAGE, "Could not upload to Google Drive. Not Authorized.")
+                    .putInt("uploaded", 0)
+                    .putBoolean("main_uploaded", false)
+                    .build());
         }
 
         final AtomicBoolean taskDone = new AtomicBoolean(false);
         //PreferenceHelper preferenceHelper = PreferenceHelper.getInstance();
 
-       // DriveUtils.copyToClipboard(mContext, filePaths.length+" ?", "tag");
+        // DriveUtils.copyToClipboard(mContext, filePaths.length+" ?", "tag");
 
 
         try {
@@ -128,15 +141,50 @@ public class DriveUpWorker extends Worker {
                 }
 
                 if (success) {
-                    for (String path : filePaths) {
+                    String[] remoteNames = getInputData().getStringArray("remoteNames");
+
+                    for (int i = 0; i < filePaths.length; i++) {
+                        String path = filePaths[i];
                         File mFile = new File(path);
-                        if (mFile.exists()) {
-                            filesSet(mFile, targetFolderId);
+
+                        if (!mFile.exists()) {
+                            LOG.error("No existe: " + path);
+                            missing++;
+                            continue;
                         }
+
+                        // Nombre en Drive: remoto explícito o mapeo LOCAL_UPLOAD → DataSave.bin
+                        String remoteName;
+                        if (remoteNames != null && i < remoteNames.length && remoteNames[i] != null) {
+                            remoteName = remoteNames[i];
+                        } else {
+                            remoteName = DriveManager.remoteNameForUpload(mFile);
+                        }
+
+                        if (filesSet(mFile, targetFolderId, remoteName)) {
+                            uploaded++;
+                            if (StartVar.EXPORT_NAME.equals(remoteName)) {
+                                mainUploaded = true;
+                            }
+                        } else {
+                            skipped++;
+                        }
+                    }
+
+                    LOG.info("Upload resumen: uploaded=" + uploaded
+                            + " skipped=" + skipped
+                            + " missing=" + missing
+                            + " mainUploaded=" + mainUploaded);
+
+                    if (uploaded == 0 && missing > 0) {
+                        success = false;
+                        failureMessage = "Ningún archivo local encontrado";
+                    } else if (uploaded == 0 && skipped == 0) {
+                        success = false;
+                        failureMessage = "filePaths vacío o sin archivos válidos";
                     }
                 }
             }
-
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             success = false;
@@ -144,17 +192,22 @@ public class DriveUpWorker extends Worker {
             failureThrowable = e;
         }
 
-        if(success){
-            // Notify internal listeners
-            if (isList) {
-                EventBus.getDefault().post(new UploadEvents.GoogleDrive().succeeded("Archivos Subidos: "+filePaths.length+" ; ", count));
-            }
-            else {
-                EventBus.getDefault().post(new UploadEvents.GoogleDrive().succeeded());
-            }
-            // Notify external listeners
-            //Basic.sendFileUploadedBroadcast(getApplicationContext(), new String[]{fileToUpload.getAbsolutePath()}, "googledrive");
-            return Result.success();
+        if (success) {
+            // Generamos un mensaje informativo nativo según sea una lista o un archivo único
+            String msgExito = isList
+                    ? "Subidos=" + uploaded + " skip=" + skipped + " total=" + count
+                    : "Sincronización de archivo único exitosa";
+
+            LOG.info("Google Drive - " + msgExito);
+
+            // Retornamos el éxito con toda la metadata que tu GenericQueue necesita procesar
+            return Result.success(new Data.Builder()
+                    .putString(KEY_RESULT_MESSAGE, msgExito)
+                    .putInt("uploaded", uploaded)
+                    .putInt("skipped", skipped)
+                    .putInt("missing", missing)
+                    .putBoolean("main_uploaded", mainUploaded)
+                    .build());
         }
 
         if(getRunAttemptCount() < getRetryLimit()){
@@ -166,162 +219,75 @@ public class DriveUpWorker extends Worker {
             failureThrowable = new Exception(failureMessage);
         }
 
-        EventBus.getDefault().post(new UploadEvents.GoogleDrive().failed(failureMessage, failureThrowable));
-        return Result.failure();
+        return Result.failure(new Data.Builder()
+                .putString(KEY_RESULT_MESSAGE, failureMessage+ "  "+failureThrowable)
+                .build());
 
     }
 
-    private boolean filesSet(File localFile, String folderId) throws Exception {
-        String fileName = localFile.getName();
-        LOG.info("=== INICIANDO filesSet() - Archivo: " + fileName);
+    private boolean filesSet(File localFile, String folderId, String remoteName) throws Exception {
+        if (remoteName == null || remoteName.isEmpty()) {
+            remoteName = DriveManager.remoteNameForUpload(localFile);
+        }
 
-        // 1. Una sola consulta: metadatos (id + MD5)
+        LOG.info("=== filesSet local=" + localFile.getName() + " → remoto=" + remoteName);
+
+        // 1) Metadatos en Drive por NOMBRE REMOTO (DataSave.bin, no .upload.bin)
         DriveFileMeta driveFile = DriveUtils.getFileMetaFromDrive(
-                googleDriveAccessToken, fileName, folderId);
+                googleDriveAccessToken, remoteName, folderId);
 
         String driveFileId;
         boolean isNew = false;
 
         if (driveFile == null || DriveUtils.isNullOrEmpty(driveFile.id)) {
-            LOG.info("   → No existe en Drive → createEmptyFile()");
+            LOG.info("   → No existe en Drive → createEmptyFile(" + remoteName + ")");
             driveFileId = DriveUtils.createEmptyFile(
                     googleDriveAccessToken,
-                    fileName,
-                    DriveUtils.getMimeTypeFromFileName(fileName),
+                    remoteName,
+                    DriveUtils.getMimeTypeFromFileName(remoteName),
                     folderId
             );
             isNew = true;
-        }
-        else {
+        } else {
             driveFileId = driveFile.id;
-            LOG.info("   → Encontrado ID: " + driveFileId
-                    + " | MD5: " + driveFile.md5Checksum);
+            LOG.info("   → ID=" + driveFileId + " | MD5 remoto=" + driveFile.md5Checksum);
         }
 
         if (DriveUtils.isNullOrEmpty(driveFileId)) {
-            LOG.error("   ❌ No se pudo obtener/crear el archivo en Drive");
+            LOG.error("   ❌ No se pudo obtener/crear en Drive: " + remoteName);
             count--;
             return false;
         }
 
-        // 2. ¿Hay que subir contenido?
+        // 2) ¿Hay que subir contenido?
+        boolean isMainDb = StartVar.EXPORT_NAME.equals(remoteName);
         boolean mustUpload = isNew;
+
         if (!isNew) {
-            String localMd5 = DriveUtils.getLocalFileMd5(localFile);
-            String remoteMd5 = driveFile.md5Checksum != null ? driveFile.md5Checksum : "";
-            // Sin MD5 remoto (recién creado o Google no lo devuelve) → subir
-            mustUpload = remoteMd5.isEmpty()
-                    || localMd5 == null
-                    || !remoteMd5.equalsIgnoreCase(localMd5);
+            if (isMainDb) {
+                // Siempre actualizar DataSave.bin en sync
+                mustUpload = true;
+            } else {
+                String localMd5 = DriveUtils.getLocalFileMd5(localFile);
+                String remoteMd5 = driveFile.md5Checksum != null ? driveFile.md5Checksum : "";
+                mustUpload = remoteMd5.isEmpty()
+                        || localMd5 == null
+                        || !remoteMd5.equalsIgnoreCase(localMd5);
+            }
         }
 
         if (!mustUpload) {
-            LOG.info("   → MD5 igual, no se sube: " + fileName);
+            LOG.info("   → MD5 igual, no se sube: " + remoteName);
             count--;
             return false;
         }
 
-        // 3. Subir
-        LOG.info("   → Subiendo contenido...");
+        // 3) Subir bytes del file LOCAL; en Drive queda como remoteName
+        LOG.info("   → Subiendo contenido de " + localFile.getName() + " como " + remoteName);
         uploadFileContents(googleDriveAccessToken, driveFileId, localFile);
-        LOG.info("=== FIN DE filesSet() OK: " + fileName);
+        LOG.info("=== filesSet OK: " + remoteName);
         return true;
     }
-
-    private String uploadFileContents2(String accessToken, String driveFileId, File fileToUpload, String mType) throws Exception {
-
-        if (fileToUpload == null || !fileToUpload.exists()) {
-            throw new IllegalArgumentException("El archivo a subir no existe");
-        }
-
-        String mimeType = DriveUtils.getMimeTypeFromFileName(fileToUpload.getName());
-
-        // Para CSV forzamos UTF-8 explícitamente (muy importante)
-        String contentType = mType; //"application/octet-stream";
-
-
-//        String contentType = fileToUpload.getName().toLowerCase().endsWith(".csv")
-//                ? "text/csv; charset=utf-8"
-//                : mimeType;
-
-        String updateUrl = "https://www.googleapis.com/upload/drive/v3/files/" +
-                driveFileId + "?uploadType=media";
-
-        LOG.debug("Subiendo archivo a Drive → ID: {} | Nombre: {} | Tipo: {}",
-                driveFileId, fileToUpload.getName(), contentType);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .build();
-
-        // Usamos RequestBody.create con el archivo directamente (más eficiente)
-        RequestBody body = RequestBody.create(fileToUpload, MediaType.parse(contentType));
-
-        Request.Builder builder = new Request.Builder()
-                .url(updateUrl)
-                .addHeader("Authorization", "Bearer " + accessToken);
-
-        // Soporte para Android antiguo
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-            builder.addHeader("X-HTTP-Method-Override", "PATCH");
-            builder.method("POST", body);
-        } else {
-            builder.method("PATCH", body);
-        }
-
-        Request request = builder.build();
-
-        try (Response response = client.newCall(request).execute()) {
-
-            if (!response.isSuccessful()) {
-                String errorBody = response.body() != null ? response.body().string() : "";
-                LOG.error("Error al subir archivo. Código: {} - {}", response.code(), errorBody);
-                throw new Exception("Error al subir archivo: Código " + response.code() + " - " + errorBody);
-            }
-
-            String responseBody = response.body() != null ? response.body().string() : "";
-            LOG.debug("Respuesta de Drive al subir: {}", responseBody);
-
-            JSONObject json = new JSONObject(responseBody);
-            String fileId = json.getString("id");
-
-            LOG.info("✅ Archivo subido correctamente a Drive. ID: {}", fileId);
-            return fileId;
-
-        } catch (Exception e) {
-            LOG.error("Error en updateFileContents al subir: {}", fileToUpload.getName(), e);
-            throw e;
-        }
-    }
-
-//    private String uploadFileContents(String accessToken, String driveFileId, File fileToUpload) throws Exception {
-//        FileInputStream fis = new FileInputStream(fileToUpload);
-//        String fileId = null;
-//
-//        String fileUpdateUrl = "https://www.googleapis.com/upload/drive/v3/files/" + driveFileId + "?uploadType=media";
-//
-//        OkHttpClient client = new OkHttpClient();
-//        Request.Builder requestBuilder = new Request.Builder().url(fileUpdateUrl);
-//
-//        requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-//        RequestBody body = RequestBody.create(MediaType.parse(DriveUtils.getMimeTypeFromFileName(fileToUpload.getName())), getByteArrayFromInputStream(fis));
-//        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-//            requestBuilder.addHeader("X-HTTP-Method-Override", "PATCH");
-//        }
-//        requestBuilder = requestBuilder.method("PATCH", body);
-//
-//        Request request = requestBuilder.build();
-//        Response response = client.newCall(request).execute();
-//        String fileMetadata = response.body().string();
-//        LOG.debug(fileMetadata);
-//        response.body().close();
-//
-//        JSONObject fileMetadataJson = new JSONObject(fileMetadata);
-//        fileId = fileMetadataJson.getString("id");
-//
-//        return fileId;
-//    }
 
     private String uploadFileContents(String accessToken, String driveFileId, File fileToUpload) throws Exception {
         if (fileToUpload == null || !fileToUpload.exists()) {
@@ -400,4 +366,3 @@ public class DriveUpWorker extends Worker {
         return null;
     }
 }
-

@@ -36,9 +36,6 @@ import com.example.salesrecord.databinding.FragmentAddBinding;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.DatabaseUtils;
 import com.example.salesrecord.db.dao.DaoArt;
-import com.example.salesrecord.drive.DriveManager;
-import com.example.salesrecord.drive.SetWorkResult;
-import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
@@ -49,8 +46,6 @@ import com.example.salesrecord.utls.Msg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class AddAtrFragment extends Fragment {
 
@@ -304,7 +299,7 @@ public class AddAtrFragment extends Fragment {
                     // Nueva imagen elegida con el picker
                     if (currUri != null) {
                         bitmap = MediaStore.Images.Media.getBitmap(contex.getContentResolver(), currUri);
-                        sImage = mFileM.SavePhoto(bitmap, atrId, oldFile, contex, contex.getContentResolver());
+                        sImage = mFileM.SavePhoto(bitmap, atrId);
                     } else if (sImage != null && !sImage.isEmpty()) {
                         // Se mantiene la imagen anterior
                         oldFile = Uri.parse(sImage);

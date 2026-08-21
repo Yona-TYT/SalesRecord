@@ -21,6 +21,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.airbnb.lottie.L;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
@@ -59,7 +60,7 @@ public class PayListFragment extends Fragment {
     private DaoArt daoArt;
     private DaoSal daoSal;
     private List<Sale> mSalList = new ArrayList<>();
-    private List<Cliente> cltList;
+    private List<Cliente> cltList = new ArrayList<>();
 
     private List<EditText> mInpList =  new ArrayList<>();
 
@@ -182,11 +183,16 @@ public class PayListFragment extends Fragment {
             }
         });
 
-        cltList = StartVar.appDBall.daoClt().getUsers();
+        cltList.clear();
+        List<Cliente> tmpCltList = StartVar.appDBall.daoClt().getUsers();
 
         nameList.add("<Nombre>");
-        for (Cliente mC : cltList){
-            nameList.add(mC.iduser);
+        for (Cliente mC : tmpCltList){
+
+            if(mC.level > 0) {
+                cltList.add(mC);
+                nameList.add(mC.iduser);
+            }
         }
 
         // Para el selector por Nombre Cliente

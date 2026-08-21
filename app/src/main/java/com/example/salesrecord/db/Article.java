@@ -4,6 +4,8 @@ import io.reactivex.annotations.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity
 public class Article {
     @PrimaryKey(autoGenerate = true)
@@ -66,5 +68,67 @@ public class Article {
 
         this.ultfec = ultfec;
         this.fecha = fecha;
+    }
+
+    public Article(Article other) {
+
+        if (other != null) {
+            this.uid = other.uid;
+            this.article = other.article;
+            this.nombre = other.nombre;
+            this.descr = other.descr;
+            this.iddesde = other.iddesde;
+            this.image = other.image;
+
+            this.precund = other.precund;
+            this.precpq = other.precpq;
+            this.preccj = other.preccj;
+            this.margen = other.margen;
+
+            this.totalcount = other.totalcount;
+            this.currcount = other.currcount;
+            this.isopen = other.isopen;
+            this.artipo = other.artipo;
+            this.metrica = other.metrica;
+            this.caduca = other.caduca;
+            this.staus = other.staus;
+
+            this.ultfec = other.ultfec;
+            this.fecha = other.fecha;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Article artA = (Article) o;
+        return uid == artA.uid &&
+                Objects.equals(article, artA.article) &&
+                Objects.equals(nombre, artA.nombre) &&
+                Objects.equals(descr, artA.descr) &&
+                Objects.equals(iddesde, artA.iddesde) &&
+                Objects.equals(image, artA.image) &&
+                Objects.equals(precund, artA.precund) &&
+                Objects.equals(precpq, artA.precpq) &&
+                Objects.equals(preccj, artA.preccj) &&
+                Objects.equals(margen, artA.margen) &&
+                Objects.equals(totalcount, artA.totalcount) &&
+                Objects.equals(currcount, artA.currcount) &&
+                Objects.equals(isopen, artA.isopen) &&
+                Objects.equals(artipo, artA.artipo) &&
+                Objects.equals(metrica, artA.metrica) &&
+                Objects.equals(caduca, artA.caduca) &&
+                Objects.equals(staus, artA.staus) &&
+                Objects.equals(ultfec, artA.ultfec) &&
+                Objects.equals(fecha, artA.fecha);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uid, article, nombre, descr, iddesde, image,
+                precund, precpq, preccj, margen,
+                totalcount, currcount, isopen, artipo,
+                metrica, caduca, staus, ultfec, fecha);
     }
 }

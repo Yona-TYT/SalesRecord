@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
@@ -15,17 +14,18 @@ import androidx.work.WorkManager;
 
 
 import com.example.salesrecord.DBListCreator;
-import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.db.dao.QueueItemDao;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.drive.SetWorkResult;
 import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.utls.CalendUtls;
+import com.example.salesrecord.utls.Msg;
 import com.google.gson.Gson;
 
 import net.openid.appauth.AuthState;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -36,11 +36,36 @@ public class GenericQueue {
     private QueueItemDao queueItemDao;
     private final Context context;
     private final Gson gson;
+    private boolean isProcessing = false;
+
+    private static final String TAG = "GenericQueue";
+
 
     public GenericQueue(Context context) {
-        this.context = context.getApplicationContext();
+        this.context = context;
         this.queue = new LinkedList<>();
         this.gson = new Gson();
+    }
+
+    public interface OnSyncCompleteListener {
+        void onSyncComplete();
+    }
+
+    // 2. Crea una variable global para almacenar el listener temporal
+    private OnSyncCompleteListener syncCompleteListener;
+
+    public void setOnSyncCompleteListener(OnSyncCompleteListener listener) {
+        this.syncCompleteListener = listener;
+    }
+
+    public void notifySyncComplete() {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (syncCompleteListener != null) {
+                syncCompleteListener.onSyncComplete();
+                syncCompleteListener = null; // Limpieza anti-fugas de memoria
+                Log.d(TAG, "Callback de éxito notificado externamente.");
+            }
+        });
     }
 
     // 3. Agrega este método para asegurar que el DAO se obtenga solo cuando se necesite
@@ -48,7 +73,7 @@ public class GenericQueue {
         if (queueItemDao == null) {
             // Si la app despertó en segundo plano y StartVar no se ha inicializado, lo forzamos
             if (StartVar.appDBall == null) {
-                Log.w("Queue", "La BD en StartVar es null. Inicializando contenedores...");
+                Log.w(TAG, "La BD en StartVar es null. Inicializando contenedores...");
                 StartVar.setAllListDB();
             }
             queueItemDao = StartVar.appDBall.daoQueue();
@@ -63,40 +88,45 @@ public class GenericQueue {
 
     // Encolar con mSend personalizado
     public void enqueue(Object objeto, int mSend) {
+        if (objeto == null) return;
+        if (objeto instanceof List) {
+            Log.e(TAG, "enqueue(List) no permitido; usa enqueueList");
+            List<?> raw = (List<?>) objeto;
+            enqueueList(new ArrayList<>(raw), mSend);
+            return;
+        }
+
         String json = gson.toJson(objeto);
         String tipoClase = objeto.getClass().getName();
-
         long order = System.currentTimeMillis();
         QueueItem item = new QueueItem(json, tipoClase, order);
 
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-
                 getQueueItemDao().insert(item);
+                Log.d(TAG, "INSERT ok tipo=" + tipoClase
+                        + " roomSize=" + getQueueItemDao().getAllQueueItems().size());
 
-                // Sincronización con Drive
                 AuthState authState = DriveManager.getAuthState();
                 if (authState != null && authState.isAuthorized()) {
-                    synchronizeCheck();
+                    synchronizeCheck(); // SetDb → startUsuarioQueue
+                } else {
+                    // Sin red: procesar en local si quieres
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        queue.add(objeto);
+                        startUsuarioQueue(mSend);
+                    });
+                    return;
                 }
-
-                // Añadir a la cola en memoria y arrancar el procesamiento con mSend
                 new Handler(Looper.getMainLooper()).post(() -> {
                     queue.add(objeto);
-                    Log.d("Queue", "Objeto añadido a la cola en memoria");
-
-                    // Arranca el Worker con el mSend indicado (siempre 2 desde el fragment)
-                    startUsuarioQueue(mSend);
+                    Log.d(TAG, "Objeto añadido a la cola en memoria");
+                    // NO startUsuarioQueue aquí
                 });
-
             } catch (Exception e) {
-                Log.e("Queue", "Error al procesar item en cola", e);
+                Log.e(TAG, "Error al procesar item en cola", e);
             }
         });
-    }
-
-    public void enqueueList(List<Object> objList) {
-        enqueueList(objList, 2);
     }
 
     public void enqueueList(List<Object> objList, int mSend) {
@@ -129,11 +159,11 @@ public class GenericQueue {
                 // Pasar al hilo principal para actualizar memoria e iniciar Workers
                 new Handler(Looper.getMainLooper()).post(() -> {
                     queue.addAll(objList);
-                    Log.d("Queue", objList.size() + " objetos añadidos a la memoria.");
+                    Log.d(TAG, objList.size() + " objetos añadidos a la memoria.");
                 });
 
             } catch (Exception e) {
-                Log.e("Queue", "Error al procesar lista en cola", e);
+                Log.e(TAG, "Error al procesar lista en cola", e);
             }
         });
     }
@@ -157,7 +187,7 @@ public class GenericQueue {
                 if (!queue.isEmpty()) {
                     processNext(send);
                 } //else {
-                    ///Basic.msg("No hay elementos en cola");
+                ///Basic.msg("No hay elementos en cola");
                 //}
             });
         });
@@ -183,61 +213,98 @@ public class GenericQueue {
                 StartVar.mWorkResult.observeWorkResult();
                 manager.dataSynchronizeCheck();
             } catch (Exception e) {
-                Log.e("Queue", "Error en synchronizeCheck", e);
+                Log.e(TAG, "Error en synchronizeCheck", e);
             }
         });
     }
-
     private void processNext(int sendOpt) {
-        if (queue.isEmpty()) {
-            if (sendOpt == 1 || sendOpt == 2 || sendOpt == 3) {
-                performFinalUpload(sendOpt);
-            }
+        if (isProcessing) {
+            Log.d(TAG, "Ya hay un lote en curso");
             return;
         }
 
-        Object current = queue.peek();
-
-        Data inputData = new Data.Builder()
-                .putString("objeto_json", gson.toJson(current))
-                .putString("objeto_tipo", current.getClass().getName())
-                .putInt("send", sendOpt)
-                .build();
-
-        OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(GenericWorker.class)
-                .setInputData(inputData)
-                .build();
-
-        WorkManager.getInstance(context)
-                .getWorkInfoByIdLiveData(request.getId())
-                .observe(ProcessLifecycleOwner.get(), workInfo -> {
-                    if (workInfo != null && workInfo.getState().isFinished()) {
-                        if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
-                            queue.poll();
-
-                            QueueItem item = getQueueItemDao().getFirstQueueItem();
-                            if (item != null) getQueueItemDao().delete(item);
-
-                            processNext(sendOpt);   // siguiente
-                        } else {
-                            Log.e("Queue", "Worker falló: " + workInfo.getState());
-                        }
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<QueueItem> items = getQueueItemDao().getAllQueueItems();
+            if (items == null || items.isEmpty()) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    isProcessing = false;
+                    if (sendOpt == 1 || sendOpt == 2 || sendOpt == 3) {
+                        performFinalUpload(sendOpt);
                     }
                 });
+                return;
+            }
 
-        WorkManager.getInstance(context).enqueue(request);
+            isProcessing = true;
+
+            Data inputData = new Data.Builder()
+                    .putInt("send", sendOpt)
+                    .build();
+
+            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(GenericWorker.class)
+                    .setInputData(inputData)
+                    .build();
+
+            // Observar en main una sola vez (simplificado)
+            new Handler(Looper.getMainLooper()).post(() -> {
+                WorkManager.getInstance(context)
+                        .getWorkInfoByIdLiveData(request.getId())
+                        .observe(ProcessLifecycleOwner.get(), workInfo -> {
+                            if (workInfo == null || !workInfo.getState().isFinished()) return;
+
+                            isProcessing = false;
+
+                            if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                                // Worker ya borró lo procesado en Room
+                                processNext(sendOpt); // verá si quedan más en Room
+                            } else {
+                                Log.e(TAG, "Lote falló: " + workInfo.getState());
+                            }
+                        });
+                WorkManager.getInstance(context).enqueue(request);
+            });
+        });
     }
 
+//    private void performFinalUpload(int sendOpt) {
+//
+//        Log.d(TAG, "performFinalUpload → upload (clear al confirmar Drive)");
+//        Executors.newSingleThreadExecutor().execute(() -> {
+//            try {
+//                updateConfigTimestamp();
+//                StartVar.getConfigDB();
+//                // createDbLists lo puede hacer solo uploadDataBase()
+//                new DriveManager(PreferenceHelper.getInstance()).uploadDataBase();
+//                // SIN clear() aquí
+//
+//                if (sendOpt == 2) {
+//                    new Handler(Looper.getMainLooper()).post(() -> {
+//                        if (StartVar.mActivity != null) {
+//                            Intent i = new Intent(context, StartVar.mActivity.getClass());
+//                            StartVar.mActivity.startActivity(i);
+//                            StartVar.mActivity.finish();
+//                        }
+//                    });
+//                }
+//            } catch (Exception e) {
+//                Log.e(TAG, "Error en subida final", e);
+//            }
+//        });
+//
+//    }
+
     private void performFinalUpload(int sendOpt) {
+        Log.d(TAG, "performFinalUpload → upload (clear al confirmar Drive)");
+
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                updateConfigTimestamp();                 // nueva fecha local
-                DBListCreator.createDbLists();           // CSV actualizados (ya fusionados)
+                updateConfigTimestamp();
+                StartVar.getConfigDB();
+
+                // 1. Exporta el CSV fresco con los datos fusionados y encola la subida final
                 new DriveManager(PreferenceHelper.getInstance()).uploadDataBase();
-                clear();
 
                 if (sendOpt == 2) {
-                    // Reiniciar activity si es necesario
                     new Handler(Looper.getMainLooper()).post(() -> {
                         if (StartVar.mActivity != null) {
                             Intent i = new Intent(context, StartVar.mActivity.getClass());
@@ -247,7 +314,12 @@ public class GenericQueue {
                     });
                 }
             } catch (Exception e) {
-                Log.e("Queue", "Error en subida final", e);
+                Log.e(TAG, "Error en subida final", e);
+            } finally {
+                // 2. ÉXITO DE INTERFAZ: Como el lote local ya se vació y se mandó a fusionar/subir,
+                // notificamos a la Activity para que cierre la pantalla de Ventas.
+                // El Worker de Drive ("google_drive_upload") seguirá haciendo la subida física en background de forma segura.
+                notifySyncComplete();
             }
         });
     }

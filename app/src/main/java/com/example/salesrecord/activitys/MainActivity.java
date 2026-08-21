@@ -4,6 +4,7 @@ import static androidx.fragment.app.FragmentManager.TAG;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -39,6 +40,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -87,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedViewModel sharedViewModel;
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
-
 
     // 1. Variables globales para controlar el tiempo entre clics
     private boolean doubleBackToExitPressedOnce = false;
@@ -300,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
 //                }
 
                 else if (id == R.id.summary) {
-                    //Basic.msg("Mostrando resumen...");
+                    Intent intent = new Intent(MainActivity.this, ClientListActivity.class);
+                    startActivity(intent);
                     return true;
                 }
                 //Para Exportar archivo CSV
@@ -377,13 +379,30 @@ public class MainActivity extends AppCompatActivity {
 
                 // Solo disparamos la tarea de sincronización, el observador del onCreate ya está listo esperando
                 if (DriveManager.getAuthState().isAuthorized() && driveManager != null) {
-                    driveManager.dataSynchronize();
+                    boolean hasQueue = GlobalData.getInstance(getApplicationContext()).getGenericQueue().hasPendingQueueItems();
+                    if(!hasQueue) {
+                        //Msg.m("Sincronizando Datos...nav");
+                        driveManager.dataSynchronize();
+                    }
                 }
 
                 // 3. Retornas el resultado de la navegación
                 return navego;
             }
         });
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if(GlobalData.shouldReload && StartVar.mLifecycle != null) {
+            if (DriveManager.getAuthState().isAuthorized() && driveManager != null) {
+                Msg.m("Sincronizando Datos...");
+                driveManager.dataSynchronize();
+            }
+        }
+
+        GlobalData.shouldReload = true;
     }
 
     @Override

@@ -298,7 +298,7 @@ public class BitsOper {
             int mByte = 0x0;
             int currBit = bitL(0x1, idx);
 
-            List<Integer> bitList = BitsOper.getBits(mClt.bits);
+            List<Integer> bitList = BitsOper.getBits("");
 
             //Basic.msg("siz "+siz+" bitList.size() "+bitList.size());
 
