@@ -98,6 +98,8 @@ public class SummaryAdapter extends BaseAdapter  {
                     ContextCompat.getColor(holder.layout1.getContext(), R.color.selected_background)
             );
         } else {
+            double mAlert = item.unit == 0 ? GlobalData.glUdsAlert : GlobalData.glMtrAlert;
+
             // Si no está seleccionado, mantiene tus colores lógicos originales
             if (item.status == 0){
                 holder.layout1.setBackgroundColor(
@@ -109,7 +111,7 @@ public class SummaryAdapter extends BaseAdapter  {
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
                 );
             }
-            else if (item.currCount <= GlobalData.glCritical || item.maxCount <= GlobalData.glCritical){
+            else if (item.currCount <= mAlert || item.maxCount <= mAlert){
                 holder.layout1.setBackgroundColor(
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
                 );

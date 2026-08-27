@@ -43,6 +43,7 @@ import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.SaleResultAdapter;
+import com.example.salesrecord.adapters.SearchAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
@@ -63,6 +64,7 @@ import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import io.reactivex.annotations.NonNull;
@@ -359,61 +361,60 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
-            // Lista dinámica que se mostrará en el ListView
-            filtreList = new ArrayList<>();
+            // 1. Obtener la lista de nombres (sin duplicados)
+            List<String> clientNames = new ArrayList<>();
+            LinkedHashSet<String> uniqueNames = new LinkedHashSet<>();
 
-            // 3. Configurar el adaptador para el ListView
-            adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filtreList);
-            mListView2.setAdapter(adapter);
+            for (Cliente mC : daoClt.getUsers()) {
+                if (mC.iduser != null && !mC.iduser.trim().isEmpty()) {
+                    uniqueNames.add(mC.iduser);
+                }
+            }
+            clientNames.addAll(uniqueNames);
 
-            // 4. Escuchar los cambios de texto en el AutoCompleteTextView
+            // 2. Crear y asignar el adaptador
+            SearchAdapter clientAdapter = new SearchAdapter(this, clientNames); // o requireContext() si es Fragment
+            mListView2.setAdapter(clientAdapter);
+
+            // Flag para no volver a filtrar/mostrar al hacer setText
+            final boolean[] isSelecting = {false};
+
+            // 3. Filtrado dinámico + visibilidad
             mInput1.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    String textoEscrito = s.toString().toLowerCase().trim();
-                    filtreList.clear();
+                    if (isSelecting[0]) return; // Evita que setText reabra la lista
 
-                    // Filtrar solo si el usuario ha escrito texto
-                    if (!textoEscrito.isEmpty()) {
-                        for (String nombre : allNamesList) {
-                            if (nombre.toLowerCase().contains(textoEscrito)) {
-                                filtreList.add(nombre);
-                            }
-                        }
+                    if (clientAdapter != null) {
+                        clientAdapter.getFilter().filter(s);
+                    }
+                    if (mBtton4.isChecked()  && s != null && s.length() > 0) {
                         mListView2.setVisibility(View.VISIBLE);
                     } else {
-                        // Ocultar la lista si el input está vacío
                         mListView2.setVisibility(View.GONE);
                     }
-
-                    // Notificar al adaptador para que refresque la interfaz visual
-                    adapter.notifyDataSetChanged();
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {}
             });
 
-            // 5. Detectar cuándo el usuario selecciona un nombre de la lista de sugerencias
-            mListView2.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    // Obtener el nombre seleccionado
-                    String nombreSeleccionado = filtreList.get(position);
+            // 4. Al seleccionar un ítem
+            mListView2.setOnItemClickListener((parent, view, position, id) -> {
+                String selectedName = (String) clientAdapter.getItem(position);
 
-                    // Colocar el nombre en el input y mover el cursor al final
-                    mInput1.setText(nombreSeleccionado);
-                    mInput1.setSelection(mInput1.getText().length());
+                isSelecting[0] = true;
+                mInput1.setText(selectedName);
+                mInput1.setSelection(mInput1.getText().length());
+                isSelecting[0] = false;
 
-                    // Limpiar y ocultar el ListView de sugerencias
-                    filtreList.clear();
-                    adapter.notifyDataSetChanged();
-                    mListView2.setVisibility(View.GONE);
-                }
+                mListView2.setVisibility(View.GONE);
             });
+
+
 
             mBtton4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -457,6 +458,20 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                             }
                         }
                     }
+                }
+            });
+
+            mBtton4.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mBtton4.isChecked()){
+                        mListView2.setVisibility(View.VISIBLE);
+
+                    }
+                    else {
+                        mListView2.setVisibility(View.GONE);
+                    }
+
                 }
             });
 
@@ -563,9 +578,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                     }
 
                     // 3. MATEMÁTICA SEGURA: Restamos el viejo del récord y sumamos el nuevo
-                    float points = mClt.level - oldPoints ;
-
-                    mClt.level -= points;
+                    mClt.level = mClt.level - oldPoints;
 
                     // Guardamos el cliente actualizado en Room
                     daoClt.insertUser(mClt);

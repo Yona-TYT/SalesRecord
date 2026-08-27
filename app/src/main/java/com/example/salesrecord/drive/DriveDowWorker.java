@@ -11,6 +11,7 @@ import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ex.DownloadEvents;
 import com.example.salesrecord.ex.Logs;
 import com.example.salesrecord.ex.PreferenceHelper;
+import com.example.salesrecord.ex.UploadEvents;
 
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationService;
@@ -111,8 +112,8 @@ public class DriveDowWorker extends Worker {
             if (DriveUtils.isNullOrEmpty(mFolderId)) {
                 failureMessage = "Could not resolve folder";
                 success = false;
-            } else if (isImg) {
-                // ===== Carpeta de imágenes =====
+            }
+            else if (isImg) {
                 String imgFolderName = PreferenceHelper.getInstance().getGoogleDriveImgPath();
                 String imgFolderId = DriveUtils.getOrCreateFolder(
                         googleDriveAccessToken,
@@ -124,35 +125,44 @@ public class DriveDowWorker extends Worker {
                     failureMessage = "Could not create img folder";
                     success = false;
                 } else {
-                    List<String[]> mList = DriveUtils.getDriveIdAndNameList(googleDriveAccessToken, imgFolderId);
+                    File dir = new File(filePath);
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+
+                    List<String[]> mList = DriveUtils.getDriveIdAndNameList(
+                            googleDriveAccessToken, imgFolderId);
                     count = mList.size();
 
-                    for (String[] dataFile : mList) {
-                        String fId = dataFile[0];
-                        String fName = dataFile[1];
-                        if (DriveUtils.isNullOrEmpty(fId)) {
-                            isFileOk = false;
-                            failureMessage = "Error no se encontraron DATOS.";
-                            return Result.failure(new Data.Builder()
-                                    .putString(KEY_RESULT_MESSAGE, failureMessage)
-                                    .putBoolean(KEY_IS_PRELOADER, isPreloader)
-                                    .putBoolean(KEY_IS_FILE_OK, isFileOk)
-                                    .putBoolean(KEY_IS_IMG, true)
-                                    .build());
+                    if (mList.isEmpty()) {
+                        failureMessage = "No hay imágenes en Drive";
+                        isFileOk = false;
+                        success = false;
+                    } else {
+                        for (String[] dataFile : mList) {
+                            String fId = dataFile[0];
+                            String fName = dataFile[1];
+                            if (DriveUtils.isNullOrEmpty(fId) || DriveUtils.isNullOrEmpty(fName)) {
+                                continue;
+                            }
+
+                            File currFile = new File(dir, fName);
+
+                            // forceDownload = true → bajar siempre en sync de imágenes
+                            downloadFileContents(
+                                    googleDriveAccessToken,
+                                    imgFolderId,
+                                    fId,
+                                    currFile,
+                                    fileType,
+                                    true,
+                                    fName
+                            );
                         }
-                        File currFile = new File(filePath + "/" + fName);
-                        downloadFileContents(
-                                googleDriveAccessToken,
-                                imgFolderId,
-                                fId,
-                                currFile,
-                                fileType,
-                                false,
-                                fName
-                        );
                     }
                 }
-            } else {
+            }
+            else {
                 // ===== Archivo DB =====
                 String driveFileId;
                 if (isId) {
@@ -201,13 +211,16 @@ public class DriveDowWorker extends Worker {
 
         if (success) {
             if (isImg) {
-                LOG.info("Google Drive - Archivos Descargados: " + count);
-
-                // Retornamos el éxito empaquetando el conteo de forma nativa
+                EventBus.getDefault().post(
+                        new UploadEvents.GoogleDrive().succeeded("Imágenes sincronizadas: ", count)
+                );
+                LOG.info("Google Drive - Imágenes procesadas: " + count);
                 return Result.success(new Data.Builder()
-                        .putString("result_message", "Imágenes descargadas con éxito")
+                        .putString(KEY_RESULT_MESSAGE, "Imágenes descargadas: " + count)
                         .putInt("downloaded_count", count)
-                        .putBoolean("is_img", true)
+                        .putBoolean(KEY_IS_IMG, true)      // "img" = true
+                        .putBoolean(KEY_IS_FILE_OK, true)
+                        .putBoolean(KEY_IS_PRELOADER, isPreloader)
                         .build());
             }
             return Result.success(new Data.Builder()
@@ -225,6 +238,10 @@ public class DriveDowWorker extends Worker {
         if (getRunAttemptCount() < getRetryLimit()) {
             return Result.retry();
         }
+
+        EventBus.getDefault().post(
+                new UploadEvents.GoogleDrive().failed(failureMessage, failureThrowable)
+        );
 
         return Result.failure(new Data.Builder()
                 .putString(KEY_RESULT_MESSAGE, failureMessage)
@@ -251,7 +268,7 @@ public class DriveDowWorker extends Worker {
 
         // Nombre en Drive (DataSave.bin). NUNCA uses mFile.getName() si es .download.bin
         if (remoteName == null || remoteName.isEmpty()) {
-            remoteName = StartVar.EXPORT_NAME;
+            remoteName = mFile.getName(); // no forzar EXPORT_NAME
         }
 
         if (!forceDownload) {

@@ -9,6 +9,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.ex.UploadEvents;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.ex.Logs;
 import com.example.salesrecord.ex.PreferenceHelper;
@@ -191,7 +192,6 @@ public class DriveUpWorker extends Worker {
             failureMessage = e.getMessage();
             failureThrowable = e;
         }
-
         if (success) {
             // Generamos un mensaje informativo nativo según sea una lista o un archivo único
             String msgExito = isList
@@ -200,13 +200,22 @@ public class DriveUpWorker extends Worker {
 
             LOG.info("Google Drive - " + msgExito);
 
-            // Retornamos el éxito con toda la metadata que tu GenericQueue necesita procesar
+            // Restaurar EventBus (lo que usa tu Fragment)
+            if (isImg) {
+                EventBus.getDefault().post(
+                        new UploadEvents.GoogleDrive().succeeded("Imágenes subidas: " + uploaded)
+                );
+            } else {
+                EventBus.getDefault().post(new UploadEvents.GoogleDrive().succeeded());
+            }
+
             return Result.success(new Data.Builder()
                     .putString(KEY_RESULT_MESSAGE, msgExito)
                     .putInt("uploaded", uploaded)
                     .putInt("skipped", skipped)
                     .putInt("missing", missing)
                     .putBoolean("main_uploaded", mainUploaded)
+                    .putBoolean("img", isImg)
                     .build());
         }
 
@@ -218,6 +227,10 @@ public class DriveUpWorker extends Worker {
         if(failureThrowable == null) {
             failureThrowable = new Exception(failureMessage);
         }
+
+        EventBus.getDefault().post(
+                new UploadEvents.GoogleDrive().failed(failureMessage, failureThrowable)
+        );
 
         return Result.failure(new Data.Builder()
                 .putString(KEY_RESULT_MESSAGE, failureMessage+ "  "+failureThrowable)

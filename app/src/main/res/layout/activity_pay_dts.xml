@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -9,7 +10,7 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_dts"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
@@ -19,6 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- ===== Sección Total ===== -->
     <TextView
         android:id="@+id/tx_dts"
         android:layout_width="0dp"
@@ -29,9 +31,9 @@
         android:text="Total:"
         android:textSize="@dimen/inner_text_3"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_dts" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_dts" />
 
     <TextView
         android:id="@+id/txtotal_dts1"
@@ -41,9 +43,9 @@
         android:text="Actual:"
         android:textSize="@dimen/inner_text_2"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/tx_dts" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintTop_toBottomOf="@id/tx_dts" />
 
     <TextView
         android:id="@+id/txtotal_dts2"
@@ -53,43 +55,38 @@
         android:text=""
         android:textSize="@dimen/inner_text_2"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txtotal_dts1" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintTop_toBottomOf="@id/txtotal_dts1" />
 
-    <!-- Fila horizontal: TextView + Button (Cadena horizontal directa) -->
+    <!-- ===== Fila QR (GONE por defecto) ===== -->
     <TextView
         android:id="@+id/text_dts1"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
         android:padding="2dp"
         android:text="Datos de Pago con QR:"
         android:textSize="@dimen/inner_text_2"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="10dp"
         android:gravity="center_vertical"
         android:maxLines="1"
         android:visibility="gone"
         app:layout_constraintHorizontal_weight="1.5"
-
-        app:layout_constraintBottom_toTopOf="@+id/pay_dts_viewList"
-        app:layout_constraintEnd_toStartOf="@id/butt_dts0"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txtotal_dts2" />
+        app:layout_constraintEnd_toStartOf="@id/butt_dts0"
+        app:layout_constraintTop_toBottomOf="@id/txtotal_dts2" />
 
     <ImageButton
         android:id="@+id/butt_dts0"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
-        android:layout_marginStart="0dp"
-        android:enabled="true"
         android:src="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
         android:scaleType="centerInside"
-        android:padding="0dp"
         android:background="@color/button"
         android:visibility="gone"
-
         app:layout_constraintHorizontal_weight="0.3"
         app:layout_constraintTop_toTopOf="@id/text_dts1"
         app:layout_constraintBottom_toBottomOf="@id/text_dts1"
@@ -101,41 +98,58 @@
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
         android:layout_marginStart="5dp"
-        android:enabled="true"
         android:src="@drawable/ic_qr_scan"
         android:scaleType="centerInside"
         android:padding="3dp"
         android:background="@color/button"
         android:visibility="gone"
-
         app:layout_constraintHorizontal_weight="0.3"
-        app:layout_constraintTop_toTopOf="@id/butt_dts0"
-        app:layout_constraintBottom_toBottomOf="@id/butt_dts0"
+        app:layout_constraintTop_toTopOf="@id/text_dts1"
+        app:layout_constraintBottom_toBottomOf="@id/text_dts1"
         app:layout_constraintStart_toEndOf="@id/butt_dts0"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
+    <!-- Barrier: se posiciona debajo del último elemento visible de la zona superior -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="txtotal_dts2,text_dts1,butt_dts1" />
+
+    <!-- ===== ListView principal (se expande) ===== -->
     <ListView
         android:id="@+id/pay_dts_viewList"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="4dp"
         android:visibility="visible"
-        app:layout_constraintTop_toBottomOf="@+id/butt_dts1"
-        app:layout_constraintBottom_toTopOf="@+id/input_dts1"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2" />
+        app:layout_constraintTop_toBottomOf="@id/barrier_top"
+        app:layout_constraintBottom_toTopOf="@id/txview_dts2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2" />
 
+    <!-- Barrier que marca el inicio de la sección inferior fija -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_bottom_section"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:barrierAllowsGoneWidgets="false"
+        app:constraint_referenced_ids="input_dts1,pay_dts_viewList2,txview_dts2" />
+
+    <!-- ===== Views opcionales (gone) ===== -->
     <AutoCompleteTextView
         android:id="@+id/input_dts1"
         android:layout_width="0dp"
         android:layout_height="@dimen/txview_h2"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="8dp"
         android:background="@color/text_background"
         android:completionThreshold="1"
-        android:enabled="true"
-        android:gravity="center_vertical"
         android:hint="Buscar Nombre:"
+        android:enabled="true"
+
         android:imeOptions="actionDone"
         android:inputType="textPersonName|textCapWords"
         android:maxLines="1"
@@ -144,13 +158,11 @@
         android:textStyle="bold"
         android:visibility="gone"
 
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/pay_dts_viewList" />
+        app:layout_constraintBottom_toTopOf="@id/txview_dts2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+    />
 
-
-    <!-- ListView para desplegar la lista completa de sugerencias debajo del input -->
     <ListView
         android:id="@+id/pay_dts_viewList2"
         android:layout_width="0dp"
@@ -158,10 +170,11 @@
         android:layout_marginTop="4dp"
         android:visibility="gone"
         android:elevation="2dp"
-        app:layout_constraintTop_toBottomOf="@+id/input_dts1"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintEnd_toEndOf="@+id/guideline2" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintBottom_toTopOf="@id/input_dts1" />
 
+    <!-- ===== Sección inferior (anclada desde abajo) ===== -->
     <TextView
         android:id="@+id/txview_dts2"
         android:layout_width="0dp"
@@ -172,30 +185,27 @@
         android:textStyle="bold"
         android:background="@color/text_background"
         android:gravity="center_vertical"
-
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintTop_toBottomOf="@+id/pay_dts_viewList2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/butt_dts4" />
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/butt_dts4"
+        app:layout_constraintBottom_toTopOf="@id/txview_dts3" />
 
-    <!-- Botón copiado alineado perfectamente al Input -->
     <ToggleButton
         android:id="@+id/butt_dts4"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-
+        android:layout_height="@dimen/input_h1"
         android:backgroundTint="@color/button"
         android:textColor="@color/inner_button"
         android:checked="false"
         android:textOff="Editar"
         android:textOn="OK"
-
         android:textSize="@dimen/inner_text_1"
-        app:layout_constraintBottom_toBottomOf="@id/txview_dts2"
-        app:layout_constraintEnd_toEndOf="@+id/guideline2"
         app:layout_constraintHorizontal_weight="0.4"
+        app:layout_constraintTop_toTopOf="@id/txview_dts2"
+        app:layout_constraintBottom_toBottomOf="@id/txview_dts2"
         app:layout_constraintStart_toEndOf="@id/txview_dts2"
-        app:layout_constraintTop_toTopOf="@id/txview_dts2" />
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
     <TextView
         android:id="@+id/txview_dts3"
@@ -206,11 +216,9 @@
         android:textSize="@dimen/inner_text_1"
         android:textStyle="bold"
         android:background="@color/text_background"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts2"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintBottom_toTopOf="@id/txview_dts4" />
 
     <TextView
         android:id="@+id/txview_dts4"
@@ -221,11 +229,9 @@
         android:textSize="@dimen/inner_text_1"
         android:textStyle="bold"
         android:background="@color/text_background"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts3"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintBottom_toTopOf="@id/txview_dts5" />
 
     <TextView
         android:id="@+id/txview_dts5"
@@ -236,11 +242,9 @@
         android:textSize="@dimen/inner_text_1"
         android:textStyle="bold"
         android:background="@color/text_background"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts4"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintBottom_toTopOf="@id/txview_dts6" />
 
     <TextView
         android:id="@+id/txview_dts6"
@@ -251,12 +255,11 @@
         android:textSize="@dimen/inner_text_1"
         android:textStyle="bold"
         android:background="@color/text_background"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts5"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/guideline2"
+        app:layout_constraintBottom_toTopOf="@id/sw_dts1" />
 
+    <!-- Switch + Spinner -->
     <Switch
         android:id="@+id/sw_dts1"
         android:layout_width="0dp"
@@ -267,10 +270,11 @@
         android:text="Confirme"
         android:textStyle="bold"
         android:textSize="@dimen/inner_text_2"
-        app:layout_constraintTop_toBottomOf="@+id/txview_dts6"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/pay_dts_select1"
         app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/pay_dts_select1"
+        app:layout_constraintBottom_toTopOf="@id/butt_dts2"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <Spinner
@@ -278,47 +282,44 @@
         android:layout_width="0dp"
         android:layout_height="@dimen/sw_h1"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="15dp"
         android:enabled="false"
         android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="@+id/sw_dts1"
-        app:layout_constraintEnd_toEndOf="@+id/guideline2"
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toEndOf="@+id/sw_dts1"
-        app:layout_constraintTop_toTopOf="@+id/sw_dts1"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="@id/sw_dts1"
+        app:layout_constraintBottom_toBottomOf="@id/sw_dts1"
+        app:layout_constraintStart_toEndOf="@id/sw_dts1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
+    <!-- Botones inferiores (anclados al fondo) -->
     <Button
         android:id="@+id/butt_dts2"
         android:layout_width="0dp"
         android:layout_height="@dimen/button_h1"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="24dp"
         android:enabled="false"
         android:text="Eliminar"
         android:textSize="@dimen/inner_text_2"
-        app:layout_constraintTop_toBottomOf="@+id/sw_dts1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/butt_dts3"
-        app:layout_constraintHorizontal_weight="1" />
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/butt_dts3"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <Button
         android:id="@+id/butt_dts3"
         android:layout_width="0dp"
         android:layout_height="@dimen/button_h1"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="12dp"
         android:text="Aceptar"
         android:textSize="@dimen/inner_text_2"
-        app:layout_constraintBottom_toBottomOf="@+id/butt_dts2"
-        app:layout_constraintEnd_toEndOf="@+id/guideline2"
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toEndOf="@+id/butt_dts2"
-        app:layout_constraintTop_toTopOf="@+id/butt_dts2"
-        app:layout_constraintVertical_bias="1.0" />
-
+        app:layout_constraintTop_toTopOf="@id/butt_dts2"
+        app:layout_constraintBottom_toBottomOf="@id/butt_dts2"
+        app:layout_constraintStart_toEndOf="@id/butt_dts2"
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
+    <!-- Guidelines -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
@@ -332,6 +333,5 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="30dp" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

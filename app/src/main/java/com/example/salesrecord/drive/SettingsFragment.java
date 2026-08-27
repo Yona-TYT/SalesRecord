@@ -69,6 +69,7 @@ import eltos.simpledialogfragment.form.Input;
 import eltos.simpledialogfragment.form.SimpleFormDialog;
 
 import com.example.salesrecord.activitys.MainActivity;
+import com.example.salesrecord.ex.UploadEvents;
 import com.example.salesrecord.utls.Msg;
 
 
@@ -86,6 +87,55 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     private AuthState authState = new AuthState();
     private AuthorizationService authorizationService;
     private SetWorkResult mWorkResult;
+
+
+    public void onEvent(Object event) {
+        // Dejar vacío por ahora para evitar el crash fatídico
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this);
+        }
+        super.onStop();
+    }
+
+    @EventBusHook
+    public void onEventMainThread(UploadEvents.GoogleDrive event) {
+        if (!event.success) {
+            Dialogs.hideProgress();
+            Dialogs.showError(getContext(), "Error",
+                    "No se pudo sincronizar con Google Drive",
+                    event.message, event.throwable);
+            return;
+        }
+
+        String msg = event.message != null ? event.message : "";
+
+        // Solo aquí termina el flujo de imágenes
+        if (msg.contains("Imágenes sincronizadas") || msg.contains("Imágenes descargadas")) {
+            Dialogs.hideProgress();
+            if (StartVar.mActivity != null) {
+                Intent i = new Intent(AppContextProvider.getContext(), MainActivity.class);
+                StartVar.mActivity.startActivity(i);
+                StartVar.mActivity.finish();
+            }
+            return;
+        }
+
+        // Upload terminó → falta el download
+        Dialogs.progress((FragmentActivity) getActivity(), "Descargando imágenes...");
+        manager.dataSynchronizeImg();
+    }
 
 
     @Override
@@ -426,76 +476,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 
         return false;
     }
-
- //   @EventBusHook
-//    public void onEventMainThread(UploadEvents.GoogleDrive event) {
-//        LOG.debug("Evento Google Drive recibido, éxito: " + event.success);
-//        Dialogs.hideProgress();  // Oculta loading
-//
-//        if (!event.success) {
-//            Dialogs.showError(getContext(),
-//                    "Error",  // Título
-//                    "No se pudo Sincronizar desde Google Drive",  // Mensaje amigable
-//                    event.message,
-//                    event.throwable);
-//        } else {
-//            // Detalles opcionales
-//            @SuppressLint("DefaultLocale") String detailMsg = String.format("✅ %s %d",
-//                    event.message,
-//                    event.count);
-//
-//            DialogInterface.OnClickListener successListener = (dialog, which) -> {
-//                LOG.debug("Botón [Aceptar] en éxito pulsado");
-//                dialog.dismiss();  // Opcional
-//
-//                Intent mIntent = new Intent(AppContextProvider.getContext(), MainActivity.class);
-//                StartVar.mActivity.startActivity(mIntent);
-//                StartVar.mActivity.finish();
-//            };
-//
-//            if(event.count > 0) {
-//                Dialogs.progress((FragmentActivity) getActivity(), "Subidos " + event.count +" Archivos...");
-//            }
-//            else{
-//                Dialogs.progress((FragmentActivity) getActivity(), "Sincronizado Imagenes...");
-//            }
-//
-//            manager.dataSynchronizeImg();
-//
-//        }
-//    }
-
-//    @EventBusHook
-//    public void onEventMainThread(DownloadEvents.GoogleDrive event) {
-//        LOG.debug("Evento Google Drive recibido, éxito: " + event.success);
-//        Dialogs.hideProgress();  // Oculta loading
-//
-//        if (!event.success) {
-//            Dialogs.showError(getContext(),
-//                    "Error",  // Título
-//                    "No se pudo Sincronizar desde Google Drive",  // Mensaje amigable
-//                    event.message,
-//                    event.throwable);
-//        } else {
-//            // Detalles opcionales
-//            @SuppressLint("DefaultLocale") String detailMsg = String.format("✅ %s %d",
-//                    event.message,
-//                    event.count);
-//
-//            DialogInterface.OnClickListener successListener = (dialog, which) -> {
-//                LOG.debug("Botón [Aceptar] en éxito pulsado");
-//                dialog.dismiss();  // Opcional
-//
-//                Intent mIntent = new Intent(AppContextProvider.getContext(), ReloadActivity.class);
-//                StartVar.mActivity.startActivity(mIntent);
-//                StartVar.mActivity.finish();
-//            };
-//            Dialogs.alert(getContext(),
-//                    "Completado",
-//                    detailMsg,
-//                    successListener);
-//        }
-//    }
 
     public File createTestFile() throws IOException {
         File gpxFolder = new File(PreferenceHelper.getInstance().getGpsLoggerFolder());

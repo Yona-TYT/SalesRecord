@@ -1,27 +1,12 @@
 package com.example.salesrecord;
 
-import android.app.Activity;
 import android.content.Context;
 
-import androidx.lifecycle.LifecycleOwner;
-import androidx.room.Room;
-
-import com.example.salesrecord.db.AllDao;
 import com.example.salesrecord.db.Article;
-import com.example.salesrecord.db.Cliente;
-import com.example.salesrecord.db.Conf;
-import com.example.salesrecord.db.Deuda;
-import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.GenericQueue;
-import com.example.salesrecord.db.Sale;
-import com.example.salesrecord.drive.SetWorkResult;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 public class GlobalData {
 
@@ -40,10 +25,12 @@ public class GlobalData {
 
     public static  boolean shouldReload = true;
 
-    public static final int glCritical = 3;
+    public static final double glUdsAlert = 3.0;
+    public static final double glMtrAlert = 0.5;
+
     public static final float pointPay = 0.05f;
     public static final float pointNoPay = 0.01f;
-    public static final float pointLost = 0.001f;
+    public static final float pointLost = 0.0001f;
 
     public Article currArt = null;
     public String currSalId = "";

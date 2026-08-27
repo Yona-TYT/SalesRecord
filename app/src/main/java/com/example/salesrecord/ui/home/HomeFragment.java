@@ -417,6 +417,10 @@ public class HomeFragment extends Fragment {
             binding.topPanel.setVisibility(View.VISIBLE);
 
             for (Obj item : objListAll) {
+                if(item.status == 0){
+                    item.visible = 0;
+                    continue;
+                }
                 item.visible = 1;
 
             }
@@ -441,6 +445,10 @@ public class HomeFragment extends Fragment {
                 String str = InputHelper.cleanText(query.trim());
 
                 for (Obj item : objListAll) {
+                    if(item.status == 0){
+                        item.visible = 0;
+                        continue;
+                    }
                     if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
                         item.visible = 1;
                     }
@@ -462,6 +470,10 @@ public class HomeFragment extends Fragment {
                     String str = InputHelper.cleanText(newText.trim());
 
                     for (Obj item : objListAll) {
+                        if(item.status == 0){
+                            item.visible = 0;
+                            continue;
+                        }
                         if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
                             item.visible = 1;
                         }
@@ -955,7 +967,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setCalcResult(){
-        if (currObj != null && calcCount > 0 && calcCount <= currObj.maxCount){
+        if (currObj != null && calcCount >= 0 && calcCount <= currObj.maxCount){
            // Basic.msg("Aqui hay NARIZ ! \uD83D\uDC43\uD83D\uDC3D\uD83E\uDD25\uD83E\uDD78 ");
 
             currObj.saleCount = calcCount;

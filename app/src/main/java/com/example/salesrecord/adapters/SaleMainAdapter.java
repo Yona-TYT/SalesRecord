@@ -129,13 +129,13 @@ public class SaleMainAdapter extends BaseAdapter  {
             holder.layout1.setVisibility(View.VISIBLE);
 
 
+            double mAlert = item.unit == 0 ? GlobalData.glUdsAlert : GlobalData.glMtrAlert;
             // Layout
-
             if (item.currCount <= 0 || item.maxCount <= 0) {
                 holder.layout1.setBackgroundColor(
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.alert_background)
                 );
-            } else if (item.currCount <= GlobalData.glCritical || item.maxCount <= GlobalData.glCritical) {
+            } else if (item.currCount <= mAlert || item.maxCount <= mAlert) {
                 holder.layout1.setBackgroundColor(
                         ContextCompat.getColor(holder.layout1.getContext(), R.color.warning_background)
                 );

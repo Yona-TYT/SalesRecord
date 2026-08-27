@@ -17,6 +17,7 @@ import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.dao.DaoClt;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientListActivity extends AppCompatActivity {
 
@@ -60,10 +61,20 @@ public class ClientListActivity extends AppCompatActivity {
         DaoClt daoClt = StartVar.appDBall.daoClt();
         ArrayList<String> mStrList = new ArrayList<>();
 
-        for (Cliente mC : daoClt.getUsers()){
-            mStrList.add(mC.nombre+", Puntos: "+mC.level+" Count:"+mC.count);
+        // 1. Obtener la lista original de clientes
+        List<Cliente> clientes = daoClt.getUsers();
+
+        // 2. Ordenar de mayor a menor usando el campo float 'level'
+        clientes.sort((c1, c2) -> Float.compare(c2.level, c1.level));
+
+        // 3. Llenar la lista de Strings ya ordenada
+        int mLev = 1;
+        for (Cliente mC : clientes){
+            mStrList.add("["+mLev+"] "+mC.nombre+", Puntos: "+mC.level+" Count:"+mC.count);
+            mLev++;
         }
 
+        // 4. Asignar al adaptador
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mStrList);
         mListView1.setAdapter(adapter);
 

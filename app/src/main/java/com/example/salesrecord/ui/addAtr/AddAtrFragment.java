@@ -273,7 +273,7 @@ public class AddAtrFragment extends Fragment {
                         isOk = b;
                     }
                     if (t.isEmpty()){
-                        mTxList.add("0");
+                        mTxList.add("");
                     }
                     else {
                         mTxList.add(t);

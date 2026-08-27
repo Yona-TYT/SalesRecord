@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                 // 💡 CASO 4: Si estás en la pestaña de PAGOS (Pays)
                 else if (currentDestinationId == R.id.navigation_pays) {
                     // Puedes inflar otros o dejarlo vacío si no lleva íconos
-                    menuInflater.inflate(R.menu.summary, menu);
+                    menuInflater.inflate(R.menu.cltlist, menu);
                 }
 
                 menuInflater.inflate(R.menu.impor, menu);
@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
 //                    return true;
 //                }
 
-                else if (id == R.id.summary) {
+                else if (id == R.id.cltlist) {
                     Intent intent = new Intent(MainActivity.this, ClientListActivity.class);
                     startActivity(intent);
                     return true;

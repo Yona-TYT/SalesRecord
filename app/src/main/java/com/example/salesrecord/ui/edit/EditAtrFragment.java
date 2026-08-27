@@ -559,8 +559,11 @@ public class EditAtrFragment extends Fragment {
 
         //Para la lista de Articulos ----------------------------
         //Para la lista de todos los productos
+
         for (Article obj : mArtList) {
-            if(mSw1.isChecked() && obj.totalcount > GlobalData.glCritical){
+            double mAlert = obj.metrica == 0 ? GlobalData.glUdsAlert : GlobalData.glMtrAlert;
+
+            if(mSw1.isChecked() && obj.totalcount > mAlert){
                 continue;
             }
             if(InputHelper.hasWordMatch(obj.nombre+obj.descr, strValidate) ){
