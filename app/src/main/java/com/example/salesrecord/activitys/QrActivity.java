@@ -208,7 +208,7 @@ public class QrActivity extends AppCompatActivity {
             try {
                 // Generar el String encriptado con tu método actual
 
-                String payload = QrPagoMovilCodec.encode(qrData);
+                String payload = QrPagoMovilCodec.encodeWeb(qrData);
 
                 Bitmap logoBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.suiche);
 

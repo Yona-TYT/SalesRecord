@@ -7,7 +7,10 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -294,6 +297,53 @@ public final class QrPagoMovilCodec {
         return encrypted + "?merchantId=" + data.bank + "&origin=app";
     }
 
+
+    /**
+     * Genera QR en formato estándar bancario:
+     * RSA PKCS#1 v1.5 + origin=web + strong_id
+     */
+    public static String encodeWeb(QrData data) throws Exception {
+        if (data == null) throw new IllegalArgumentException("QrData es null");
+        if (data.bank == null || data.bank.isEmpty()) {
+            throw new IllegalArgumentException("bank (merchantId) es obligatorio");
+        }
+        if (data.phone == null || data.phone.isEmpty()) {
+            throw new IllegalArgumentException("phone es obligatorio");
+        }
+        if (data.dni == null || data.dni.isEmpty()) {
+            throw new IllegalArgumentException("dni es obligatorio");
+        }
+
+        String dni = data.dni.trim().toUpperCase();
+        if (dni.matches("\\d+")) {
+            dni = "V" + dni;
+        }
+
+        // Orden parecido al QR estándar Provincial (0108)
+        JSONObject json = new JSONObject();
+        json.put("id", dni);
+        if (data.name != null && !data.name.trim().isEmpty()) {
+            json.put("name", data.name.trim());
+        }
+        json.put("phone", data.phone.trim());
+        json.put("bank", data.bank.trim());
+        json.put("versions", "versionName: 1.0.11.5 - keyVersion: 1");
+
+        if (data.amount != null && !data.amount.trim().isEmpty()) {
+            json.put("amount", data.amount.trim()); // o formatAmountVE(...)
+        }
+
+        String encrypted = rsaEncrypt(json.toString(), data.bank);
+
+        // Provincial usa strong_id numérico (epoch seconds)
+        String strongId = String.valueOf(System.currentTimeMillis() / 1000);
+
+        return encrypted
+                + "?merchantId=" + data.bank
+                + "&strong_id=" + strongId
+                + "&origin=web";
+    }
+
     // =========================================================
     //  AES
     // =========================================================
@@ -336,6 +386,30 @@ public final class QrPagoMovilCodec {
         return plainText;
     }
 
+    /**
+     * Cifra el JSON con la clave pública RSA del banco (PKCS#1 v1.5).
+     * Usar para origin=web.
+     */
+    private static String rsaEncrypt(String plainText, String merchantId) throws Exception {
+        PrivateKey privateKey = loadRsaPrivateKey(merchantId);
+        PublicKey publicKey = publicFromPrivate(privateKey);
+
+        byte[] data = plainText.getBytes(StandardCharsets.UTF_8);
+        // RSA-2048 + PKCS1: máximo 245 bytes de texto plano
+        if (data.length > 245) {
+            throw new IllegalArgumentException(
+                    "JSON demasiado largo para RSA (" + data.length + " bytes). Máximo 245.");
+        }
+
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        byte[] encrypted = cipher.doFinal(data);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return Base64.getEncoder().encodeToString(encrypted);
+        }
+        return "";
+    }
+
     private static String rsaDecrypt(String base64CipherText, String merchantId) throws Exception {
         String privateKeyBase64 = RSA_KEYS.get(merchantId);
         if (privateKeyBase64 == null) {
@@ -357,6 +431,29 @@ public final class QrPagoMovilCodec {
             decrypted = cipher.doFinal(Base64.getDecoder().decode(base64CipherText));
         }
         return new String(decrypted, StandardCharsets.UTF_8);
+    }
+
+    private static PrivateKey loadRsaPrivateKey(String merchantId) throws Exception {
+        String b64 = RSA_KEYS.get(merchantId);
+        if (b64 == null || b64.isEmpty()) {
+            throw new IllegalArgumentException("No hay clave RSA para merchantId: " + merchantId);
+        }
+        byte[] der = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            der = Base64.getDecoder().decode(b64);
+        }
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(der);
+        return KeyFactory.getInstance("RSA").generatePrivate(spec);
+    }
+
+    /** La pública se deriva de la privada (para cifrar al generar el QR). */
+    private static PublicKey publicFromPrivate(PrivateKey privateKey) throws Exception {
+        RSAPrivateCrtKey rsaPriv = (RSAPrivateCrtKey) privateKey;
+        RSAPublicKeySpec pubSpec = new RSAPublicKeySpec(
+                rsaPriv.getModulus(),
+                rsaPriv.getPublicExponent()
+        );
+        return KeyFactory.getInstance("RSA").generatePublic(pubSpec);
     }
 
     // =========================================================
