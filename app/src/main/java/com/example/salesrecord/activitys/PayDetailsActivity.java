@@ -127,6 +127,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
     private String currId;
 
+    private Cliente mClt;
+
     private double mTotal = 0.0;
 
     @SuppressLint("MissingInflatedId")
@@ -258,6 +260,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             StartVar.setAllListDB();
         }
 
+        mListView2.setVisibility(View.GONE);
+
         contex = AppContextProvider.getContext();
         daoSal = StartVar.appDBall.daoSal();
 
@@ -342,11 +346,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             if (txAlias.startsWith("cltID")) {
                 DaoClt daoClt = StartVar.appDBall.daoClt();
-                Cliente mClt = daoClt.getUsers(txAlias);
+                mClt = daoClt.getUsers(txAlias);
                 if (mClt != null) {
                     txAlias = mClt.nombre + " (" + mClt.iduser + ")";
-
-                    mInput1.setText(mClt.iduser);
+                    //mInput1.setText(mClt.iduser);
                 }
             }
 
@@ -373,28 +376,24 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             clientNames.addAll(uniqueNames);
 
             // 2. Crear y asignar el adaptador
-            SearchAdapter clientAdapter = new SearchAdapter(this, clientNames); // o requireContext() si es Fragment
+            SearchAdapter clientAdapter = new SearchAdapter(this, clientNames); // o requireContext()
+            clientAdapter.setListView(mListView2);
             mListView2.setAdapter(clientAdapter);
 
             // Flag para no volver a filtrar/mostrar al hacer setText
             final boolean[] isSelecting = {false};
 
-            // 3. Filtrado dinámico + visibilidad
+            // 3. Filtrado dinámico
             mInput1.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (isSelecting[0]) return; // Evita que setText reabra la lista
+                    if (isSelecting[0]) return;
 
                     if (clientAdapter != null) {
-                        clientAdapter.getFilter().filter(s);
-                    }
-                    if (mBtton4.isChecked()  && s != null && s.length() > 0) {
-                        mListView2.setVisibility(View.VISIBLE);
-                    } else {
-                        mListView2.setVisibility(View.GONE);
+                        clientAdapter.getFilter().filter(s);  // el adapter controla VISIBLE/GONE
                     }
                 }
 
@@ -415,21 +414,29 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             });
 
 
-
             mBtton4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
                         mInput1.setVisibility(View.VISIBLE);
+                        if(mClt != null) {
+                            mInput1.setText(mClt.iduser);
+                        }
+                        else {
+                            mInput1.setText("");
+                        }
                     }
                     else {
                         mInput1.setVisibility(View.GONE);
+                        InputHelper.hideKeyboard(mInput1);
 
                         String strRawName = mInput1.getText().toString();
                         if (strRawName.equals("<Vacio>") || strRawName.isEmpty()) {
                             String strNr = " nr"+mSale.cltnr;
                             mSale.cliente = "Clt." + strNr ;
                             mSale.cltid = "@null";
+                            mText2.setText(mSale.cliente);
+                            mClt = null;
                             GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
                         }
                         else {
@@ -445,6 +452,8 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                                             mSale.cliente = cl.cliente;
                                             daoSal.update(mSale);
                                             mAlias = cl.nombre + " (" + cl.iduser + ")";
+                                            mClt = cl;
+
                                             GlobalData.getInstance(contex).getGenericQueue().enqueue(mSale, 3);
                                             break;
                                         }
@@ -457,6 +466,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                                 mTextList.get(0).setText("Alias: " + mAlias);
                             }
                         }
+
+                        mInput1.setText("");
+
                     }
                 }
             });

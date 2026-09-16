@@ -11,7 +11,7 @@
 
     <!-- Textos e fondos de lectura -->
     <color name="text_color1">#1B1B1B</color>
-    <color name="text_background">#E8F5E9</color>
+    <color name="text_background">#81C784</color>
     <color name="text_background2">#E3F2FD</color>
     <color name="text_top_image">#607D8B</color>
     <color name="text_color_counter">#FFFFFF</color>

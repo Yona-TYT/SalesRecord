@@ -2,22 +2,32 @@ package com.example.salesrecord.adapters;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
+
+import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.R;
+import com.example.salesrecord.ThemeHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchAdapter extends BaseAdapter implements Filterable {
 
     private final Context mContext;
-    private final List<String> originalList;      // Lista original
-    private List<Integer> filteredIndexes;        // Índices filtrados
+    private final List<String> originalList;
+    private List<Integer> filteredIndexes;
+    private ListView listView;          // para controlar visibilidad
 
     public SearchAdapter(Context context, List<String> textList) {
         this.mContext = context;
@@ -28,6 +38,10 @@ public class SearchAdapter extends BaseAdapter implements Filterable {
         for (int i = 0; i < originalList.size(); i++) {
             filteredIndexes.add(i);
         }
+    }
+
+    public void setListView(ListView listView) {
+        this.listView = listView;
     }
 
     @Override
@@ -51,33 +65,34 @@ public class SearchAdapter extends BaseAdapter implements Filterable {
         ViewHolder holder;
 
         if (convertView == null) {
-            LinearLayout layout = new LinearLayout(mContext);
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-            layout.setPadding(10, 8, 10, 8);
+            // 1. Obtenemos el tema dinámico de la actividad activa
+            int mStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
+            ContextThemeWrapper themedContext = new ContextThemeWrapper(mContext, mStyle);
 
-            TextView text = new TextView(mContext);
-            text.setTypeface(Typeface.DEFAULT_BOLD);
-            text.setGravity(Gravity.CENTER);
-            text.setTextSize(18);
-            text.setPadding(10, 5, 10, 5);
+            // 2. Inflamos el diseño XML usando el contexto estilizado
+            convertView = LayoutInflater.from(themedContext).inflate(R.layout.item_search, parent, false);
 
-            layout.addView(text);
-
+            // 3. Mapeamos los elementos al ViewHolder estático
             holder = new ViewHolder();
-            holder.textView = text;
-            layout.setTag(holder);
-
-            convertView = layout;
+            holder.textView = convertView.findViewById(R.id.inner_text_view);
+            convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
+        // 4. Vinculación de tus datos originales
         int originalIndex = filteredIndexes.get(position);
         String item = originalList.get(originalIndex);
-
         holder.textView.setText(item);
 
         return convertView;
+    }
+
+
+
+    private int dpToPx(int dp) {
+        float density = mContext.getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
     private static class ViewHolder {
@@ -118,6 +133,15 @@ public class SearchAdapter extends BaseAdapter implements Filterable {
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 filteredIndexes = (List<Integer>) results.values;
                 notifyDataSetChanged();
+
+                // Control de visibilidad
+                if (listView != null) {
+                    if (results.count > 0 && constraint != null && constraint.length() > 0) {
+                        listView.setVisibility(View.VISIBLE);
+                    } else {
+                        listView.setVisibility(View.GONE);
+                    }
+                }
             }
         };
     }

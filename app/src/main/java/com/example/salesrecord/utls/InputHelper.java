@@ -1,7 +1,10 @@
 package com.example.salesrecord.utls;
 
 
+import android.content.Context;
 import android.text.InputType;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import java.text.Normalizer;
@@ -48,7 +51,7 @@ public class InputHelper {
                     return false;
                 }
 
-                if (Double.parseDouble(cleanDigits) <= 0) {
+                if (Double.parseDouble(cleanDigits) < 0) {
                     input.setError(errorMsg);
                     return false;
                 }
@@ -152,5 +155,15 @@ public class InputHelper {
 
         // Devuelve true si el texto contiene esa secuencia de letras en cualquier parte
         return matcher.find();
+    }
+
+    public static void hideKeyboard(View view) {
+        if (view == null) return;
+
+        InputMethodManager imm = (InputMethodManager) view.getContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 }

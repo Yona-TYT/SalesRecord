@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://android.com"
+    android:id="@+id/text_item_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:background="@color/text_background"> <!-- ★ Bloquea transparencias en toda la fila -->
+
+    <TextView
+        android:id="@+id/inner_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="@dimen/inner_text_1"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/inner_button"
+        tools:text="Ejemplo de texto de la lista" />
+
+</LinearLayout>

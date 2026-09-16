@@ -1,5 +1,7 @@
 package com.example.salesrecord.ui.home;
 
+import static org.apache.http.client.methods.RequestBuilder.post;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
@@ -110,6 +112,7 @@ public class HomeFragment extends Fragment {
 
     private Spinner mSpinn1;
     private int currSel1 = 0;
+    private int currSel2 = -1;
 
     private CurrencyEditText mInput2;
     private int currGrid = 0;
@@ -332,7 +335,7 @@ public class HomeFragment extends Fragment {
     }
 
     @SuppressLint("SetTextI18n")
-    private void setViwes(boolean isSave){
+    private void setViwes(boolean isSave) {
 
         if (StartVar.appDBall == null) {
             //Satrted variables
@@ -373,7 +376,6 @@ public class HomeFragment extends Fragment {
             binding.panelCalc.setVisibility(View.GONE);
             binding.bottomPanel.setVisibility(View.VISIBLE);
         });
-
 
 
         sharedViewModel.getSrchToggle().observe(getViewLifecycleOwner(), visible -> {
@@ -417,7 +419,7 @@ public class HomeFragment extends Fragment {
             binding.topPanel.setVisibility(View.VISIBLE);
 
             for (Obj item : objListAll) {
-                if(item.status == 0){
+                if (item.status == 0) {
                     item.visible = 0;
                     continue;
                 }
@@ -445,14 +447,13 @@ public class HomeFragment extends Fragment {
                 String str = InputHelper.cleanText(query.trim());
 
                 for (Obj item : objListAll) {
-                    if(item.status == 0){
+                    if (item.status == 0) {
                         item.visible = 0;
                         continue;
                     }
-                    if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                    if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
                         item.visible = 1;
-                    }
-                    else {
+                    } else {
                         item.visible = 0;
 
                     }
@@ -470,14 +471,13 @@ public class HomeFragment extends Fragment {
                     String str = InputHelper.cleanText(newText.trim());
 
                     for (Obj item : objListAll) {
-                        if(item.status == 0){
+                        if (item.status == 0) {
                             item.visible = 0;
                             continue;
                         }
-                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
                             item.visible = 1;
-                        }
-                        else {
+                        } else {
                             item.visible = 0;
 
                         }
@@ -501,10 +501,9 @@ public class HomeFragment extends Fragment {
                     String str = InputHelper.cleanText(query.trim());
 
                     for (Obj item : objListAll) {
-                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name+item.desc, str)) {
+                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
                             item.visible = 1;
-                        }
-                        else {
+                        } else {
                             item.visible = 0;
 
                         }
@@ -560,7 +559,7 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if(s != null && !s.toString().isEmpty() && StartVar.mDollar > 0){
+                if (s != null && !s.toString().isEmpty() && StartVar.mDollar > 0) {
                     refreshSaleListUI();
                     if (mAdapter1 != null) {
                         mAdapter1.notifyDataSetChanged();
@@ -579,29 +578,26 @@ public class HomeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-                if(currObj != null) {
+                if (currObj != null) {
                     if (currObj.maxCount > 0) {
                         mInput2.setError(null);
                         double price = MathUtls.addPercentage(currObj.price, currObj.margen);
-                        double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                        double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency ? 1 : 0);
 
                         double quant = MoneyUtls.getQuantity(price, cueePrice);
                         calcCount = quant;
-                        viewResult.setText("Cantidad: " + MoneyUtls.setFormatterEs(quant) + " / " +MoneyUtls.setFormatterEs(currObj.maxCount)+" "+glData.unitList.get(currObj.unit));
-                        if(quant <= currObj.maxCount){
+                        viewResult.setText("Cantidad: " + MoneyUtls.setFormatterEs(quant) + " / " + MoneyUtls.setFormatterEs(currObj.maxCount) + " " + glData.unitList.get(currObj.unit));
+                        if (quant <= currObj.maxCount) {
                             mButt2.setEnabled(true);
-                        }
-                        else {
+                        } else {
                             mInput2.setError("El Monto es mayor a la cantidad MAXIMA DISPONIBLE!");
                             mButt2.setEnabled(false);
                         }
-                    }
-                    else {
+                    } else {
                         mInput2.setError("Producto AGOTADO!.");
                         mButt2.setEnabled(false);
                     }
-                }
-                else {
+                } else {
                     mInput2.setError("Debe seleccionar un Producto primero !.");
                     mButt2.setEnabled(false);
                 }
@@ -621,12 +617,9 @@ public class HomeFragment extends Fragment {
                 if (actionId == EditorInfo.IME_ACTION_DONE ||
                         (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
 
-
                     // 3. Ocultamos el teclado de la pantalla
-                    InputMethodManager imm = (InputMethodManager) mInput2.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) {
-                        imm.hideSoftInputFromWindow(mInput2.getWindowToken(), 0);
-                    }
+
+                    InputHelper.hideKeyboard(mInput2);
 
                     setCalcResult();
 
@@ -641,11 +634,10 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 swCurrency = !swCurrency;
-                if(swCurrency) {
+                if (swCurrency) {
                     mInput2.setCurrencySymbol("Bs");
                     mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 1, false));
-                }
-                else{
+                } else {
                     mInput2.setCurrencySymbol("$");
                     mInput2.setText(MoneyUtls.getMaskConv(mInput2.getNumericValue(), 0, false));
                 }
@@ -672,19 +664,18 @@ public class HomeFragment extends Fragment {
                 mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
                 loadCatalogIntoSlot(currSlot);
                 bindWorkingLists();
-                
+
                 if (mAdapter1 != null && mAdapter2 != null) {
 
                     Double total = setTotal(objListSal);
-                    viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+                    viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
 
                     mAdapter1.setSelectedPos(-1);
 
                     mAdapter1.notifyDataSetChanged();
                     mAdapter2.notifyDataSetChanged();
-                }
-                else {
-                    Msg.m("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
+                } else {
+                    Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
                 }
 
                 currObj = null;
@@ -701,21 +692,20 @@ public class HomeFragment extends Fragment {
         mButt0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+                if (!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
                     Application application = (Application) contex.getApplicationContext();
                     Intent mIntent = new Intent(contex, QrActivity.class);
                     mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
-                }
-                else {
+                } else {
                     Msg.m("Los datos de pago estan incompletos!.");
                 }
             }
         });
 
         //Para la lista de todos los productos
-        if(!isSave) {
+        if (!isSave) {
             for (int i = 0; i < 3; i++) {
                 loadCatalogIntoSlot(i);  // cada caja: listas propias e independientes
             }
@@ -745,10 +735,9 @@ public class HomeFragment extends Fragment {
                 currGrid = position;
                 currObj = item;
                 mInput2.setText("");
-                if(item.maxCount > 0) {
+                if (item.maxCount > 0) {
                     mInput2.setError(null);
-                }
-                else {
+                } else {
                     mInput2.setError("Producto AGOTADO!.");
                 }
 
@@ -757,7 +746,7 @@ public class HomeFragment extends Fragment {
                 }
 
                 //Termina aqui si la calculadora esta activa
-                if (isCalc){
+                if (isCalc) {
                     updateSaleList(item);
                     return;
                 }
@@ -765,8 +754,8 @@ public class HomeFragment extends Fragment {
                 //--------------------------------------------
 
                 // ==================== LONG CLICK (Reset) ====================
-                if (item.click == 1 ) {
-                    if (view.getId() == R.id.buttDel1){
+                if (item.click == 1) {
+                    if (view.getId() == R.id.buttDel1) {
                         item.currCount = item.maxCount; // Restaurar stock completo
                         //item.saleCount = 0;
 
@@ -784,18 +773,17 @@ public class HomeFragment extends Fragment {
                 }
 
                 // ==================== CLICK NORMAL (fuera del botón X) ====================
-                if (view.getId() != R.id.buttDel1 && view.getId() != R.id.inputCount ) {
+                if (view.getId() != R.id.buttDel1 && view.getId() != R.id.inputCount) {
 
                     if (item.currCount > 0 && item.maxCount > 0 && item.saleCount < item.maxCount) {
-                        if((item.saleCount +1) > item.maxCount) {
+                        if ((item.saleCount + 1) > item.maxCount) {
                             double minus = item.maxCount - item.saleCount;
 
                             item.saleCount += minus;
                             item.currCount -= minus;
 //                            Basic.msg("Remanente no alcanza "+minus);
 //                            return;
-                        }
-                        else {
+                        } else {
                             item.saleCount++;
                             item.currCount--;
                         }
@@ -831,20 +819,20 @@ public class HomeFragment extends Fragment {
                     boolean b = false;
                     for (int i = 0; i < objListAll.size(); i++) {
                         Obj obj = objListAll.get(i);
-                        if(obj.id == item.id){
+                        if (obj.id == item.id) {
                             objListAll.set(i, item);
                             b = true;
                             break;
                         }
                     }
                     //Si es necesario se actualiza
-                    if (b){
+                    if (b) {
                         objListSal.removeIf(obj -> obj.saleCount == 0);
 
                         if (mAdapter1 != null) {
 
                             Double total = setTotal(objListSal);
-                            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+                            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
 
                             mAdapter1.notifyDataSetChanged();
                         }
@@ -868,9 +856,9 @@ public class HomeFragment extends Fragment {
 
         // Para el Boton de Precesar PAgos
         mButt4.setOnClickListener(v -> {
-            if(!objListSal.isEmpty()){
+            if (!objListSal.isEmpty()) {
                 //Procesa la venta y guarda el registro
-                if(saveSale()){
+                if (saveSale()) {
                     //Si sale bien se limpian los valores
                     objListAll.clear();
                     objListSal.clear();
@@ -886,15 +874,14 @@ public class HomeFragment extends Fragment {
                     if (mAdapter1 != null && mAdapter2 != null) {
 
                         Double total = setTotal(objListSal);
-                        viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+                        viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
 
                         mAdapter1.setSelectedPos(-1);
 
                         mAdapter1.notifyDataSetChanged();
                         mAdapter2.notifyDataSetChanged();
-                    }
-                    else {
-                        Msg.m("Aqui no hay aqui no hay !: "+mAdapter1 +" : "+ mAdapter2);
+                    } else {
+                        Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
                     }
 
                     currObj = null;
@@ -909,61 +896,110 @@ public class HomeFragment extends Fragment {
 //                    startActivity(mIntent);
 //                    //-------------------------------------
                 }
-            }
-            else {
+            } else {
                 Msg.m("Lista VACIA!");
             }
         });
 
-        if(isSave) {
+        if (isSave) {
             refreshAllUI();
         }
 
         // 1. Obtener la lista de clientes desde tus variables globales existentes (StartVar)
-        // Mapeamos a String si es una lista de objetos complejos
         List<String> clientNames = new ArrayList<>();
-
         for (Cliente mC : daoClt.getUsers()) {
-            // Reemplaza .getName() por el método real que devuelva el texto de tu objeto Cliente
             clientNames.add(mC.iduser);
         }
 
-
-        // 2. Crear y asignar el adaptador
         SearchAdapter clientAdapter = new SearchAdapter(requireContext(), clientNames);
+        clientAdapter.setListView(mListV2);
         mListV2.setAdapter(clientAdapter);
 
-        // 3. Filtrado dinámico y control de visibilidad en tiempo real
+        // Ajuste en el TextWatcher para controlar la visibilidad dinámicamente
         mInput3.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (clientAdapter != null) {
-                    clientAdapter.getFilter().filter(s);
-                }
-
-                // Si el input no está vacío, mostramos la lista de sugerencias, de lo contrario la ocultamos
-                if (s != null && s.length() > 0) {
-                    mListV2.setVisibility(View.VISIBLE);
-                } else {
-                    mListV2.setVisibility(View.GONE);
+                    clientAdapter.getFilter().filter(s, count1 -> {
+                        // count1 nos dice cuántos elementos quedaron tras el filtro
+                        // SI hay texto Y quedan coincidencias Y el input tiene el foco -> Mostramos la lista
+                        if (s.length() > 0 && count1 > 0 && mInput3.hasFocus()) {
+                            mListV2.setVisibility(View.VISIBLE);
+                        } else {
+                            mListV2.setVisibility(View.GONE); // Se oculta si está vacía o no hay coincidencias
+                        }
+                    });
                 }
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
-        // 4. Guardar selección al hacer click en un nombre de la lista
+        mInput3.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    // Al ganar el foco, si ya tiene texto escrito, volvemos a filtrar para evaluar si se muestra
+                    String text = mInput3.getText().toString();
+                    if (!text.isEmpty()) {
+                        clientAdapter.getFilter().filter(text);
+                    }
+                } else {
+                    // Al PERDER el foco se oculta siempre de inmediato
+                    mListV2.setVisibility(View.GONE);
+
+                    if (currSel2 >= 0) {
+                        currSel2 = -1;
+                    } else {
+                        boolean b = false;
+                        String text = mInput3.getText().toString();
+                        for (String s : clientNames) {
+                            if (s.equals(text)) {
+                                b = true;
+                                break;
+                            }
+                        }
+                        // Si el texto no coincide con ningún cliente exacto, podrías limpiar el input aquí si lo deseas
+                    }
+                }
+            }
+        });
+
+        mInput3.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT || event != null) {
+                mInput3.clearFocus(); // Esto disparará el onFocusChange (false) y ocultará la lista
+
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(mInput3.getWindowToken(), 0);
+                }
+                return true;
+            }
+            return false;
+        });
+
+        // Guardar selección al hacer click en un nombre de la lista
         mListV2.setOnItemClickListener((parent, view1, position, id) -> {
             String selectedName = (String) clientAdapter.getItem(position);
+
+            // 1. Modificamos la variable de control PRIMERO para que el clearFocus sepa que fue una selección válida
+            currSel2 = position;
+
             mInput3.setText(selectedName);
             mInput3.setSelection(mInput3.getText().length()); // Mueve el cursor al final
-            mListV2.setVisibility(View.GONE); // Ocultamos la lista ya seleccionada
-        });
 
+            // 2. Apagamos el filtro para dejar listo el adapter
+            clientAdapter.getFilter().filter("");
+
+            // 3. Quitamos el foco para que el teclado se cierre de forma natural
+            mInput3.clearFocus();
+        });
     }
 
     private void setCalcResult(){
@@ -1177,7 +1213,7 @@ public class HomeFragment extends Fragment {
                 // Sumamos los nuevos puntos a los puntos que el cliente ya tenía acumulados
                 mCl.level += points;
                 mCl.ulfech = currDate;
-                mCl.count += 1;
+                mCl.count = mCl.count + 1;
 
                 daoClt.insertUser(mCl);
                 mList.add(mCl);
