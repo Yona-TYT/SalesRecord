@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -113,6 +114,8 @@ public class HomeFragment extends Fragment {
     private Spinner mSpinn1;
     private int currSel1 = 0;
     private int currSel2 = -1;
+    final boolean[] isTouchingList = {false};
+
 
     private CurrencyEditText mInput2;
     private int currGrid = 0;
@@ -334,7 +337,7 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     private void setViwes(boolean isSave) {
 
         if (StartVar.appDBall == null) {
@@ -905,6 +908,7 @@ public class HomeFragment extends Fragment {
             refreshAllUI();
         }
 
+
         // 1. Obtener la lista de clientes desde tus variables globales existentes (StartVar)
         List<String> clientNames = new ArrayList<>();
         for (Cliente mC : daoClt.getUsers()) {
@@ -914,6 +918,22 @@ public class HomeFragment extends Fragment {
         SearchAdapter clientAdapter = new SearchAdapter(requireContext(), clientNames);
         clientAdapter.setListView(mListV2);
         mListV2.setAdapter(clientAdapter);
+
+        mListV2.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_MOVE:
+                    isTouchingList[0] = true; // El usuario está tocando o arrastrando la lista
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    // Damos un micro-retraso para que no parpadee al soltar el dedo
+                    mListV2.postDelayed(() -> isTouchingList[0] = false, 100);
+                    break;
+            }
+            return false; // Retornamos false para que el ListView siga procesando el scroll de forma normal
+        });
+
 
         // Ajuste en el TextWatcher para controlar la visibilidad dinámicamente
         mInput3.addTextChangedListener(new TextWatcher() {
@@ -945,27 +965,27 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    // Al ganar el foco, si ya tiene texto escrito, volvemos a filtrar para evaluar si se muestra
                     String text = mInput3.getText().toString();
                     if (!text.isEmpty()) {
                         clientAdapter.getFilter().filter(text);
                     }
                 } else {
-                    // Al PERDER el foco se oculta siempre de inmediato
-                    mListV2.setVisibility(View.GONE);
+                    // SÓLO ocultamos la lista si el usuario NO está interactuando con ella
+                    if (!isTouchingList[0]) {
+                        mListV2.setVisibility(View.GONE);
 
-                    if (currSel2 >= 0) {
-                        currSel2 = -1;
-                    } else {
-                        boolean b = false;
-                        String text = mInput3.getText().toString();
-                        for (String s : clientNames) {
-                            if (s.equals(text)) {
-                                b = true;
-                                break;
+                        if (currSel2 >= 0) {
+                            currSel2 = -1;
+                        } else {
+                            boolean b = false;
+                            String text = mInput3.getText().toString();
+                            for (String s : clientNames) {
+                                if (s.equals(text)) {
+                                    b = true;
+                                    break;
+                                }
                             }
                         }
-                        // Si el texto no coincide con ningún cliente exacto, podrías limpiar el input aquí si lo deseas
                     }
                 }
             }
@@ -1156,8 +1176,8 @@ public class HomeFragment extends Fragment {
                     }
                 }
                 if(b){
-                String cltId = DatabaseUtils.generateId("cltID", daoClt);
-                mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 1, 0);
+                    String cltId = DatabaseUtils.generateId("cltID", daoClt);
+                    mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 1, 0);
                 }
             }
 

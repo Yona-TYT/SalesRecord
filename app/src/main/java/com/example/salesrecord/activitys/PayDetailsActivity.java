@@ -53,6 +53,7 @@ import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
+import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.Dialogs;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
@@ -584,13 +585,21 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                     // 1. Calcular cuántos puntos le habíamos dado con el estatus viejo
                     switch (oldSt) {
-                        case 0: oldPoints = (float) (mTotal * GlobalData.pointPay); break;
-                        case 1: oldPoints = (float) (mTotal * GlobalData.pointNoPay); break;
-                        case 2: oldPoints = (float) (mTotal * GlobalData.pointLost); break;
+                        case 0:
+                            oldPoints = (float) (mTotal * GlobalData.pointPay);
+                            break;
+                        case 1:
+                            oldPoints = (float) (mTotal * GlobalData.pointNoPay);
+                            break;
+                        case 2:
+                            oldPoints = (float) (mTotal * GlobalData.pointLost);
+                            break;
                     }
 
                     // 3. MATEMÁTICA SEGURA: Restamos el viejo del récord y sumamos el nuevo
                     mClt.level = mClt.level - oldPoints;
+
+                    mClt.count = mClt.count > 0 ? (mClt.count - 1) : 0;
 
                     // Guardamos el cliente actualizado en Room
                     daoClt.insertUser(mClt);
@@ -600,11 +609,19 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                 glData.setIsEdit(true);
 
-                //Elimina el registro selecionado
-                mSale.sale = "@null";
-                daoSal.update(mSale);
 
-                mList.add(mSale);
+                if (DriveManager.getAuthState().isAuthorized()) {
+                    //Elimina el registro selecionado
+
+                    mSale.sale = "@null";
+                    daoSal.update(mSale);
+
+                    mList.add(mSale);
+                 }
+
+                else {
+                    daoSal.removerUser(mSale.uid);
+                }
 
                 // 2. Apagamos el reload
                 GlobalData.shouldReload = false;
@@ -677,6 +694,11 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         finishActivity(null);
     }
     private void finishActivity(List<Object> mList){
+        if( !DriveManager.getAuthState().isAuthorized()){
+            finish();
+            return;
+        }
+
         if(GlobalData.shouldReload && (mList == null || mList.isEmpty())){
             finish(); // Cierre instantáneo y seguro
             return;
