@@ -18,6 +18,9 @@ public interface DaoSal extends GenericDao<Sale>{
     @Query("SELECT * FROM Sale")
     List<Sale> getUsers();
 
+    @Query("SELECT * FROM Sale WHERE cliente = :cliente")
+    List<Sale> getSalesByClient(String cliente);
+
     // Insertar una lista completa (grupoId ya está en cada objeto Pgos)
     @Insert
     void insertAll(List<Sale> sales);

@@ -35,15 +35,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickListener{
-    //Test------------------------------------------------------------
     private Context mContex;
-    private CalendUtls cale = new CalendUtls();
-    private Basic mBasic;
-
     private List<Object[]> textList = new ArrayList<>();
     private List<Object[]> currList = new ArrayList<>(); // Original Values
-    private List<String> mCurrencyList= Arrays.asList("$", "Bs");
-    private int mCindex = StartVar.mCurrency;
 
     private ArrayList<Integer> newList = new ArrayList<>();    // Values to be displayed
 
@@ -53,8 +47,6 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         this.mContex = mContex;
         this.textList = textList;
         this.currList = textList;
-
-        mBasic = new Basic(mContex);
     }
 
     static class ViewHolder {
@@ -132,7 +124,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             }
 
             txMont += " ("+ Basic.getMask((double) textList.get(idx)[2], 0) + " / "+
-                    Basic.getMaskConv((double) textList.get(idx)[2], (double) textList.get(idx)[6], 1)+")";
+                    Basic.getMaskConv((double) textList.get(idx)[2], null, 1)+")";
 
             monto.setText(txMont);
 

@@ -5,11 +5,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activitys.ClientListActivity">
-
+    tools:context=".activitys.CltDetailsActivity">
 
     <Spinner
-        android:id="@+id/clt_select1"
+        android:id="@+id/cltdts_select1"
         android:layout_width="0dp"
         android:layout_height="@dimen/spinner_hs"
         android:layout_marginTop="10dp"
@@ -17,20 +16,20 @@
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toStartOf="@+id/clt_select2" />
+        app:layout_constraintEnd_toStartOf="@+id/cltdts_select2" />
 
     <Spinner
-        android:id="@+id/clt_select2"
+        android:id="@+id/cltdts_select2"
         android:layout_width="0dp"
         android:layout_height="@dimen/spinner_hs"
         android:layout_marginTop="10dp"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/clt_select1"
+        app:layout_constraintStart_toEndOf="@id/cltdts_select1"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
     <CheckBox
-        android:id="@+id/clt_check_1"
+        android:id="@+id/cltdts_check_1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -39,11 +38,10 @@
         android:checked="true"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/clt_select1" />
+        app:layout_constraintTop_toBottomOf="@+id/cltdts_select1" />
 
-    <!-- TextView posicionado justo debajo de clt_select1 -->
     <TextView
-        android:id="@+id/txview_clts1"
+        android:id="@+id/txview_cltdts1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
@@ -53,10 +51,11 @@
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/clt_check_1" />
+        app:layout_constraintTop_toBottomOf="@+id/cltdts_check_1" /> <!-- Apunta al CheckBox -->
+
 
     <TextView
-        android:id="@+id/txview_clts2"
+        android:id="@+id/txview_cltdts2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
@@ -66,11 +65,11 @@
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_clts1" />
+        app:layout_constraintTop_toBottomOf="@+id/txview_cltdts1" />
 
 
     <TextView
-        android:id="@+id/txview_clts3"
+        android:id="@+id/txview_cltdts3"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
         android:padding="2dp"
@@ -84,13 +83,13 @@
         android:visibility="gone"
         app:layout_constraintHorizontal_weight="1.5"
 
-        app:layout_constraintBottom_toTopOf="@+id/clt_viewList"
-        app:layout_constraintEnd_toStartOf="@id/butt_clts0"
+        app:layout_constraintBottom_toTopOf="@+id/cltdts_viewList"
+        app:layout_constraintEnd_toStartOf="@id/butt_cltdts0"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/txview_clts2" />
+        app:layout_constraintTop_toBottomOf="@+id/txview_cltdts2" />
 
     <ImageButton
-        android:id="@+id/butt_clts0"
+        android:id="@+id/butt_cltdts0"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
         android:layout_marginStart="0dp"
@@ -102,13 +101,13 @@
         android:visibility="gone"
 
         app:layout_constraintHorizontal_weight="0.3"
-        app:layout_constraintTop_toTopOf="@id/txview_clts3"
-        app:layout_constraintBottom_toBottomOf="@id/txview_clts3"
-        app:layout_constraintStart_toEndOf="@id/txview_clts3"
-        app:layout_constraintEnd_toStartOf="@id/butt_clts1" />
+        app:layout_constraintTop_toTopOf="@id/txview_cltdts3"
+        app:layout_constraintBottom_toBottomOf="@id/txview_cltdts3"
+        app:layout_constraintStart_toEndOf="@id/txview_cltdts3"
+        app:layout_constraintEnd_toStartOf="@id/butt_cltdts1" />
 
     <ImageButton
-        android:id="@+id/butt_clts1"
+        android:id="@+id/butt_cltdts1"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
         android:layout_marginStart="5dp"
@@ -120,24 +119,24 @@
         android:visibility="gone"
 
         app:layout_constraintHorizontal_weight="0.3"
-        app:layout_constraintTop_toTopOf="@id/butt_clts0"
-        app:layout_constraintBottom_toBottomOf="@id/butt_clts0"
-        app:layout_constraintStart_toEndOf="@id/butt_clts0"
+        app:layout_constraintTop_toTopOf="@id/butt_cltdts0"
+        app:layout_constraintBottom_toBottomOf="@id/butt_cltdts0"
+        app:layout_constraintStart_toEndOf="@id/butt_cltdts0"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
 
 
 
-    <!-- ListView ahora inicia correctamente debajo de txview_clts1 y llena el espacio restante -->
+    <!-- ListView ahora inicia correctamente debajo de txview_cltdts1 y llena el espacio restante -->
     <ListView
-        android:id="@+id/clt_viewList"
+        android:id="@+id/cltdts_viewList"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/butt_clts1" />
+        app:layout_constraintTop_toBottomOf="@+id/butt_cltdts1" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
@@ -154,3 +153,4 @@
         app:layout_constraintGuide_end="10dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

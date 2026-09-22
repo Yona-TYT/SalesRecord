@@ -349,7 +349,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 DaoClt daoClt = StartVar.appDBall.daoClt();
                 mClt = daoClt.getUsers(txAlias);
                 if (mClt != null) {
-                    txAlias = mClt.nombre + " (" + mClt.iduser + ")";
+                    txAlias = mClt.nombre;
                     //mInput1.setText(mClt.iduser);
                 }
             }
@@ -497,7 +497,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             String txHora = CalendUtls.getTime(mSale.time);
 
             int i = 0;
-            mTextList.get(i).setText("Alias: " + txAlias);
+            mTextList.get(i).setText(txAlias.toUpperCase());
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;

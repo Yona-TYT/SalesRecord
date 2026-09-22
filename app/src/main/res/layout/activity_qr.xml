@@ -9,9 +9,6 @@
     android:orientation="vertical"
     tools:context=".activitys.QrActivity">
 
-    <!-- CONTENEDOR ELÁSTICO CENTRAL (Ocupa todo el espacio restante de la pantalla) -->
-
-    <!-- TEXTO 1: Etiqueta estática "Total:" -->
     <TextView
         android:id="@+id/txtTotalLabel"
         android:layout_width="match_parent"

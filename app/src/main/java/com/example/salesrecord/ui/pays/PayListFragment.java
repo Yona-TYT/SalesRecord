@@ -90,8 +90,6 @@ public class PayListFragment extends Fragment {
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
-
-
     private double mTotal = 0.0;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -117,10 +115,8 @@ public class PayListFragment extends Fragment {
 
         contex = AppContextProvider.getContext();
 
-
         if (StartVar.appDBall == null) {
             //Satrted variables
-            StartVar startVar = new StartVar();
             StartVar.setAllListDB();
         }
 
@@ -147,10 +143,9 @@ public class PayListFragment extends Fragment {
             currDate = Instant.now().toEpochMilli();
         }
         for (Fecha d : listFecha){
-            //
             // Basic.msg(d.strdate+" "+dateOrderedList.size());
             if(CalendUtls.isSameDay(currDate, d.date)){
-                mStrFecList.add("Hoy");
+                mStrFecList.add("<Hoy>");
             }
             else {
                 mStrFecList.add(d.strdate);
@@ -254,17 +249,17 @@ public class PayListFragment extends Fragment {
 
                 if(currSel2 == 0) {
                     if (CalendUtls.isSameDay(fecha, selFecha.date)) {
-                        Object[] stList = new Object[8];
-                        stList[0] = mPay.sale;
-                        stList[1] = status;
-                        stList[2] = mPay.monto;
-                        stList[3] = date;
-                        stList[4] = mPay.status;
-                        stList[5] = time;
-                        stList[6] = mPay.tasa;
-                        stList[7] = txAlias;
+                        Object[] strList = new Object[8];
+                        strList[0] = mPay.sale;
+                        strList[1] = status;
+                        strList[2] = mPay.monto;
+                        strList[3] = date;
+                        strList[4] = mPay.status;
+                        strList[5] = time;
+                        strList[6] = mPay.tasa;
+                        strList[7] = txAlias;
 
-                        mPayList.add(stList);
+                        mPayList.add(strList);
 
                         oldTasa = mPay.tasa;
                         mTotal += mPay.monto;

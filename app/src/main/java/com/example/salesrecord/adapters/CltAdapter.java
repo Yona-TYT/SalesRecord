@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -20,11 +21,15 @@ import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.content.ContextCompat;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.GlobalData;
+import com.example.salesrecord.activitys.CltDetailsActivity;
+import com.example.salesrecord.activitys.PayDetailsActivity;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.ThemeHelper;
+import com.example.salesrecord.utls.Msg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,29 +38,28 @@ import java.util.List;
 import android.app.Activity;
 
 public class CltAdapter extends BaseAdapter implements Filterable, View.OnClickListener{
-    //Test------------------------------------------------------------
     private Context mContex;
-    private CalendUtls cale = new CalendUtls();
-    private Basic mBasic;
-    private Activity mActivity;
-
     private List<Object[]> textList = new ArrayList<>();
     private List<Object[]> currList = new ArrayList<>(); // Original Values
-    private List<String> mCurrencyList= Arrays.asList("$", "Bs");
-    private int mCindex = StartVar.mCurrency;
-    private String mCurr = "";
 
     private ArrayList<Integer> newList = new ArrayList<>();    // Values to be displayed
 
-    public  CltAdapter(Context mContex, List<Object[]> textList, Activity mActivity){
+    private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
+
+    public  CltAdapter(Context mContex, List<Object[]> textList){
         this.mContex = mContex;
         this.textList = textList;
         this.currList = textList;
-        this.mActivity = mActivity;
+    }
 
-        mBasic = new Basic(mContex);
-
-        mCurr = mCurrencyList.get(mCindex);
+    static class ViewHolder {
+        LinearLayout layout;
+        Button butt;
+        TextView text1;
+        TextView text2;
+        TextView text3;
+        TextView text4;
+        int defaultTextColor;
     }
 
     @Override
@@ -73,64 +77,74 @@ public class CltAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
     @SuppressLint("SetTextI18n")
     @Override
-    public View getView(int pos, View convertView, ViewGroup parent){
+    public View getView(int pos, View convertView, ViewGroup parent) {
+        ViewHolder holder;
 
-        Log.d("PhotoPicker", "Ya hay ? 11111------------------------: "+ newList.size() + " ::" + pos);
-        TextView text1 = new TextView(mContex);
-        TextView text2 = new TextView(mContex);
+        if (convertView == null) {
+            // 1. Obtenemos el tema de la actividad para que el botón lo herede de forma nativa
+            int mStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());
+            ContextThemeWrapper themedContext = new ContextThemeWrapper(mContex, mStyle);
 
-        int buttonStyle = ThemeHelper.getManifestThemeId(AppContextProvider.getCurrentActivity());//R.style.Theme_RegistroCuentas;
+            // 2. Inflamos el nuevo archivo XML usando ese contexto con estilo
+            convertView = LayoutInflater.from(themedContext).inflate(R.layout.item_client, parent, false);
 
-        Button butt = new Button(new ContextThemeWrapper(mContex, buttonStyle));
-        LinearLayout layout = new LinearLayout(mContex);
-        int idx = newList.get(pos);
+            holder = new ViewHolder();
+            holder.layout = convertView.findViewById(R.id.clt_item_layout);
+            holder.butt = convertView.findViewById(R.id.butt_cltlist);
+            holder.text1 = convertView.findViewById(R.id.clt_text1);
+            holder.text2 = convertView.findViewById(R.id.clt_text2);
+            holder.text3 = convertView.findViewById(R.id.clt_text3);
+            holder.text4 = convertView.findViewById(R.id.clt_text4);
+            holder.defaultTextColor = holder.text3.getCurrentTextColor();
 
-        // Se ajustan los parametros del Boton ----------------------------------
-        butt.setId(R.id.butt_cltlist);
-        butt.setTag(textList.get(idx)[0]);
-        butt.setText("+");
-        butt.setTypeface(Typeface.DEFAULT_BOLD);
-        LinearLayout.LayoutParams buttParams = new LinearLayout.LayoutParams(mBasic.getPixelSiz(R.dimen.button_wss), mBasic.getPixelSiz(R.dimen.button_h1));
-        buttParams.gravity = Gravity.CENTER;
-        butt.setLayoutParams(buttParams);
-        butt.setTextSize(mBasic.getFloatSiz(R.dimen.inner_text_2));
-        butt.setPadding(1, 1, 1, 1);
-        butt.setOnClickListener(this);
-        layout.addView(butt);
-        //-----------------------------------------------------------------------
-        // Se ajustan los parametros del Texto ----------------------------------
-        String txName = (String)textList.get(idx)[1];
-        //String txMont = (opt==0?"+ ":"- ")+Basic.getValue((String)textList.get(idx)[2]) + " "+ mCurrencyList.get(mCindex);
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
 
-        String txA = (String)textList.get(idx)[2];
-        String txB = (String)textList.get(idx)[3];
+        if (textList != null && pos < newList.size()) {
+            int idx = newList.get(pos);
 
-        text1.setText( txName +txA );
-        text1 = setTextView(text1, R.dimen.txview_wm2, R.dimen.button_h1);
-        layout.addView(text1);
+            // Configuración dinámica del Botón
+            holder.butt.setTag((String) textList.get(idx)[0]);
+            holder.butt.setOnClickListener(this); // Asigna el listener de la clase
 
-        text2.setText( txB );
-        text2 = setTextView(text2, R.dimen.txview_ws, R.dimen.button_h1);
-        layout.addView(text2);
-        //-----------------------------------------------------------------------
+            // Construcción y asignación de Textos
+            String txPoints = (String) textList.get(idx)[1];
 
-        layout.setOrientation(LinearLayout.HORIZONTAL);
-        layout.setVisibility(View.VISIBLE);
-        layout.setPadding(2,2,2,2);
+            String txName = (String) textList.get(idx)[7];
+            holder.text1.setText(txName);
+            holder.text2.setText(txPoints);
 
-        return layout;
-    }
+            TextView monto = holder.text3;
 
-    public TextView setTextView(TextView view, int w, int h){
-        view.setTypeface(Typeface.DEFAULT_BOLD);
-        view.setTextColor(ContextCompat.getColor(view.getContext(), R.color.text_color1));
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(mBasic.getPixelSiz(w), mBasic.getPixelSiz(h));
-        textParams.gravity = Gravity.CENTER;
-        view.setLayoutParams(textParams);
-        view.setTextSize(mBasic.getFloatSiz(R.dimen.inner_text_2));
-        view.setMaxLines(1);
-        view.setPadding(2, 15, 2, 2);
-        return view;
+            TextView status = holder.text4;
+            String txStatus = "Sin Deudas";
+            String txMont ="";
+            double money = (double) textList.get(idx)[2];
+            if(money > 0.0){
+
+                txMont ="-";
+                monto.setTextColor(
+                        ContextCompat.getColor(monto.getContext(), R.color.alert_background)
+                );
+
+                txStatus = "Deuda Total";
+            }
+            else {
+                monto.setTextColor(holder.defaultTextColor);
+            }
+
+            status.setText(txStatus);
+
+            txMont += " ("+ Basic.getMask(money, 0) + " / "+
+                    Basic.getMaskConv(money, null, 1)+")";
+
+            monto.setText(txMont);
+
+        }
+
+        return convertView;
     }
 
     @Override
@@ -187,11 +201,10 @@ public class CltAdapter extends BaseAdapter implements Filterable, View.OnClickL
         int itemId = view.getId();
 
         if(itemId == R.id.butt_cltlist) {
-            StartVar startVar = new StartVar();
-            startVar.setCltIndex( (int)view.getTag());
+            glData.setCurrCltId( (String) view.getTag());
 
             Application application = (Application) mContex.getApplicationContext();
-            Intent mIntent = new Intent(mContex, mActivity.getClass());
+            Intent mIntent = new Intent(mContex, CltDetailsActivity.class);
             mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             application.startActivity(mIntent);
         }

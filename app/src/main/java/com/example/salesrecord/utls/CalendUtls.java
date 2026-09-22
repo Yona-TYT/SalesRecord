@@ -258,6 +258,19 @@ public class CalendUtls {
         return getShortDateInternal(timestamp, true);
     }
 
+    public static String getShortDateYear(LocalDate date) {
+        if (date == null){
+            return "NA";
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            // Al usar atStartOfDay() forzamos la hora a las 00:00:00.000 de ese día real
+            return getShortDateInternal(date.atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli(), true);
+        }
+        return "NA";
+    }
     public static String getShortDate(long timestamp) {
         return getShortDateInternal(timestamp, false);
     }
@@ -494,5 +507,19 @@ public class CalendUtls {
             return LocalDateTime.now(); // fallback seguro
         }
         return null;
+    }
+
+    public static long localDateToTimestamp(LocalDate date) {
+        if (date == null) {
+            return 0L;
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            // Al usar atStartOfDay() forzamos la hora a las 00:00:00.000 de ese día real
+            return date.atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+        }
+        return 0L;
     }
 }

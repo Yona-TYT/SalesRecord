@@ -34,6 +34,7 @@ public class GlobalData {
 
     public Article currArt = null;
     public String currSalId = "";
+    public String currCltId = "";
 
     public List<String> unitList = Arrays.asList("uds.", "kg", "L", "m", "cm", "?", "?", "?");
 
@@ -113,6 +114,13 @@ public class GlobalData {
     }
     public String getCurrSalId(){
         return this.currSalId;
+    }
+
+    public void setCurrCltId(String obj){
+        this.currCltId = obj;
+    }
+    public String getCurrCltId(){
+        return this.currCltId;
     }
 
     public void setTasaDolar(double tasa) {

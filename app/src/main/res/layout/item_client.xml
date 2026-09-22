@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/clt_item_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="2dp">
+    <!-- EL BOTÓN CON PESO DIRECTO: Se cambia el ancho a 0dp y se le asigna el weight -->
+    <Button
+        android:id="@+id/butt_cltlist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.25"
+        android:layout_gravity="center_vertical"
+        android:textColor="@color/inner_button"
+        android:backgroundTint="@color/button"
+        android:padding="1dp"
+        android:text="+"
+        android:textStyle="bold"
+        android:textSize="@dimen/inner_text_2"
+        android:focusable="false"
+        android:focusableInTouchMode="false" />
+
+    <!-- CONTENIDO DE TEXTO PRINCIPAL: Conserva su peso mayor (ej. 2.0 o 2.5) para dominar la pantalla -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2.0"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <!-- COLUMNA IZQUIERDA -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/clt_text1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+
+            <TextView
+                android:id="@+id/clt_text2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1" />
+        </LinearLayout>
+
+        <!-- COLUMNA DERECHA (Corregida con width 0dp) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/clt_text3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:padding="2dp"
+                android:gravity="right"
+                android:textSize="@dimen/inner_text_1"
+                tools:ignore="RtlHardcoded" />
+
+            <TextView
+                android:id="@+id/clt_text4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:padding="2dp"
+                android:textSize="@dimen/inner_text_1"
+                tools:ignore="RtlHardcoded" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
