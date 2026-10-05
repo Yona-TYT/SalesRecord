@@ -257,7 +257,7 @@ public class CltDetailsActivity extends AppCompatActivity {
                     DaoArt daoArt = StartVar.appDBall.daoAtr();
                     double mPrice = 0.0;
                     for (Sale mS : mSalList) {
-                        if (mS != null) {
+                        if (mS != null && mS.status != 0 && mS.status != 3) {
                             String[] artcList = mS.artclist.split("\\|");
                             String[] countList = mS.countlist.split("\\|");
                             String[] priceList = mS.pricelist.split("\\|");
