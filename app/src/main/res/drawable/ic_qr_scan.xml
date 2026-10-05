@@ -7,10 +7,10 @@
     android:viewportHeight="24">
 
     <group
-        android:pivotX="-0.4"
-        android:pivotY="-0.4"
-        android:scaleX="0.15"
-        android:scaleY="0.15"
+        android:pivotX="1.4"
+        android:pivotY="1.4"
+        android:scaleX="0.128"
+        android:scaleY="0.128"
         android:translateX="1"
         android:translateY="1">
         <path

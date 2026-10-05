@@ -171,6 +171,8 @@ public class EditAtrFragment extends Fragment {
             StartVar startVar = new StartVar();
             StartVar.setAllListDB();
         }
+        daoCfg = StartVar.appDBall.daoCfg();
+        mConf = daoCfg.getUsers(StartVar.mConfID);
 
         daoArt = StartVar.appDBall.daoAtr();
         mArtList = daoArt.getUsers();
@@ -178,9 +180,6 @@ public class EditAtrFragment extends Fragment {
         //Para la lista de Articulos ----------------------------
         //Para la lista de todos los productos
         reloadList();
-
-        daoCfg = StartVar.appDBall.daoCfg();
-        mConf = daoCfg.getUsers(StartVar.mConfID);
 
         if(mConf != null) {
             glMarg.setText(Basic.setFormatterEs(mConf.margen));
@@ -406,7 +405,7 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
-                    mTil1.setHint("Total: " + Basic.formatDecimal(mInput3.getNumericValue()+crrArt.totalcount));
+                    mTil1.setHint("Total: " + MoneyUtls.formatDecimal(mInput3.getNumericValue()+crrArt.totalcount));
                 }
             }
 
@@ -589,9 +588,10 @@ public class EditAtrFragment extends Fragment {
         else {
             mPrice = art.preccj;
         }
+
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, 1, art.currcount, art.totalcount, 0, mPrice, art.margen
-                , art.uid);
+                art.staus, 1, art.currcount, art.totalcount, 0, mPrice,
+                (art.margen + mConf.margen), art.uid);
 
         return mObj;
 

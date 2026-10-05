@@ -8,32 +8,20 @@
     android:layout_height="match_parent"
     tools:context=".activitys.PayDetailsActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_dts"
-        android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark"
-        android:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
     <!-- ===== Sección Total ===== -->
     <TextView
         android:id="@+id/tx_dts"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:padding="2dp"
         android:gravity="center"
+        android:padding="2dp"
         android:text="Total:"
         android:textSize="@dimen/inner_text_3"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toStartOf="@id/guideline2"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_dts" />
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
     <TextView
         android:id="@+id/txtotal_dts1"

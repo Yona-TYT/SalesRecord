@@ -116,7 +116,6 @@ public class PayListFragment extends Fragment {
         contex = AppContextProvider.getContext();
 
         if (StartVar.appDBall == null) {
-            //Satrted variables
             StartVar.setAllListDB();
         }
 

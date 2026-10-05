@@ -2,11 +2,14 @@ package com.example.salesrecord.adapters;
 
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -15,8 +18,14 @@ import androidx.core.content.ContextCompat;
 import com.example.salesrecord.AppContextProvider;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
+import com.example.salesrecord.StartVar;
+import com.example.salesrecord.activitys.ArtSalesActivity;
+import com.example.salesrecord.db.Article;
+import com.example.salesrecord.db.Conf;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
+import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
 import java.util.ArrayList;
@@ -32,6 +41,7 @@ public class SummaryAdapter extends BaseAdapter  {
 
 
     private static class ViewHolder {
+        Button butt;
         LinearLayout layout1;
         TextView view1;
         TextView view2;
@@ -80,6 +90,7 @@ public class SummaryAdapter extends BaseAdapter  {
             convertView = LayoutInflater.from(mContex).inflate(R.layout.item_summary, parent, false);
 
             holder = new ViewHolder();
+            holder.butt = convertView.findViewById(R.id.butt_summary);
             holder.layout1 = convertView.findViewById(R.id.summary_Layout);
             holder.view1 = convertView.findViewById(R.id.summary_tex1);
             holder.view2 = convertView.findViewById(R.id.summary_tex2);
@@ -135,11 +146,10 @@ public class SummaryAdapter extends BaseAdapter  {
         holder.view1.setText(off+item.name+desc);
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
-        Double total = (clcPrice*item.saleCount);
-        holder.view2.setText("uds. " + Basic.formatDecimal(item.maxCount) +
+        holder.view2.setText("uds. " + MoneyUtls.formatDecimal(item.maxCount) +
                 "  -  precio: " + Basic.getMaskConv(item.price, 0) +
-                " / "+  Basic.getMaskConv(item.price, 1) +
-                "  -  (" + Basic.formatDecimal(item.margen)+" %)");
+                " / "+  Basic.getMaskConv(clcPrice, 1) +
+                "  -  (" + MoneyUtls.formatDecimal(item.margen)+" %)");
 
         holder.view1.setTextColor(
                 ContextCompat.getColor(holder.view1.getContext(), R.color.alert_text)
@@ -150,6 +160,25 @@ public class SummaryAdapter extends BaseAdapter  {
 
         holder.view1.setTag(pos);
         holder.view2.setTag(pos);
+
+        holder.butt.setTag(item.strId);
+        holder.butt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Object object = v.getTag();
+                if(object != null) {
+                    Article mArt = StartVar.appDBall.daoAtr().getUsers((String) object);
+                    if(mArt != null) {
+                        glData.setCurrArt(mArt);
+
+                        Application application = (Application) mContex.getApplicationContext();
+                        Intent mIntent = new Intent(mContex, ArtSalesActivity.class);
+                        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        application.startActivity(mIntent);
+                    }
+                }
+            }
+        });
 
         return convertView;
     }

@@ -1,6 +1,7 @@
 package com.example.salesrecord.activitys;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
@@ -34,6 +35,12 @@ public class QrActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Escanear Codigo QR");
+        }
+
         binding = ActivityQrBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -47,6 +54,14 @@ public class QrActivity extends AppCompatActivity {
         // 3. Botón para cerrar la Activity
         binding.dummyButton.setOnClickListener(v -> finish());
     }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        // Cierra esta actividad y regresa de inmediato a la anterior
+        finish();
+        return true;
+    }
+
 
     private void displayGeneratedQr(String amount) {
         QrPagoMovilCodec.QrData qrData = new QrPagoMovilCodec.QrData();

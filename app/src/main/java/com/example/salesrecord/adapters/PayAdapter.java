@@ -56,6 +56,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         TextView text2;
         TextView text3;
         TextView text4;
+        int defaultTextColor;
     }
 
     @Override
@@ -91,6 +92,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             holder.text2 = convertView.findViewById(R.id.pay_text2);
             holder.text3 = convertView.findViewById(R.id.pay_text3);
             holder.text4 = convertView.findViewById(R.id.pay_text4);
+            holder.defaultTextColor = holder.text3.getCurrentTextColor();
 
             convertView.setTag(holder);
         } else {
@@ -121,6 +123,9 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
                 monto.setTextColor(
                         ContextCompat.getColor(monto.getContext(), R.color.alert_background)
                 );
+            }
+            else {
+                monto.setTextColor(holder.defaultTextColor);
             }
 
             txMont += " ("+ Basic.getMask((double) textList.get(idx)[2], 0) + " / "+

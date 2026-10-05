@@ -18,6 +18,7 @@ import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
 
 import java.util.ArrayList;
@@ -170,7 +171,7 @@ public class SaleResultAdapter extends BaseAdapter  {
         double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 
         Double total = (clcPrice*item.saleCount);
-        holder.view2.setText("Cantidad: " +Basic.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1)+")");
+        holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1)+")");
 
 
         holder.view1.setTextColor(

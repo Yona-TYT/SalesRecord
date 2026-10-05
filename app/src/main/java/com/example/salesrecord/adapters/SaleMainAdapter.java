@@ -27,6 +27,7 @@ import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
@@ -164,7 +165,7 @@ public class SaleMainAdapter extends BaseAdapter  {
             TextView viewCount = holder.viewcount;
 
             CurrencyEditText inputCount = holder.inputcount;
-            viewCount.setText(Basic.formatDecimal(count));
+            viewCount.setText(MoneyUtls.formatDecimal(count));
 
             Object mTag = inputCount.getTag();
 
@@ -315,7 +316,7 @@ public class SaleMainAdapter extends BaseAdapter  {
                                 viewCount.setVisibility(View.VISIBLE);
 
                                 // Actualizamos el texto visual con el nuevo valor guardado
-                                viewCount.setText(Basic.formatDecimal(mitem.saleCount));
+                                viewCount.setText(MoneyUtls.formatDecimal(mitem.saleCount));
 
                                 // 3. Ocultamos el teclado de la pantalla
                                 InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -366,7 +367,7 @@ public class SaleMainAdapter extends BaseAdapter  {
                                 viewCount.setVisibility(View.VISIBLE);
 
                                 // Actualizamos el texto visual con el nuevo valor guardado
-                                viewCount.setText(Basic.formatDecimal(mitem.saleCount));
+                                viewCount.setText(MoneyUtls.formatDecimal(mitem.saleCount));
 
                                 // 3. Ocultamos el teclado de la pantalla
                                 InputMethodManager imm = (InputMethodManager) inputCount.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -401,7 +402,7 @@ public class SaleMainAdapter extends BaseAdapter  {
                 desc = "";
             }
             holder.view1.setText(item.name + desc);
-            holder.view2.setText("Disponible: " + Basic.formatDecimal(item.currCount) + "/" + Basic.formatDecimal(item.maxCount));
+            holder.view2.setText("Disponible: " + MoneyUtls.formatDecimal(item.currCount) + "/" + MoneyUtls.formatDecimal(item.maxCount));
 
             double clcPrice = MathUtls.addPercentage(item.price, item.margen);
 

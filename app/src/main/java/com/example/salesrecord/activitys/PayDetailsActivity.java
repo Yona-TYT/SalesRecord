@@ -136,33 +136,15 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Detalles de Pago");
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_pay_dts);
-
-        //Se configura el Boton nav Back -----------------------------------------------
-        OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                finishActivity();
-            }
-        };
-        onBackPressedDispatcher.addCallback(this, callback);
-        //---------------------------------------------------------------------------------
-        //Activate ToolBar ----------------------------------------------------------------
-        Toolbar myToolbar = findViewById(R.id.toolbar_dts);
-        setSupportActionBar(myToolbar);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        // calling the action bar
-        ActionBar actionBar = getSupportActionBar();
-        // showing the back button in action bar
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("Detalles de Pago");
-        actionBar.setDisplayShowHomeEnabled(true);
-
-        myToolbar.setTitleTextColor(ContextCompat.getColor(myToolbar.getContext(), R.color.inner_button));
-        //------------------------------------------------------------------------------------------
 
         // 3. Restaurar las variables (Opción A: Desde el onCreate)
         if (savedInstanceState != null) {
@@ -241,17 +223,12 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         setViwes();
     }
 
-    // MenuToolbar boton back
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == android.R.id.home) {
-            finishActivity();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    public boolean onSupportNavigateUp() {
+        // Cierra esta actividad y regresa de inmediato a la anterior
+        finish();
+        return true;
     }
-    //------------------------------------------------------------
 
     @SuppressLint("SetTextI18n")
     public void setViwes() {
@@ -340,7 +317,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             }
 
             total2.setText(infla);
-
 
             mUser = mSale.sale;
             String txAlias = mSale.cliente;
@@ -690,9 +666,6 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         }
     }
 
-    private void finishActivity() {
-        finishActivity(null);
-    }
     private void finishActivity(List<Object> mList){
         if( !DriveManager.getAuthState().isAuthorized()){
             finish();

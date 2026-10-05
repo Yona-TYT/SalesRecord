@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import com.example.salesrecord.StartVar;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -148,5 +149,28 @@ public class MoneyUtls {
 
     public static double getQuantity(double price, double currPrice ){
         return price == 0? 0 : currPrice/price;
+    }
+
+
+    public static String formatDecimal(Double value) {
+        if (value == null) return "";
+
+        return getFormatDecimal().format(value);
+    }
+
+    public static String formatDecimal(Float value) {
+        if (value == null) return "";
+        return getFormatDecimal().format(value);
+    }
+
+    public static DecimalFormat getFormatDecimal() {
+        // Forzamos el locale de España para asegurar punto en miles y coma en decimales
+        Locale spanishLocale = Locale.forLanguageTag("es-ES");
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(spanishLocale);
+
+        // El '#' oculta los ceros innecesarios
+        DecimalFormat df = new DecimalFormat("###,###.##", symbols);
+
+        return df;
     }
 }

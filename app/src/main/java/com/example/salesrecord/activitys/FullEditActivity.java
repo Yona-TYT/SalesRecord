@@ -19,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.Insets;
@@ -93,6 +94,13 @@ public class FullEditActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Editor de Articulo");
+        }
+
         contex = this;
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_full_edit);
@@ -103,6 +111,13 @@ public class FullEditActivity extends AppCompatActivity {
         });
 
         setViwes();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        // Cierra esta actividad y regresa de inmediato a la anterior
+        finish();
+        return true;
     }
 
     @SuppressLint("WrongViewCast")

@@ -16,6 +16,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -71,8 +72,14 @@ public class CltDetailsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Pagos por Cliente"); // Opcional: Cambia el título de la barra
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_clt_details);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -92,6 +99,13 @@ public class CltDetailsActivity extends AppCompatActivity {
         mListView = findViewById(R.id.cltdts_viewList);
 
         setViwes();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        // Cierra esta actividad y regresa de inmediato a la anterior
+        finish();
+        return true;
     }
 
     @Override
