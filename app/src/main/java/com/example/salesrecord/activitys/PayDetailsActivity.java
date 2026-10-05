@@ -617,30 +617,44 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         float oldPoints = 0f;
                         float newPoints = 0f;
 
-                        // 1. Calcular cuántos puntos le habíamos dado con el estatus viejo
+                        // 1. Puntos que se habían otorgado con el estatus anterior
                         switch (oldSt) {
-                            case 0: oldPoints = (float) (mTotal * GlobalData.pointPay); break;
-                            case 1: oldPoints = (float) (mTotal * GlobalData.pointNoPay); break;
-                            case 2: oldPoints = (float) (mTotal * GlobalData.pointLost); break;
+                            case 0: // Pagado
+                                oldPoints = (float) (mTotal * GlobalData.pointPay);
+                                break;
+                            case 1: // No pagado
+                                oldPoints = (float) (mTotal * GlobalData.pointNoPay);
+                                break;
+                            case 2: // Perdido
+                                oldPoints = (float) (mTotal * GlobalData.pointLost);
+                                break;
+                            case 3: // Exonerar → no se habían sumado puntos
+                                oldPoints = 0f;
+                                break;
                         }
 
-                        // 2. Calcular cuántos puntos le corresponden con el nuevo estatus
+                        // 2. Puntos que corresponden con el nuevo estatus
                         switch (currSel1) {
-                            case 0: newPoints = (float) (mTotal * GlobalData.pointPay); break;
-                            case 1: newPoints = (float) (mTotal * GlobalData.pointNoPay); break;
-                            case 2: newPoints = (float) (mTotal * GlobalData.pointLost); break;
+                            case 0: // Pagado
+                                newPoints = (float) (mTotal * GlobalData.pointPay);
+                                break;
+                            case 1: // No pagado
+                                newPoints = (float) (mTotal * GlobalData.pointNoPay);
+                                break;
+                            case 2: // Perdido
+                                newPoints = (float) (mTotal * GlobalData.pointLost);
+                                break;
+                            case 3: // Exonerar → se restan los puntos anteriores y no se agrega nada
+                                newPoints = 0f;
+                                break;
                         }
 
-                        // 3. MATEMÁTICA SEGURA: Restamos el viejo del récord y sumamos el nuevo
+                        // 3. Matemática segura
                         float points = mClt.level - oldPoints + newPoints;
-                        
-                        mClt.level = points > 0 ? ( mClt.level - oldPoints + newPoints ) :  newPoints;
+                        mClt.level = points > 0f ? points : newPoints;
 
-                        // Guardamos el cliente actualizado en Room
-                        mClt.count = mClt.count > 0 ? (mClt.count -1) : 0;
                         daoClt.insertUser(mClt);
                         mList.add(mClt);
-
                     }
                     mSale.status = currSel1;
                 }

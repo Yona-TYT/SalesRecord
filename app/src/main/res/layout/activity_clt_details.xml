@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".activitys.CltDetailsActivity">
 
+    <!-- ==================== SPINNERS SUPERIORES ==================== -->
     <Spinner
         android:id="@+id/cltdts_select1"
         android:layout_width="0dp"
@@ -28,6 +29,7 @@
         app:layout_constraintStart_toEndOf="@id/cltdts_select1"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
+    <!-- ==================== CHECKBOX ==================== -->
     <CheckBox
         android:id="@+id/cltdts_check_1"
         android:layout_width="0dp"
@@ -40,6 +42,7 @@
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/cltdts_select1" />
 
+    <!-- ==================== TEXTVIEWS ==================== -->
     <TextView
         android:id="@+id/txview_cltdts1"
         android:layout_width="0dp"
@@ -51,8 +54,7 @@
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/cltdts_check_1" /> <!-- Apunta al CheckBox -->
-
+        app:layout_constraintTop_toBottomOf="@+id/cltdts_check_1" />
 
     <TextView
         android:id="@+id/txview_cltdts2"
@@ -66,7 +68,6 @@
         app:layout_constraintEnd_toEndOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/txview_cltdts1" />
-
 
     <TextView
         android:id="@+id/txview_cltdts3"
@@ -82,12 +83,12 @@
         android:maxLines="1"
         android:visibility="gone"
         app:layout_constraintHorizontal_weight="1.5"
-
         app:layout_constraintBottom_toTopOf="@+id/cltdts_viewList"
         app:layout_constraintEnd_toStartOf="@id/butt_cltdts0"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/txview_cltdts2" />
 
+    <!-- ==================== BOTONES QR ==================== -->
     <ImageButton
         android:id="@+id/butt_cltdts0"
         android:layout_width="0dp"
@@ -99,7 +100,6 @@
         android:padding="0dp"
         android:background="@color/button"
         android:visibility="gone"
-
         app:layout_constraintHorizontal_weight="0.3"
         app:layout_constraintTop_toTopOf="@id/txview_cltdts3"
         app:layout_constraintBottom_toBottomOf="@id/txview_cltdts3"
@@ -117,27 +117,58 @@
         android:padding="3dp"
         android:background="@color/button"
         android:visibility="gone"
-
         app:layout_constraintHorizontal_weight="0.3"
         app:layout_constraintTop_toTopOf="@id/butt_cltdts0"
         app:layout_constraintBottom_toBottomOf="@id/butt_cltdts0"
         app:layout_constraintStart_toEndOf="@id/butt_cltdts0"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
-
-
-
-    <!-- ListView ahora inicia correctamente debajo de txview_cltdts1 y llena el espacio restante -->
+    <!-- ==================== LISTVIEW (ahora termina antes del Switch) ==================== -->
     <ListView
         android:id="@+id/cltdts_viewList"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/butt_cltdts1"
+        app:layout_constraintBottom_toTopOf="@+id/sw_cltdts1"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/butt_cltdts1" />
+        app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
+    <!-- ==================== SWITCH (40% del espacio) ==================== -->
+    <Switch
+        android:id="@+id/sw_cltdts1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/sw_h1"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="8dp"
+        android:padding="10dp"
+        android:text="Confirme"
+        android:textStyle="bold"
+        android:textSize="@dimen/inner_text_2"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintEnd_toStartOf="@id/butt_cltdts2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_weight="4"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <!-- ==================== BOTÓN ELIMINAR (60% del espacio) ==================== -->
+    <Button
+        android:id="@+id/butt_cltdts2"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/button_h1"
+        android:layout_marginBottom="24dp"
+        android:layout_marginStart="8dp"
+        android:enabled="false"
+        android:text="Exonerar Todo"
+        android:textSize="@dimen/inner_text_2"
+        app:layout_constraintStart_toEndOf="@id/sw_cltdts1"
+        app:layout_constraintEnd_toEndOf="@id/guideline2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_weight="6" />
+
+
+    <!-- ==================== GUIDELINES ==================== -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
@@ -153,4 +184,3 @@
         app:layout_constraintGuide_end="10dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

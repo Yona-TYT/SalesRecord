@@ -40,7 +40,7 @@ public class GlobalData {
 
     public List<String> categ = Arrays.asList("Unidad", "Paquete", "Caja", "No Empacables");
 
-    public List<String> saleType = Arrays.asList("Venta", "Sin Pagar", "Perdida", "Exonerar");
+    public List<String> saleType = Arrays.asList("Venta", "Sin Pagar", "Perdida", "Exonerado");
 
     public int optTasa = 0;
     public double tasaDolar = 0.0;

@@ -7,12 +7,17 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -28,12 +33,18 @@ import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
+import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
+import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.db.Sale;
+import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
+import com.example.salesrecord.drive.DriveManager;
+import com.example.salesrecord.ex.Dialogs;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
+import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 
@@ -63,6 +74,8 @@ public class CltDetailsActivity extends AppCompatActivity {
     private TextView copyText;
     private ImageButton mBtton0;
     private ImageButton mBtton1;
+    private Switch mSw1;
+    private Button mBtton2;
 
     private Long currDate = null;
     private double mTotal = 0.0;
@@ -97,6 +110,9 @@ public class CltDetailsActivity extends AppCompatActivity {
         mBtton1 = findViewById(R.id.butt_cltdts1);
 
         mListView = findViewById(R.id.cltdts_viewList);
+
+        mSw1 = findViewById(R.id.sw_cltdts1);
+        mBtton2 = findViewById(R.id.butt_cltdts2);
 
         setViwes();
     }
@@ -224,6 +240,49 @@ public class CltDetailsActivity extends AppCompatActivity {
         });
 
         setListAdapter();
+
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mBtton2.setEnabled(mSw1.isChecked());
+            }
+        });
+
+        mBtton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mSw1.isChecked()){
+                    List<Object> mList = new ArrayList<>();
+
+                    DaoArt daoArt = StartVar.appDBall.daoAtr();
+                    double mPrice = 0.0;
+                    for (Sale mS : mSalList) {
+                        if (mS != null) {
+                            String[] artcList = mS.artclist.split("\\|");
+                            String[] countList = mS.countlist.split("\\|");
+                            String[] priceList = mS.pricelist.split("\\|");
+                            String[] margList = mS.marglist.split("\\|");
+
+                            for (int i = 0; i < artcList.length; i++) {
+                                Article crrArt = daoArt.getUsers(artcList[i]);
+
+                                if (crrArt != null) {
+                                    double count = Double.parseDouble(countList[i]);
+                                    double price = Double.parseDouble(priceList[i]);
+                                    double marge = Double.parseDouble(margList[i]);
+
+                                    double calc = MathUtls.addPercentage(price, marge);
+                                    mPrice = mPrice + (calc * count);
+                                }
+                            }
+
+                            mList.addAll(updatePointsStatus( mS.status, 3,  mS, mPrice));
+                        }
+                    }
+                    syncWithDrive(mList);
+                }
+            }
+        });
     }
 
     @SuppressLint("SetTextI18n")
@@ -232,7 +291,8 @@ public class CltDetailsActivity extends AppCompatActivity {
 
         mTotal = 0.0;
         for (Sale mS : mSalList) {
-            if (check1.isChecked() && mS.status == 0) {
+            int stus = mS.status;
+            if (check1.isChecked() && ( stus == 0 || stus == 3)){
                 continue;
             }
 
@@ -244,11 +304,11 @@ public class CltDetailsActivity extends AppCompatActivity {
                 }
             }
 
-            if(mS.status > 0){
+            if(stus > 0 && stus < 3){
                 mTotal += mS.monto;
             }
 
-            String status = glData.saleType.get(mS.status);
+            String status = glData.saleType.get(stus);
             Long longDate = mS.fecha;
             String date = CalendUtls.getShortDate(fecha);
             String time = CalendUtls.getTime(mS.time);
@@ -258,7 +318,7 @@ public class CltDetailsActivity extends AppCompatActivity {
             strList[1] = status;
             strList[2] = mS.monto;
             strList[3] = date;
-            strList[4] = mS.status;
+            strList[4] = stus;
             strList[5] = time;
             strList[6] = mS.tasa;
             strList[7] = mClt.nombre;
@@ -292,5 +352,99 @@ public class CltDetailsActivity extends AppCompatActivity {
         PayAdapter mAdapter = new PayAdapter(contex, mPayList);
         mListView.setAdapter(mAdapter);
         mAdapter.getFilter().filter("");
+    }
+
+    private List<Object> updatePointsStatus(int oldOpt, int opt, Sale mSale, double price){
+        List<Object> mList = new ArrayList<>();
+
+        if (oldOpt != opt){
+
+            Cliente mClt = daoClt.getUsers(mSale.cliente);
+
+            if (mClt != null) {
+                float oldPoints = 0f;
+                float newPoints = 0f;
+
+                // 1. Puntos que se habían otorgado con el estatus anterior
+                switch (oldOpt) {
+                    case 0: // Pagado
+                        oldPoints = (float) (price * GlobalData.pointPay);
+                        break;
+                    case 1: // No pagado
+                        oldPoints = (float) (price * GlobalData.pointNoPay);
+                        break;
+                    case 2: // Perdido
+                        oldPoints = (float) (price * GlobalData.pointLost);
+                        break;
+                    case 3: // Exonerar → no se habían sumado puntos
+                        oldPoints = 0f;
+                        break;
+                }
+
+                // 2. Puntos que corresponden con el nuevo estatus
+                switch (opt) {
+                    case 0: // Pagado
+                        newPoints = (float) (price * GlobalData.pointPay);
+                        break;
+                    case 1: // No pagado
+                        newPoints = (float) (price * GlobalData.pointNoPay);
+                        break;
+                    case 2: // Perdido
+                        newPoints = (float) (price * GlobalData.pointLost);
+                        break;
+                    case 3: // Exonerar → se restan los puntos anteriores y no se agrega nada
+                        newPoints = 0f;
+                        break;
+                }
+
+                // 3. Matemática segura
+                float points = mClt.level - oldPoints + newPoints;
+                mClt.level = points > 0f ? points : newPoints;
+
+                daoClt.insertUser(mClt);
+                mList.add(mClt);
+            }
+            mSale.status = opt;
+            mList.add(mSale);
+        }
+        return mList;
+    }
+
+    private void syncWithDrive(List<Object> mList) {
+        if (!DriveManager.getAuthState().isAuthorized()) {
+            Msg.m("No autorizado en Google Drive");
+            return;
+        }
+
+        if (GlobalData.shouldReload && (mList == null || mList.isEmpty())) {
+            return;
+        }
+
+        GlobalData.shouldReload = false;
+
+        Dialogs.progress(this, "Sincronizando con Google Drive");
+
+        GenericQueue queue = GlobalData.getInstance(AppContextProvider.getContext()).getGenericQueue();
+
+        final boolean[] completed = {false};   // bandera
+
+        queue.setOnSyncCompleteListener(() -> {
+            completed[0] = true;
+            Dialogs.hideProgress();
+            queue.setOnSyncCompleteListener(null);
+            Msg.m("Sincronización exitosa");
+            setListAdapter();
+        });
+
+        queue.enqueueList(mList, 3);
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (!completed[0]) {                 // solo si todavía no terminó
+                Dialogs.hideProgress();
+                queue.setOnSyncCompleteListener(null);
+                Log.w("Ventas", "Timeout de red alcanzado. Liberando pantalla.");
+                Msg.m("Sincronización en segundo plano");
+            }
+        }, 8000);
     }
 }

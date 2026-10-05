@@ -118,7 +118,13 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
             TextView monto = holder.text3;
             String txMont ="+";
-            if(opt > 0){
+            if (opt == 3){
+                txMont ="-";
+                monto.setTextColor(
+                        ContextCompat.getColor(monto.getContext(), R.color.retire_background)
+                );
+            }
+            else if(opt > 0){
                 txMont ="-";
                 monto.setTextColor(
                         ContextCompat.getColor(monto.getContext(), R.color.alert_background)

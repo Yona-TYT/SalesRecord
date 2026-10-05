@@ -114,7 +114,7 @@ public class ClientListActivity extends AppCompatActivity {
         for (Cliente mC : mCltList) {
             double money = 0.0;
             for (Sale mS : mSalList) {
-                if (mS.cliente.equals(mC.cliente) && mS.status > 0) {
+                if (mS.cliente.equals(mC.cliente) && mS.status > 0 && mS.status < 3) {
                     money += mS.monto;
                 }
             }
