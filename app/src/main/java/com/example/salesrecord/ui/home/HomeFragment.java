@@ -1377,7 +1377,7 @@ public class HomeFragment extends Fragment {
             for (int s = 0; s < 3; s++) {
                 if (s == currSlot || salSlots[s] == null) continue;
                 for (Obj sold : salSlots[s]) {
-                    if (sold != null && Objects.equals(sold.id, item.id)) {
+                    if (sold != null && Objects.equals(sold.strId, item.strId)) {
                         reservedInOtherSlots += sold.saleCount;
                     }
                 }
