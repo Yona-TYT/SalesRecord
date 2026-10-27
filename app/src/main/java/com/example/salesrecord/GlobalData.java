@@ -6,6 +6,7 @@ import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.GenericQueue;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class GlobalData {
@@ -15,6 +16,7 @@ public class GlobalData {
     private GenericQueue genericQueue;
 
     // Variables globales
+    public static HashMap<String, Boolean> chacksState = new HashMap<>();
     public static String glName = "";
     public static String glTelef = "";
     public static String glPhone= "";
@@ -24,6 +26,9 @@ public class GlobalData {
     public static String glNameBank = "";
 
     public static  boolean shouldReload = true;
+
+    public static  boolean shouldProcess = false;
+
 
     public static final double glUdsAlert = 3.0;
     public static final double glMtrAlert = 0.5;
@@ -101,6 +106,20 @@ public class GlobalData {
             instance = new GlobalData(context);
         }
     }
+
+    public void saveChecksState(HashMap<String, Boolean> obj){
+        chacksState = obj;
+    }
+    public HashMap<String, Boolean> getChecksState(){
+        return chacksState;
+    }
+
+    public HashMap<String, Boolean> clearChecksState(){
+
+        chacksState.clear();
+        return chacksState;
+    }
+
 
     public void setCurrArt(Article obj){
         this.currArt = obj;

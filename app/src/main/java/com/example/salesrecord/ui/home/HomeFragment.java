@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -46,6 +45,7 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
+import com.example.salesrecord.activitys.CltDetailsActivity;
 import com.example.salesrecord.activitys.QrActivity;
 import com.example.salesrecord.adapters.SaleMainAdapter;
 import com.example.salesrecord.adapters.SaleResultAdapter;
@@ -61,12 +61,10 @@ import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
-import com.example.salesrecord.drive.DriveManager;
-import com.example.salesrecord.drive.SetWorkResult;
-import com.example.salesrecord.ex.PreferenceHelper;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.LayoutShareHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
@@ -78,8 +76,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
 
@@ -106,10 +102,10 @@ public class HomeFragment extends Fragment {
 
     private Button mButt1;
     private Button mButt2;
-    private Button mButt3;
-    private Button mButt4;
-    private ImageButton mButt0;
-
+    private ImageButton mButt3;
+    private ImageButton mButt4;
+    private ImageButton mButt5;
+    private Button mButt6;
 
     private Spinner mSpinn1;
     private int currSel1 = 0;
@@ -258,7 +254,8 @@ public class HomeFragment extends Fragment {
         mButt2 = binding.buttHome2;
         mButt3 = binding.buttHome3;
         mButt4 = binding.buttHome4;
-        mButt0 = binding.buttHome0;
+        mButt5 = binding.buttHome5;
+        mButt6 = binding.buttHome6;
         mInput2 = binding.calcInput;
         mInput3 = binding.inputClient;
         mSpinn1 = binding.homeSelect1;
@@ -328,7 +325,16 @@ public class HomeFragment extends Fragment {
 
     @Override
     public void onResume() {
+
         super.onResume();
+
+        if(GlobalData.shouldProcess){
+            mSpinn1.setSelection(0);
+            currSel1 = 0;
+            processSale();
+            GlobalData.shouldProcess = false;
+        }
+
     }
 
     @Override
@@ -692,13 +698,26 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        mButt0.setOnClickListener(new View.OnClickListener() {
+        mButt4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String shredText = GlobalData.glTelef + "\n" +
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        "\n"+ GlobalData.glCodeBank + "\n" +GlobalData.glNameBank;
+
+                LayoutShareHelper.sharePlainText(getActivity(), shredText, "Share text via:");            }
+        });
+
+        mButt5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
                     Application application = (Application) contex.getApplicationContext();
                     Intent mIntent = new Intent(contex, QrActivity.class);
                     mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.putExtra("islist", false);
+                    mIntent.putExtra("process", true);
+
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
                 } else {
@@ -706,6 +725,7 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
+
 
         //Para la lista de todos los productos
         if (!isSave) {
@@ -858,47 +878,10 @@ public class HomeFragment extends Fragment {
         });
 
         // Para el Boton de Precesar PAgos
-        mButt4.setOnClickListener(v -> {
+        mButt6.setOnClickListener(v -> {
             if (!objListSal.isEmpty()) {
                 //Procesa la venta y guarda el registro
-                if (saveSale()) {
-                    //Si sale bien se limpian los valores
-                    objListAll.clear();
-                    objListSal.clear();
-
-                    //Para la lista de todos los productos
-
-                    mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
-
-                    for (Article obj : mArtList) {
-                        objListAll.add(setGalleryArray(obj));
-                    }
-
-                    if (mAdapter1 != null && mAdapter2 != null) {
-
-                        Double total = setTotal(objListSal);
-                        viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
-
-                        mAdapter1.setSelectedPos(-1);
-
-                        mAdapter1.notifyDataSetChanged();
-                        mAdapter2.notifyDataSetChanged();
-                    } else {
-                        Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
-                    }
-
-                    currObj = null;
-
-//                    // sync envia una actualizacion por red
-//                    Bundle mBundle = new Bundle();
-//                    mBundle.putBoolean("sync", true);
-//                    Intent mIntent = new Intent(contex, ReloadActivity.class);
-//                    mIntent.putExtras(mBundle);
-//                    //Esto inicia las actividad Reload
-//
-//                    startActivity(mIntent);
-//                    //-------------------------------------
-                }
+                processSale();
             } else {
                 Msg.m("Lista VACIA!");
             }
@@ -1095,8 +1078,9 @@ public class HomeFragment extends Fragment {
             viewTotal.setVisibility(View.INVISIBLE);
             mInput3.setVisibility(View.GONE);
             mButt3.setVisibility(View.GONE);
-            mButt0.setVisibility(View.GONE);
-            mButt4.setEnabled(false);
+            mButt4.setVisibility(View.GONE);
+            mButt5.setVisibility(View.GONE);
+            mButt6.setEnabled(false);
             mSpinn1.setEnabled(false);
 
         }
@@ -1104,8 +1088,9 @@ public class HomeFragment extends Fragment {
             viewTotal.setVisibility(View.VISIBLE);
             mInput3.setVisibility(View.VISIBLE);
             mButt3.setVisibility(View.VISIBLE);
-            mButt0.setVisibility(View.VISIBLE);
-            mButt4.setEnabled(true);
+            mButt4.setVisibility(View.VISIBLE);
+            mButt5.setVisibility(View.VISIBLE);
+            mButt6.setEnabled(true);
             mSpinn1.setEnabled(true);
         }
         double total = 0.0;
@@ -1134,6 +1119,38 @@ public class HomeFragment extends Fragment {
         );
 
         return mObj;
+    }
+
+    private void processSale(){
+        if (saveSale()) {
+            //Si sale bien se limpian los valores
+            objListAll.clear();
+            objListSal.clear();
+
+            //Para la lista de todos los productos
+
+            mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
+
+            for (Article obj : mArtList) {
+                objListAll.add(setGalleryArray(obj));
+            }
+
+            if (mAdapter1 != null && mAdapter2 != null) {
+
+                Double total = setTotal(objListSal);
+                viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
+
+                mAdapter1.setSelectedPos(-1);
+
+                mAdapter1.notifyDataSetChanged();
+                mAdapter2.notifyDataSetChanged();
+            } else {
+                Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
+            }
+
+            currObj = null;
+
+        }
     }
 
     private boolean saveSale(){
@@ -1248,7 +1265,7 @@ public class HomeFragment extends Fragment {
             searchBar.setQuery("", false);
             mInput3.setText("");
             mInput3.setVisibility(View.GONE);
-            mButt4.setEnabled(false);
+            mButt6.setEnabled(false);
             mSpinn1.setEnabled(false);
             mTotal = 0;
 

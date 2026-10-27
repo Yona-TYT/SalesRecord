@@ -24,8 +24,15 @@
         tools:layout="@layout/fragment_edit" />
 
     <fragment
+        android:id="@+id/navigation_clts"
+        android:name="com.example.salesrecord.ui.clients.ClientsFragment"
+        android:label="@string/title_clts"
+        tools:layout="@layout/fragment_clients" />
+
+    <fragment
         android:id="@+id/navigation_pays"
         android:name="com.example.salesrecord.ui.pays.PayListFragment"
         android:label="@string/title_pays"
         tools:layout="@layout/fragment_pays" />
+
 </navigation>

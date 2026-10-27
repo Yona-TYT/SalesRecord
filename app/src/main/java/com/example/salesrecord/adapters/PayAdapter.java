@@ -7,15 +7,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.view.ContextThemeWrapper;
@@ -32,6 +36,7 @@ import com.example.salesrecord.utls.CalendUtls;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickListener{
@@ -43,6 +48,24 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
 
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
+    private boolean checkBox = false;
+    private HashMap<String, Boolean> checkStates = new HashMap<>();
+
+    public interface OnCheckClickListener {
+        void onCheckClick(int position, boolean isChecked);
+    }
+    private OnCheckClickListener customCheckListener;
+
+    // Método público para asignar el listener desde la Activity
+    public void setOnCheckClickListener(OnCheckClickListener listener) {
+        this.customCheckListener = listener;
+    }
+
+    public  PayAdapter(Context mContex, List<Object[]> textList, boolean checkBox){
+        this(mContex, textList);
+        this.checkBox = checkBox;
+    }
+
     public  PayAdapter(Context mContex, List<Object[]> textList){
         this.mContex = mContex;
         this.textList = textList;
@@ -52,6 +75,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
     static class ViewHolder {
         LinearLayout layout;
         Button butt;
+        CheckBox check;
         TextView text1;
         TextView text2;
         TextView text3;
@@ -88,6 +112,7 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
             holder = new ViewHolder();
             holder.layout = convertView.findViewById(R.id.pay_item_layout);
             holder.butt = convertView.findViewById(R.id.butt_paylist);
+            holder.check = convertView.findViewById(R.id.cb_paylist);
             holder.text1 = convertView.findViewById(R.id.pay_text1);
             holder.text2 = convertView.findViewById(R.id.pay_text2);
             holder.text3 = convertView.findViewById(R.id.pay_text3);
@@ -98,6 +123,44 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+
+        // Alternar visibilidad de componentes según el modo seleccionado
+        if(checkBox){
+            holder.butt.setVisibility(View.GONE);
+            holder.check.setVisibility(View.VISIBLE);
+        } else {
+            holder.butt.setVisibility(View.VISIBLE);
+            holder.check.setVisibility(View.GONE);
+        }
+        // 1. Obtener la Key Única (String)
+        String itemKey = "";
+        if (pos < newList.size()) {
+            int idx = newList.get(pos);
+            itemKey = (String) textList.get(idx)[0];
+        }
+
+        // 2. CRÍTICO: Apagar el listener anterior antes de forzar el valor visual
+        // Esto evita que el reciclaje de celdas marque/desmarque elementos locamente al hacer scroll
+        holder.check.setOnCheckedChangeListener(null);
+
+        // 3. Forzar el estado visual correcto recuperado del HashMap
+        boolean isItemChecked = checkStates.containsKey(itemKey) ? checkStates.get(itemKey) : false;
+        holder.check.setChecked(isItemChecked);
+
+        // 4. Asignar el nuevo Listener usando el evento correcto de los CheckBox
+        final String finalKey = itemKey;
+        holder.check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // Guardamos el estado usando el String como clave de inmediato
+                checkStates.put(finalKey, isChecked);
+
+                // Disparamos el evento hacia la Activity
+                if (customCheckListener != null) {
+                    customCheckListener.onCheckClick(pos, isChecked);
+                }
+            }
+        });
 
         if (textList != null && pos < newList.size()) {
             int idx = newList.get(pos);
@@ -145,54 +208,80 @@ public class PayAdapter extends BaseAdapter implements Filterable, View.OnClickL
         return convertView;
     }
 
+    // Obtiene la lista completa de checks
+    public HashMap<String, Boolean> checkedList() {
+        return checkStates;
+    }
+
+    // Saber si un elemento está marcado pasando su ID único
+    public boolean isItemChecked(String itemKey) {
+        return checkStates.containsKey(itemKey) ? checkStates.get(itemKey) : false;
+    }
+
+    // Limpiar todas las selecciones de golpe cuando se apague el Switch
+    public void clearSelections() {
+        checkStates.clear();
+    }
+
+    // Permite marcar los checkboxes pasando un nuevo mapa de estados desde la Activity
+    public void setCheckedList(HashMap<String, Boolean> newCheckStates) {
+        if (newCheckStates != null) {
+            // Opción A: Reemplazar el mapa por completo
+            this.checkStates = new HashMap<>(newCheckStates);
+
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public Filter getFilter() {
         Filter filter = new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-
-                FilterResults results = new FilterResults();        // Holds the results of a filtering operation in values
+                FilterResults results = new FilterResults();
                 ArrayList<Integer> FilteredArrList = new ArrayList<Integer>();
-                /********
-                 *
-                 *  If constraint(CharSequence that is received) is null returns the mOriginalValues(Original) values
-                 *  else does the Filtering and returns FilteredArrList(Filtered)
-                 *
-                 ********/
-                //Log.d("PhotoPicker", "Constrain ------------------------: " + constraint);
+
                 if (constraint == null || constraint.length() == 0) {
-                    // set the Original result to return
                     for (int i = 0; i < currList.size(); i++) {
                         FilteredArrList.add(i);
                     }
                     results.count = FilteredArrList.size();
                     results.values = FilteredArrList;
                 }
-                else{
+                else {
                     constraint = constraint.toString().toLowerCase();
                     for (int i = 0; i < currList.size(); i++) {
                         String data = (String)currList.get(i)[1];
                         if (data.toLowerCase().startsWith(constraint.toString())) {
                             FilteredArrList.add(i);
-                            //Log.d("PhotoPicker", "Constrain ------------------------: " + i);
                         }
                     }
-                    // set the Filtered result to return
                     results.count = FilteredArrList.size();
                     results.values = FilteredArrList;
                 }
-                // Log.d("PhotoPicker", "11111------------------------: " + FilteredArrList.size());
                 return results;
             }
+
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                //Log.d("PhotoPicker", "2222------------------------: " +constraint);
-                newList = (ArrayList<Integer>) results.values;   // has the filtered values
-                notifyDataSetChanged();                         // notifies the data with new filtered values
+                // 1. Asignamos la nueva lista filtrada
+                newList = (ArrayList<Integer>) results.values;
+
+                // 2. SOLUCIÓN AL ERROR DE COMPILACIÓN: Accedemos a la variable de la clase externa PayAdapter
+                HashMap<String, Boolean> savedStates = GlobalData.getInstance(AppContextProvider.getContext()).getChecksState();
+                if (savedStates != null) {
+                    // Usamos "PayAdapter.this" para especificar que la variable le pertenece al Adapter
+                    PayAdapter.this.checkStates = new HashMap<>(savedStates);
+                }
+
+                // 3. Notificamos los cambios a la pantalla de forma segura en el hilo principal
+                notifyDataSetChanged();
             }
         };
         return filter;
     }
+
+
 
     @Override
     public void onClick(View view) {

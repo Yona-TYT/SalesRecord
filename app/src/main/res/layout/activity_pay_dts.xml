@@ -55,34 +55,52 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="10dp"
         android:padding="2dp"
-        android:text="Datos de Pago con QR:"
+        android:text="Datos/QR de Pago:"
         android:textSize="@dimen/inner_text_2"
         android:textStyle="bold"
         android:gravity="center_vertical"
         android:maxLines="1"
         android:visibility="gone"
-        app:layout_constraintHorizontal_weight="1.5"
+        app:layout_constraintHorizontal_weight="0.55"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toStartOf="@id/butt_dts0"
         app:layout_constraintTop_toBottomOf="@id/txtotal_dts2" />
 
+    <!-- Botón 0: Se conecta después del TextView y antes del Botón 1 -->
     <ImageButton
         android:id="@+id/butt_dts0"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
-        android:src="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
+        android:src="@drawable/baseline_share_24"
         android:scaleType="centerInside"
         android:background="@color/button"
         android:visibility="gone"
-        app:layout_constraintHorizontal_weight="0.3"
+        app:layout_constraintHorizontal_weight="0.2"
         app:layout_constraintTop_toTopOf="@id/text_dts1"
         app:layout_constraintBottom_toBottomOf="@id/text_dts1"
         app:layout_constraintStart_toEndOf="@id/text_dts1"
         app:layout_constraintEnd_toStartOf="@id/butt_dts1" />
 
+    <!-- Botón 1: Se conecta después del Botón 0 y antes del Botón 2 -->
     <ImageButton
         android:id="@+id/butt_dts1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/input_hs"
+        android:layout_marginStart="5dp"
+        android:src="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
+        android:scaleType="centerInside"
+        android:background="@color/button"
+        android:visibility="gone"
+        app:layout_constraintHorizontal_weight="0.2"
+        app:layout_constraintTop_toTopOf="@id/text_dts1"
+        app:layout_constraintBottom_toBottomOf="@id/text_dts1"
+        app:layout_constraintStart_toEndOf="@id/butt_dts0"
+        app:layout_constraintEnd_toStartOf="@id/butt_dts2" />
+
+    <!-- Botón 2: Se conecta después del Botón 1 y finaliza en la Guía derecha -->
+    <ImageButton
+        android:id="@+id/butt_dts2"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
         android:layout_marginStart="5dp"
@@ -91,19 +109,19 @@
         android:padding="3dp"
         android:background="@color/button"
         android:visibility="gone"
-        app:layout_constraintHorizontal_weight="0.3"
+        app:layout_constraintHorizontal_weight="0.2"
         app:layout_constraintTop_toTopOf="@id/text_dts1"
         app:layout_constraintBottom_toBottomOf="@id/text_dts1"
-        app:layout_constraintStart_toEndOf="@id/butt_dts0"
+        app:layout_constraintStart_toEndOf="@id/butt_dts1"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
 
-    <!-- Barrier: se posiciona debajo del último elemento visible de la zona superior -->
+    <!-- Barrier: Actualizado para incluir TODOS los componentes de la fila por si varían de altura -->
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="txtotal_dts2,text_dts1,butt_dts1" />
+        app:constraint_referenced_ids="txtotal_dts2,text_dts1,butt_dts0,butt_dts1,butt_dts2" />
 
     <!-- ===== ListView principal (se expande) ===== -->
     <ListView
@@ -176,11 +194,11 @@
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toStartOf="@id/butt_dts4"
+        app:layout_constraintEnd_toStartOf="@id/butt_dts5"
         app:layout_constraintBottom_toTopOf="@id/txview_dts3" />
 
     <ToggleButton
-        android:id="@+id/butt_dts4"
+        android:id="@+id/butt_dts5"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_h1"
         android:backgroundTint="@color/button"
@@ -262,7 +280,7 @@
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="@id/guideline"
         app:layout_constraintEnd_toStartOf="@id/pay_dts_select1"
-        app:layout_constraintBottom_toTopOf="@id/butt_dts2"
+        app:layout_constraintBottom_toTopOf="@id/butt_dts3"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <Spinner
@@ -280,7 +298,7 @@
 
     <!-- Botones inferiores (anclados al fondo) -->
     <Button
-        android:id="@+id/butt_dts2"
+        android:id="@+id/butt_dts3"
         android:layout_width="0dp"
         android:layout_height="@dimen/button_h1"
         android:layout_marginTop="12dp"
@@ -292,20 +310,20 @@
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="@id/guideline"
-        app:layout_constraintEnd_toStartOf="@id/butt_dts3"
+        app:layout_constraintEnd_toStartOf="@id/butt_dts4"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <Button
-        android:id="@+id/butt_dts3"
+        android:id="@+id/butt_dts4"
         android:layout_width="0dp"
         android:layout_height="@dimen/button_h1"
         android:layout_marginStart="10dp"
         android:text="Aceptar"
         android:textSize="@dimen/inner_text_2"
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintTop_toTopOf="@id/butt_dts2"
-        app:layout_constraintBottom_toBottomOf="@id/butt_dts2"
-        app:layout_constraintStart_toEndOf="@id/butt_dts2"
+        app:layout_constraintTop_toTopOf="@id/butt_dts3"
+        app:layout_constraintBottom_toBottomOf="@id/butt_dts3"
+        app:layout_constraintStart_toEndOf="@id/butt_dts3"
         app:layout_constraintEnd_toEndOf="@id/guideline2" />
     <!-- Guidelines -->
     <androidx.constraintlayout.widget.Guideline

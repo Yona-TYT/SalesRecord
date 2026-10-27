@@ -10,8 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,15 +25,11 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.OnBackPressedCallback;
-import androidx.activity.OnBackPressedDispatcher;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.appcompat.widget.Toolbar;
 
 
 import com.example.salesrecord.AppContextProvider;
@@ -59,6 +53,7 @@ import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.FilesManager;
 import com.example.salesrecord.utls.InputHelper;
+import com.example.salesrecord.utls.LayoutShareHelper;
 import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
@@ -103,9 +98,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
     private String mUser = "";
     private ImageButton mBtton0;
     private ImageButton mBtton1;
-    private Button mBtton2;
+    private ImageButton mBtton2;
     private Button mBtton3;
-    private ToggleButton mBtton4;
+    private Button mBtton4;
+    private ToggleButton mBtton5;
 
     private AutoCompleteTextView mInput1;
     private ListView mListView2;
@@ -151,6 +147,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             currId = savedInstanceState.getString("KEY_SALE", "");
         }else {
             currId = glData.getCurrSalId();
+
         }
 
         //mImage1 = findViewById(R.id.image_dts1);
@@ -175,6 +172,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mBtton2 = findViewById(R.id.butt_dts2);
         mBtton3 = findViewById(R.id.butt_dts3);
         mBtton4 = findViewById(R.id.butt_dts4);
+        mBtton5 = findViewById(R.id.butt_dts5);
 
         mSw = findViewById(R.id.sw_dts1);
 
@@ -184,6 +182,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
         mBtton1.setOnClickListener(this);
         mBtton2.setOnClickListener(this);
         mBtton3.setOnClickListener(this);
+        mBtton4.setOnClickListener(this);
         //mImage1.setOnClickListener(this);
         mSw.setOnClickListener(this);
 
@@ -253,6 +252,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 datos.setVisibility(View.VISIBLE);
                 mBtton0.setVisibility(View.VISIBLE);
                 mBtton1.setVisibility(View.VISIBLE);
+                mBtton2.setVisibility(View.VISIBLE);
+            }
+            else {
+                datos.setVisibility(View.GONE);
+                mBtton0.setVisibility(View.GONE);
+                mBtton1.setVisibility(View.GONE);
+                mBtton2.setVisibility(View.GONE);
             }
 
             mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
@@ -391,7 +397,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             });
 
 
-            mBtton4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            mBtton5.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
@@ -450,10 +456,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 }
             });
 
-            mBtton4.setOnClickListener(new View.OnClickListener() {
+            mBtton5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(mBtton4.isChecked()){
+                    if(mBtton5.isChecked()){
                         mListView2.setVisibility(View.VISIBLE);
 
                     }
@@ -504,12 +510,20 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if (itemId == R.id.sw_dts1) {
                 swDel = !swDel;
                 if (swDel) {
-                    mBtton2.setEnabled(true);
+                    mBtton3.setEnabled(true);
                 } else {
-                    mBtton2.setEnabled(false);
+                    mBtton3.setEnabled(false);
                 }
             }
             if (itemId == R.id.butt_dts0) {
+                String shredText = GlobalData.glTelef + "\n" +
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        "\n"+ GlobalData.glCodeBank + "\n" +GlobalData.glNameBank;
+
+                LayoutShareHelper.sharePlainText(PayDetailsActivity.this, shredText, "Share text via:");
+            }
+
+            if (itemId == R.id.butt_dts1) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", GlobalData.glTelef + "\n" +
                         GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
@@ -518,12 +532,14 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
             }
 
-            if (itemId == R.id.butt_dts1) {
+            if (itemId == R.id.butt_dts2) {
 
                 if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+
                     Application application = (Application) contex.getApplicationContext();
                     Intent mIntent = new Intent(contex, QrActivity.class);
                     mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.putExtra("saleid", currId);
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
                 }
@@ -533,7 +549,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             }
 
             //Remove Sale
-            if (itemId == R.id.butt_dts2) {
+            if (itemId == R.id.butt_dts3) {
 
                 //fmang.RemoveFile(saveImage, this.getContentResolver());
 
@@ -605,7 +621,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 finishActivity(mList);
 
             }
-            if (itemId == R.id.butt_dts3) {
+            if (itemId == R.id.butt_dts4) {
 
                 int oldSt = mSale.status;
                 List<Object> mList = new ArrayList<>();

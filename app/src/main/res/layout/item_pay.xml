@@ -8,7 +8,7 @@
     android:gravity="center_vertical"
     android:padding="2dp">
 
-    <!-- Botón Agregar -->
+    <!-- Botón Mas -->
     <Button
         android:id="@+id/butt_paylist"
         android:layout_width="@dimen/button_wss"
@@ -19,7 +19,17 @@
         android:padding="1dp"
         android:text="+"
         android:textStyle="bold"
-        android:textSize="@dimen/inner_text_2" />
+        android:textSize="@dimen/inner_text_2"
+        android:visibility="visible" />
+
+    <!-- 2. El CheckBox para selección múltiple (Oculto por defecto) -->
+    <CheckBox
+        android:id="@+id/cb_paylist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:padding="1dp"
+        android:visibility="gone" />
 
 
     <!-- Contenido de texto -->

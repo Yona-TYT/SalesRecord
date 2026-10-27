@@ -162,21 +162,41 @@
                     android:textSize="@dimen/inner_text_1"
                     android:visibility="visible"/>
 
-                <Button
-                    android:id="@+id/butt_home3"
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/button_h1"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="0.3"
-                    android:text="Limpiar"
-                    android:visibility="visible"/>
-
                 <ImageButton
-                    android:id="@+id/butt_home0"
+                    android:id="@+id/butt_home3"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/input_hs"
                     android:layout_marginStart="5dp"
-                    android:layout_weight="0.2"
+                    android:layout_weight="0.25"
+
+                    android:enabled="true"
+                    android:src="@drawable/limpiar"
+                    android:scaleType="centerInside"
+                    android:padding="3dp"
+                    android:background="@color/button"
+                    android:visibility="visible"/>
+
+                <ImageButton
+                    android:id="@+id/butt_home4"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_hs"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="0.25"
+
+                    android:enabled="true"
+                    android:src="@drawable/baseline_share_24"
+                    android:scaleType="centerInside"
+                    android:padding="3dp"
+                    android:background="@color/button"
+                    android:visibility="visible"
+                    />
+
+                <ImageButton
+                    android:id="@+id/butt_home5"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_hs"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="0.25"
 
                     android:enabled="true"
                     android:src="@drawable/ic_qr_scan"
@@ -208,7 +228,7 @@
                 android:gravity="center" />
 
             <Button
-                android:id="@+id/butt_home4"
+                android:id="@+id/butt_home6"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/button_h1"
                 android:layout_weight="1"

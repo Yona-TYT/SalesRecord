@@ -33,18 +33,16 @@ import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
-import com.example.salesrecord.db.Article;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.db.Sale;
-import com.example.salesrecord.db.dao.DaoArt;
 import com.example.salesrecord.db.dao.DaoClt;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.drive.DriveManager;
 import com.example.salesrecord.ex.Dialogs;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
-import com.example.salesrecord.utls.MathUtls;
+import com.example.salesrecord.utls.LayoutShareHelper;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 
@@ -52,6 +50,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +66,7 @@ public class CltDetailsActivity extends AppCompatActivity {
     private List<String> mStrFecList =  new ArrayList<>();
     private List<LocalDate> finalDateList;
 
+    private PayAdapter mAdapter1;
     private Spinner mSpinn1;
     private CheckBox check1;
     private ListView mListView;
@@ -74,13 +74,20 @@ public class CltDetailsActivity extends AppCompatActivity {
     private TextView copyText;
     private ImageButton mBtton0;
     private ImageButton mBtton1;
+    private ImageButton mBtton2;
+
     private Switch mSw1;
-    private Button mBtton2;
+    private Switch mSw2;
+    private Button mBtton3;
 
     private Long currDate = null;
     private double mTotal = 0.0;
 
     private Context contex;
+
+    private HashMap<String, Boolean> saveSaleList = new HashMap<>();
+
+
     private GlobalData glData = GlobalData.getInstance(AppContextProvider.getContext());
 
     @Override
@@ -107,12 +114,15 @@ public class CltDetailsActivity extends AppCompatActivity {
         copyText = findViewById(R.id.txview_cltdts3); //TOTAL
 
         mBtton0 = findViewById(R.id.butt_cltdts0);
+
         mBtton1 = findViewById(R.id.butt_cltdts1);
+        mBtton2 = findViewById(R.id.butt_cltdts2);
 
         mListView = findViewById(R.id.cltdts_viewList);
 
         mSw1 = findViewById(R.id.sw_cltdts1);
-        mBtton2 = findViewById(R.id.butt_cltdts2);
+        mSw2 = findViewById(R.id.sw_cltdts2);
+        mBtton3 = findViewById(R.id.butt_cltdts3);
 
         setViwes();
     }
@@ -127,8 +137,8 @@ public class CltDetailsActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-
         setViwes();
+
     }
 
     private void setViwes() {
@@ -211,7 +221,30 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         });
 
+
+        mSw1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                glData.clearChecksState();
+                if(!mSw1.isChecked() && mAdapter1 != null){
+                    mAdapter1.clearSelections();
+                }
+                setListAdapter();
+            }
+        });
+
         mBtton0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String shredText = GlobalData.glTelef + "\n" +
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        "\n"+ GlobalData.glCodeBank + "\n" +GlobalData.glNameBank;
+
+                LayoutShareHelper.sharePlainText(CltDetailsActivity.this, shredText, "Share text via:");
+            }
+        });
+
+        mBtton1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) contex.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -223,13 +256,23 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         });
 
-        mBtton1.setOnClickListener(new View.OnClickListener() {
+        mBtton2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
+
                     Application application = (Application) contex.getApplicationContext();
                     Intent mIntent = new Intent(contex, QrActivity.class);
                     mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+
+                    if(mSw1.isChecked()) {
+                        mIntent.putExtra("islist", true);
+                    }
+                    else {
+                        glData.saveChecksState(saveSaleList);
+                        mIntent.putExtra("islist", true);
+                    }
+
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
                 }
@@ -241,40 +284,27 @@ public class CltDetailsActivity extends AppCompatActivity {
 
         setListAdapter();
 
-        mSw1.setOnClickListener(new View.OnClickListener() {
+        mSw2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBtton2.setEnabled(mSw1.isChecked());
+                mBtton3.setEnabled(mSw2.isChecked());
             }
         });
 
-        mBtton2.setOnClickListener(new View.OnClickListener() {
+
+
+
+        mBtton3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mSw1.isChecked()){
+                if(mSw2.isChecked()){
                     List<Object> mList = new ArrayList<>();
 
-                    DaoArt daoArt = StartVar.appDBall.daoAtr();
                     double mPrice = 0.0;
                     for (Sale mS : mSalList) {
                         if (mS != null && mS.status != 0 && mS.status != 3) {
-                            String[] artcList = mS.artclist.split("\\|");
-                            String[] countList = mS.countlist.split("\\|");
-                            String[] priceList = mS.pricelist.split("\\|");
-                            String[] margList = mS.marglist.split("\\|");
 
-                            for (int i = 0; i < artcList.length; i++) {
-                                Article crrArt = daoArt.getUsers(artcList[i]);
-
-                                if (crrArt != null) {
-                                    double count = Double.parseDouble(countList[i]);
-                                    double price = Double.parseDouble(priceList[i]);
-                                    double marge = Double.parseDouble(margList[i]);
-
-                                    double calc = MathUtls.addPercentage(price, marge);
-                                    mPrice = mPrice + (calc * count);
-                                }
-                            }
+                            mPrice += mS.monto;
 
                             mList.addAll(updatePointsStatus( mS.status, 3,  mS, mPrice));
                         }
@@ -286,12 +316,23 @@ public class CltDetailsActivity extends AppCompatActivity {
     }
 
     @SuppressLint("SetTextI18n")
-    private void setListAdapter(){
+    private void setListAdapter() {
+        setListAdapterInternal(true);
+    }
+    private void  setListAdapterNotReload(){
+        setListAdapterInternal(false);
+    }
+    private void setListAdapterInternal(boolean reload){
         List<Object[]> mPayList = new ArrayList<>();
 
         mTotal = 0.0;
-        for (Sale mS : mSalList) {
+        saveSaleList.clear();
+        for (int idx = 0; idx < mSalList.size(); idx ++) {
+            Sale mS = mSalList.get(idx);
+
+            boolean multiSel = (mAdapter1 != null && mAdapter1.isItemChecked(mS.sale));
             int stus = mS.status;
+
             if (check1.isChecked() && ( stus == 0 || stus == 3)){
                 continue;
             }
@@ -305,26 +346,34 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
 
             if(stus > 0 && stus < 3){
-                mTotal += mS.monto;
+                if(!mSw1.isChecked()){
+                    saveSaleList.put(mS.sale, true);
+                    mTotal += mS.monto;
+                }
+                else if (multiSel){
+                    mTotal += mS.monto;
+                }
             }
+            if(reload) {
 
-            String status = glData.saleType.get(stus);
-            Long longDate = mS.fecha;
-            String date = CalendUtls.getShortDate(fecha);
-            String time = CalendUtls.getTime(mS.time);
+                String status = glData.saleType.get(stus);
+                Long longDate = mS.fecha;
+                String date = CalendUtls.getShortDate(fecha);
+                String time = CalendUtls.getTime(mS.time);
 
-            Object[] strList = new Object[9];
-            strList[0] = mS.sale;
-            strList[1] = status;
-            strList[2] = mS.monto;
-            strList[3] = date;
-            strList[4] = stus;
-            strList[5] = time;
-            strList[6] = mS.tasa;
-            strList[7] = mClt.nombre;
-            strList[8] = longDate;
+                Object[] strList = new Object[9];
+                strList[0] = mS.sale;
+                strList[1] = status;
+                strList[2] = mS.monto;
+                strList[3] = date;
+                strList[4] = stus;
+                strList[5] = time;
+                strList[6] = mS.tasa;
+                strList[7] = mClt.nombre;
+                strList[8] = longDate;
 
-            mPayList.add(strList);
+                mPayList.add(strList);
+            }
         }
 
         mPayList.sort((o1, o2) -> {
@@ -339,19 +388,43 @@ public class CltDetailsActivity extends AppCompatActivity {
             copyText.setVisibility(View.VISIBLE);
             mBtton0.setVisibility(View.VISIBLE);
             mBtton1.setVisibility(View.VISIBLE);
+            mBtton2.setVisibility(View.VISIBLE);
         }
         else {
-            total1.setText("Total: SIN DEUDAS");
+            total1.setText( mSw1.isChecked()?"Total: SELECIONE ELEMENTOS" :"Total: SIN DEUDAS");
 
             copyText.setVisibility(View.GONE);
             mBtton0.setVisibility(View.GONE);
             mBtton1.setVisibility(View.GONE);
+            mBtton2.setVisibility(View.GONE);
         }
 
         //Para configurar la lista de pagos
-        PayAdapter mAdapter = new PayAdapter(contex, mPayList);
-        mListView.setAdapter(mAdapter);
-        mAdapter.getFilter().filter("");
+        if(reload) {
+            mAdapter1 = new PayAdapter(contex, mPayList, mSw1.isChecked());
+            mListView.setAdapter(mAdapter1);
+            mAdapter1.getFilter().filter("");
+        }
+
+
+        // 1. CLICK NORMAL EN LA FILA (Tu código de siempre)
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //Msg.m();
+            }
+        });
+
+        // 2. CLICK ESPECÍFICO EN EL CHECKBOX (Capturado desde la Activity)
+        mAdapter1.setOnCheckClickListener(new PayAdapter.OnCheckClickListener() {
+            @Override
+            public void onCheckClick(int position, boolean isChecked) {
+                glData.saveChecksState(mAdapter1.checkedList());
+                setListAdapterNotReload();
+                //mAdapter1.notifyDataSetChanged();
+            }
+        });
+
     }
 
     private List<Object> updatePointsStatus(int oldOpt, int opt, Sale mSale, double price){
