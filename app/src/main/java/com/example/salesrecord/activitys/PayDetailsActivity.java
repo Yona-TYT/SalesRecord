@@ -59,6 +59,8 @@ import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -126,7 +128,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
     private Cliente mClt;
 
-    private double mTotal = 0.0;
+    private BigDecimal mTotal = new BigDecimal("0.00");
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -284,28 +286,35 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
             DaoArt daoArt = StartVar.appDBall.daoAtr();
 
-            mTotal = 0.0;
+            mTotal = new BigDecimal("0.00");
 
             for (int i = 0; i < artcList.length; i++) {
                 Article crrArt = daoArt.getUsers(artcList[i]);
 
                 if (crrArt != null) {
-                    double count = Double.parseDouble(countList[i]);
-                    double price = Double.parseDouble(priceList[i]);
-                    double marge = Double.parseDouble(margList[i]);
+                    // 1. Parsear DIRECTAMENTE desde el String al constructor de BigDecimal (Seguro y exacto)
+                    BigDecimal count = new BigDecimal(countList[i]);
+                    BigDecimal price = new BigDecimal(priceList[i]);
+                    BigDecimal marge = new BigDecimal(margList[i]);
 
-                    double calc = MathUtls.addPercentage(price, marge);
-                    mTotal = mTotal + (calc * count);
+                    // 2. Operar usando tu nueva clase MathUtls migrada a BigDecimal
+                    BigDecimal calc = MathUtls.addPercentage(price, marge);
+
+                    // 3. Calcular el subtotal de este artículo y redondearlo a 2 decimales
+                    BigDecimal subtotalItem = calc.multiply(count).setScale(2, RoundingMode.HALF_UP);
+
+                    // 4. Acumular el subtotal limpio en el total general
+                    mTotal = mTotal.add(subtotalItem);
 
                     //Basic.msg(""+price+" "+count+" "+marge, true);
-                    objListSal.add(setObjects(crrArt, price, count, marge));
+                    objListSal.add(setObjects(crrArt, price.doubleValue(), count.doubleValue(), marge.doubleValue()));
                 }
             }
 
             SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
             mListView1.setAdapter(mAdapter);
 
-            total1.setText("Actual: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
+            total1.setText("Actual: " + Basic.getMaskConv(mTotal.doubleValue(), 0) + " / " + Basic.getMaskConv(mTotal.doubleValue(), 1));
 
             double oldTasa = mSale.tasa;
             String infla = "";
@@ -315,10 +324,10 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                 // 2. La pérdida total es la diferencia de tasa multiplicada por la cantidad
                 // ELIMINADO: infla * StartVar.mDollar (Esto duplicaba el cálculo erróneamente)
-                double loss = rateDiff * mTotal;
+                double loss = rateDiff * mTotal.doubleValue();
 
                 if (loss > 0) {
-                    infla = "Fijo: " + Basic.getMaskConv(mTotal, oldTasa, 0) + " / " + Basic.getMaskConv(mTotal, oldTasa, 1);
+                    infla = "Fijo: " + Basic.getMaskConv(mTotal.doubleValue(), oldTasa, 0) + " / " + Basic.getMaskConv(mTotal.doubleValue(), oldTasa, 1);
                 }
             }
 
@@ -517,7 +526,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             }
             if (itemId == R.id.butt_dts0) {
                 String shredText = GlobalData.glTelef + "\n" +
-                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal.doubleValue(), StartVar.mDollar, 1))+
                         "\n"+ GlobalData.glCodeBank + "\n" +GlobalData.glNameBank;
 
                 LayoutShareHelper.sharePlainText(PayDetailsActivity.this, shredText, "Share text via:");
@@ -526,7 +535,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             if (itemId == R.id.butt_dts1) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 ClipData clipData = ClipData.newPlainText("Clip Data", GlobalData.glTelef + "\n" +
-                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal, StartVar.mDollar, 1))+ "\n"+
+                        GlobalData.glCedula + "\n" + MoneyUtls.formatPlainDecimal(MoneyUtls.getConv(mTotal.doubleValue(), StartVar.mDollar, 1))+ "\n"+
                         GlobalData.glCodeBank + "\n" +GlobalData.glNameBank);
                 clipboard.setPrimaryClip(clipData);
                 Msg.m("Datos de PAGO+MONTO copiados al portapapeles.");
@@ -538,7 +547,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
                     Application application = (Application) contex.getApplicationContext();
                     Intent mIntent = new Intent(contex, QrActivity.class);
-                    mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
+                    mIntent.putExtra("amount", MoneyUtls.getConv(mTotal.doubleValue(), StartVar.mDollar, 1));
                     mIntent.putExtra("saleid", currId);
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
@@ -578,13 +587,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                     // 1. Calcular cuántos puntos le habíamos dado con el estatus viejo
                     switch (oldSt) {
                         case 0:
-                            oldPoints = (float) (mTotal * GlobalData.pointPay);
+                            oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointPay);
                             break;
                         case 1:
-                            oldPoints = (float) (mTotal * GlobalData.pointNoPay);
+                            oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointNoPay);
                             break;
                         case 2:
-                            oldPoints = (float) (mTotal * GlobalData.pointLost);
+                            oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointLost);
                             break;
                     }
 
@@ -636,13 +645,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         // 1. Puntos que se habían otorgado con el estatus anterior
                         switch (oldSt) {
                             case 0: // Pagado
-                                oldPoints = (float) (mTotal * GlobalData.pointPay);
+                                oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointPay);
                                 break;
                             case 1: // No pagado
-                                oldPoints = (float) (mTotal * GlobalData.pointNoPay);
+                                oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointNoPay);
                                 break;
                             case 2: // Perdido
-                                oldPoints = (float) (mTotal * GlobalData.pointLost);
+                                oldPoints = (float) (mTotal.doubleValue() * GlobalData.pointLost);
                                 break;
                             case 3: // Exonerar → no se habían sumado puntos
                                 oldPoints = 0f;
@@ -652,13 +661,13 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         // 2. Puntos que corresponden con el nuevo estatus
                         switch (currSel1) {
                             case 0: // Pagado
-                                newPoints = (float) (mTotal * GlobalData.pointPay);
+                                newPoints = (float) (mTotal.doubleValue() * GlobalData.pointPay);
                                 break;
                             case 1: // No pagado
-                                newPoints = (float) (mTotal * GlobalData.pointNoPay);
+                                newPoints = (float) (mTotal.doubleValue() * GlobalData.pointNoPay);
                                 break;
                             case 2: // Perdido
-                                newPoints = (float) (mTotal * GlobalData.pointLost);
+                                newPoints = (float) (mTotal.doubleValue() * GlobalData.pointLost);
                                 break;
                             case 3: // Exonerar → se restan los puntos anteriores y no se agrega nada
                                 newPoints = 0f;

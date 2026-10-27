@@ -21,6 +21,8 @@ import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Obj;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -168,10 +170,10 @@ public class SaleResultAdapter extends BaseAdapter  {
         // Textos
         String desc = item.desc.isEmpty() ? "":" ("+item.desc+")";
         holder.view1.setText(item.name+desc);
-        double clcPrice = MathUtls.addPercentage(item.price, item.margen);
+        BigDecimal clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen));
 
-        Double total = (clcPrice*item.saleCount);
-        holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1)+")");
+        BigDecimal total = clcPrice.multiply(BigDecimal.valueOf(item.saleCount)).setScale(2, RoundingMode.HALF_UP);
+        holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total.doubleValue(), 0) +" / "+Basic.getMaskConv(total.doubleValue(), 1)+")");
 
 
         holder.view1.setTextColor(

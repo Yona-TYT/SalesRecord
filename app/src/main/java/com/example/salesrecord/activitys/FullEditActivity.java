@@ -44,6 +44,7 @@ import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -238,8 +239,8 @@ public class FullEditActivity extends AppCompatActivity {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    BigDecimal price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue())).doubleValue();
                     viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
 
@@ -258,8 +259,8 @@ public class FullEditActivity extends AppCompatActivity {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue());
+                    BigDecimal price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue())).doubleValue();
                     viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
 
@@ -323,7 +324,7 @@ public class FullEditActivity extends AppCompatActivity {
                     crrArt.nombre = InputHelper.cleanText(mInput1.getText().toString());
                     crrArt.descr = InputHelper.cleanText(mInput2.getText().toString());
 
-                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0).doubleValue();
 
                     if(currSel1 == 0) {
                         crrArt.precund = price;

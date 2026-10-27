@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -46,6 +48,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -250,27 +253,14 @@ public class EditAtrFragment extends Fragment {
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // Ejecuta la búsqueda (incluso si viene vacía)
-                if(query != null) {
-                    strValidate = query.trim();
-                }
-                else {
-                    strValidate = "";
-
-                }
-                reloadList();
+                applyFilter(query, false); // Inmediato
                 searchBar.clearFocus();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Si el usuario borra manualmente hasta dejarlo vacío,
-                // forzamos la restauración inmediata de la lista completa
-                if (newText == null || newText.trim().isEmpty()) {
-                    strValidate = "";
-                    reloadList();
-                }
+                applyFilter(newText, true); // Con debounce
                 return true;
             }
         });
@@ -384,8 +374,8 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
-                    double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue()+mConf.margen);
+                    BigDecimal price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue()+mConf.margen)).doubleValue();
                     mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
             }
@@ -424,8 +414,8 @@ public class EditAtrFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(crrArt != null) {
-                    double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
-                    double clcPrice = MathUtls.addPercentage(price, mInput4.getNumericValue()+mConf.margen);
+                    BigDecimal price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                    double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue()+mConf.margen)).doubleValue();
 
                     mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
                 }
@@ -487,7 +477,7 @@ public class EditAtrFragment extends Fragment {
                 crrArt.nombre = nombre;
 
                 int mType = crrArt.artipo;
-                double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
+                double price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0).doubleValue();
 
                 if(mType == 0){
                     crrArt.precund = price;
@@ -550,6 +540,36 @@ public class EditAtrFragment extends Fragment {
                 reloadList();
             }
         });
+    }
+
+    private final Handler filterHandler = new Handler(Looper.getMainLooper());
+    private Runnable filterRunnable;
+
+    /**
+     * Aplica el filtro. Si delayed = true, espera 250ms (debounce).
+     * Si delayed = false, filtra inmediatamente.
+     */
+    private void applyFilter(String query, boolean delayed) {
+        // Cancela cualquier filtrado pendiente
+        if (filterRunnable != null) {
+            filterHandler.removeCallbacks(filterRunnable);
+        }
+
+        Runnable filterTask = () -> {
+            if (query != null) {
+                strValidate = query.trim();
+            } else {
+                strValidate = "";
+            }
+            reloadList();
+        };
+
+        if (delayed) {
+            filterRunnable = filterTask;
+            filterHandler.postDelayed(filterRunnable, 250);
+        } else {
+            filterTask.run(); // Inmediato
+        }
     }
 
     private void reloadList(){

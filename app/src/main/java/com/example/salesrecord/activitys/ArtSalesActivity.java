@@ -29,6 +29,7 @@ import com.example.salesrecord.utls.MathUtls;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -118,7 +119,7 @@ public class ArtSalesActivity extends AppCompatActivity {
 //
 //                            double calc = MathUtls.addPercentage(price, marge);
 
-                            double clcPrice = MathUtls.addPercentage(mArt.precund, mArt.margen+conf.margen);
+                            BigDecimal clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(mArt.precund), BigDecimal.valueOf(mArt.margen+conf.margen));
                             String date = CalendUtls.getShortDate(mSale.fecha);
                             String time = CalendUtls.getTime(mSale.time);
 
@@ -135,7 +136,7 @@ public class ArtSalesActivity extends AppCompatActivity {
                             Object[] strList = new Object[8];
                             strList[0] = mSale.sale;
                             strList[1] = "Cantidad: "+ MoneyUtls.formatDecimal(count);
-                            strList[2] = clcPrice * count;
+                            strList[2] = clcPrice.doubleValue() * count;
                             strList[3] = date;
                             strList[4] = mSale.status;
                             strList[5] = time;

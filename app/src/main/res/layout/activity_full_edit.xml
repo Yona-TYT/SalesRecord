@@ -224,8 +224,6 @@
                 app:maxNumberOfDecimalDigits="2"
                 app:currencySymbol="uds."
                 app:currencySymbolSuffix="true"
-                app:maxValue="100"
-
                 />
 
             <TextView

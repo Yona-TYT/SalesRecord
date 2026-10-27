@@ -8,6 +8,12 @@ import java.math.RoundingMode;
  */
 public final class MathUtls {
 
+    // Constante compartida para evitar instanciar el divisor 100 repetidamente
+    private static final BigDecimal CIEN = new BigDecimal("100");
+
+    // Escala por defecto recomendada para cálculos comerciales/monedas
+    private static final int ESCALA_MONEDA = 2;
+
     // Constructor privado para evitar que la clase se instancie
     private MathUtls() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -16,33 +22,55 @@ public final class MathUtls {
     /**
      * Adds a percentage to a base value.
      */
-    public static double addPercentage(double baseValue, double percentage) {
-        return baseValue + (baseValue * (percentage / 100.0));
+    public static BigDecimal addPercentage(BigDecimal baseValue, BigDecimal percentage) {
+        if (baseValue == null || percentage == null) {
+            return BigDecimal.ZERO;
+        }
+        // Operación: baseValue * (percentage / 100)
+        BigDecimal percentageValue = baseValue.multiply(percentage.divide(CIEN, ESCALA_MONEDA, RoundingMode.HALF_UP));
+
+        // Operación: baseValue + percentageValue
+        return baseValue.add(percentageValue).setScale(ESCALA_MONEDA, RoundingMode.HALF_UP);
     }
 
     /**
      * Subtracts a percentage from a base value (useful for discounts).
      */
-    public static double subtractPercentage(double baseValue, double percentage) {
-        return baseValue - (baseValue * (percentage / 100.0));
+    public static BigDecimal subtractPercentage(BigDecimal baseValue, BigDecimal percentage) {
+        if (baseValue == null || percentage == null) {
+            return BigDecimal.ZERO;
+        }
+        // Operación: baseValue * (percentage / 100)
+        BigDecimal percentageValue = baseValue.multiply(percentage.divide(CIEN, ESCALA_MONEDA, RoundingMode.HALF_UP));
+
+        // Operación: baseValue - percentageValue
+        return baseValue.subtract(percentageValue).setScale(ESCALA_MONEDA, RoundingMode.HALF_UP);
     }
 
     /**
      * Calculates the exact value of a percentage from a total.
-     * e.g., 10% of 25 returns 2.5
+     * e.g., 10% of 25 returns 2.50
      */
-    public static double getPercentageValue(double totalValue, double percentage) {
-        return totalValue * (percentage / 100.0);
+    public static BigDecimal getPercentageValue(BigDecimal totalValue, BigDecimal percentage) {
+        if (totalValue == null || percentage == null) {
+            return BigDecimal.ZERO;
+        }
+        // Operación: totalValue * (percentage / 100)
+        return totalValue.multiply(percentage.divide(CIEN, ESCALA_MONEDA, RoundingMode.HALF_UP))
+                .setScale(ESCALA_MONEDA, RoundingMode.HALF_UP);
     }
 
     /**
-     * Rounds a double value to a specific number of decimal places.
-     * Prevents common double floating-point precision issues.
+     * Rounds a BigDecimal value to a specific number of decimal places.
+     * Prevents common floating-point precision issues.
      */
-    public static double round(double value, int decimalPlaces) {
-        if (decimalPlaces < 0) throw new IllegalArgumentException("Decimal places cannot be negative");
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(decimalPlaces, RoundingMode.HALF_UP);
-        return bd.doubleValue();
+    public static BigDecimal round(BigDecimal value, int decimalPlaces) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (decimalPlaces < 0) {
+            throw new IllegalArgumentException("Decimal places cannot be negative");
+        }
+        return value.setScale(decimalPlaces, RoundingMode.HALF_UP);
     }
 }

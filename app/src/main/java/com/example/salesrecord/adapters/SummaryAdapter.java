@@ -28,6 +28,7 @@ import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
 import com.example.salesrecord.utls.Obj;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,7 +145,7 @@ public class SummaryAdapter extends BaseAdapter  {
             desc = "";
         }
         holder.view1.setText(off+item.name+desc);
-        double clcPrice = MathUtls.addPercentage(item.price, item.margen);
+        double clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen)).doubleValue();
 
         holder.view2.setText("uds. " + MoneyUtls.formatDecimal(item.maxCount) +
                 "  -  precio: " + Basic.getMaskConv(item.price, 0) +

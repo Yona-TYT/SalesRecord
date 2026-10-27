@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 
 import com.example.salesrecord.StartVar;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -101,13 +103,15 @@ public class MoneyUtls {
         return value / precDoll;
     }
 
-    public static Double getInDollar(Double value, Double tasa, int type) {
+    public static BigDecimal getInDollar(Double value, Double tasa, int type) {
 
-        Double precDoll = (tasa == null ? StartVar.mDollar : tasa);
+        BigDecimal bigValue = BigDecimal.valueOf(value);
+
+        BigDecimal precDoll = (tasa == null ? BigDecimal.valueOf(StartVar.mDollar) : BigDecimal.valueOf(tasa));
         if(type == 1) {   //Selector en Bs
-            return value / precDoll;
+            return bigValue.divide(precDoll, 2, RoundingMode.HALF_UP);
         }
-        return value;
+        return bigValue;
     }
 
     public static Float floatFormat(String value) {
@@ -133,6 +137,11 @@ public class MoneyUtls {
         return setFormatterInternal(value, new Locale("es", "VE"));
     }
 
+    public static String setFormatterEs(BigDecimal value) {
+        return setFormatterInternal(value.doubleValue(), new Locale("es", "VE"));
+    }
+
+
     public static String setFormatterInternal(Double value, Locale locale){
         if (value == null) return "";
         DecimalFormat df = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -151,6 +160,14 @@ public class MoneyUtls {
         return price == 0? 0 : currPrice/price;
     }
 
+    public static BigDecimal getQuantity(BigDecimal price, BigDecimal currPrice) {
+        // Si cualquiera de los parámetros es nulo o el precio es cero, retornamos ZERO de forma segura
+        if (price == null || currPrice == null || price.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        // División exacta limitada a 2 decimales con redondeo comercial
+        return currPrice.divide(price, 2, RoundingMode.HALF_UP);
+    }
 
     public static String formatDecimal(Double value) {
         if (value == null) return "";

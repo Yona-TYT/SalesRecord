@@ -8,6 +8,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -73,6 +75,7 @@ import com.example.salesrecord.R;
 import com.example.salesrecord.utls.SharedViewModel;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -339,6 +342,9 @@ public class HomeFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (filterRunnable != null) {
+            filterHandler.removeCallbacks(filterRunnable);
+        }
         super.onDestroyView();
         binding = null;
     }
@@ -452,47 +458,15 @@ public class HomeFragment extends Fragment {
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // Ejecuta la búsqueda (incluso si viene vacía)
-                String str = InputHelper.cleanText(query.trim());
-
-                for (Obj item : objListAll) {
-                    if (item.status == 0) {
-                        item.visible = 0;
-                        continue;
-                    }
-                    if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
-                        item.visible = 1;
-                    } else {
-                        item.visible = 0;
-
-                    }
-                }
-                refreshAllUI();
+                applyFilter(query, false);
                 searchBar.clearFocus();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Si el usuario borra manualmente hasta dejarlo vacío,
-                // forzamos la restauración inmediata de la lista completa
-                if (newText == null || newText.trim().isEmpty()) {
-                    String str = InputHelper.cleanText(newText.trim());
-
-                    for (Obj item : objListAll) {
-                        if (item.status == 0) {
-                            item.visible = 0;
-                            continue;
-                        }
-                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
-                            item.visible = 1;
-                        } else {
-                            item.visible = 0;
-
-                        }
-                    }
-                    refreshAllUI();
-                }
+                // Se ejecuta en cada tecla → filtro dinámico
+                applyFilter(newText, true);
                 return true;
             }
         });
@@ -502,46 +476,26 @@ public class HomeFragment extends Fragment {
         View searchButton = searchBar.findViewById(searchButtonId);
 
         if (searchButton != null) {
-            searchButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String query = searchBar.getQuery().toString();
-                    // Forzamos la carga del catálogo con lo que tenga (cadena vacía o texto)
-                    String str = InputHelper.cleanText(query.trim());
-
-                    for (Obj item : objListAll) {
-                        if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
-                            item.visible = 1;
-                        } else {
-                            item.visible = 0;
-
-                        }
-                    }
-                    searchBar.clearFocus();
-                }
+            searchButton.setOnClickListener(v -> {
+                String query = searchBar.getQuery().toString();
+                applyFilter(query, false); // usa tu método unificado
+                searchBar.clearFocus();
             });
         }
+
         //=====================================================================================
 
 
         sharedViewModel.getChgToggle().observe(getViewLifecycleOwner(), pos -> {
-            // Si es nulo o no se ha seleccionado ninguna lista válida, salimos
-            if (pos == null || pos == -1) return;
+            // 1. Validación estricta del rango de slots (0, 1 o 2)
+            if (pos == null || pos < 0 || pos > 2) return;
 
-            requireActivity().invalidateOptionsMenu();
-
-            menuId = R.id.action_list1;
-            if (currSlot == 1) menuId = R.id.action_list2;
-            if (currSlot == 2) menuId = R.id.action_list3;
-
+            // 2. Primero ejecutamos el cambio de estado físico de la UI y los datos
             selectSlot(pos);
 
-            currObj = null;
-            if (mAdapter1 != null) {
-                mAdapter1.setSelectedPos(-1);
-            }
+            // 3. Con el estado (currSlot) ya actualizado, forzamos el rediseño del menú
+            requireActivity().invalidateOptionsMenu();
         });
-
 
         // Boton Recargar
         mButt1.setOnClickListener(new View.OnClickListener() {
@@ -590,13 +544,13 @@ public class HomeFragment extends Fragment {
                 if (currObj != null) {
                     if (currObj.maxCount > 0) {
                         mInput2.setError(null);
-                        double price = MathUtls.addPercentage(currObj.price, currObj.margen);
-                        double cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency ? 1 : 0);
+                        BigDecimal price = MathUtls.addPercentage(BigDecimal.valueOf(currObj.price), BigDecimal.valueOf(currObj.margen));
+                        BigDecimal cueePrice = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency ? 1 : 0);
 
-                        double quant = MoneyUtls.getQuantity(price, cueePrice);
-                        calcCount = quant;
+                        BigDecimal quant = MoneyUtls.getQuantity(price, cueePrice);
+                        calcCount = quant.doubleValue();
                         viewResult.setText("Cantidad: " + MoneyUtls.setFormatterEs(quant) + " / " + MoneyUtls.setFormatterEs(currObj.maxCount) + " " + glData.unitList.get(currObj.unit));
-                        if (quant <= currObj.maxCount) {
+                        if (quant.compareTo(BigDecimal.valueOf(currObj.maxCount)) <= 0) {
                             mButt2.setEnabled(true);
                         } else {
                             mInput2.setError("El Monto es mayor a la cantidad MAXIMA DISPONIBLE!");
@@ -627,13 +581,9 @@ public class HomeFragment extends Fragment {
                         (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
 
                     // 3. Ocultamos el teclado de la pantalla
-
                     InputHelper.hideKeyboard(mInput2);
-
                     setCalcResult();
-
                     return true;
-
                 }
                 return false; // Pasa el evento al sistema si no es la tecla Enter
             }
@@ -668,29 +618,24 @@ public class HomeFragment extends Fragment {
                 objListAll.clear();
                 objListSal.clear();
 
-                //Para la lista de todos los productos
-
-                mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
+                mArtList = daoArt.getUsers();
                 loadCatalogIntoSlot(currSlot);
                 bindWorkingLists();
 
+                currObj = null;
+
                 if (mAdapter1 != null && mAdapter2 != null) {
-
-                    Double total = setTotal(objListSal);
-                    viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
-
                     mAdapter1.setSelectedPos(-1);
-
-                    mAdapter1.notifyDataSetChanged();
-                    mAdapter2.notifyDataSetChanged();
+                    refreshAllUI(); // ← esto actualiza la lista del adapter
                 } else {
                     Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
                 }
 
-                currObj = null;
-                return false;
+                return true;
             }
         });
+
+        //Boton de Limpiar (Solo mensaje de advertencia)
         mButt3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -698,6 +643,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // Boton compartir
         mButt4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -708,6 +654,7 @@ public class HomeFragment extends Fragment {
                 LayoutShareHelper.sharePlainText(getActivity(), shredText, "Share text via:");            }
         });
 
+        // Boton QR Activity
         mButt5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -743,6 +690,10 @@ public class HomeFragment extends Fragment {
         //-----------------------------------------------------
 
         mAdapter1 = new SaleMainAdapter(contex, objListAll);
+
+        // item es la misma referencia que en objListAll
+        // updateSaleList ya llama refreshSaleListUI()
+        mAdapter1.setOnQuantityChangedListener(this::updateSaleList);
         //------------------------------------------------------
 
         gridView.setAdapter(mAdapter1);
@@ -751,13 +702,26 @@ public class HomeFragment extends Fragment {
             @SuppressLint("SetTextI18n")
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Obj item = objListAll.get(position);
 
-                //Para las calculadora
+                // ✅ Objeto real desde el adapter (lista filtrada)
+                Obj item = (Obj) mAdapter1.getItem(position);
+                if (item == null) return;
+
+                // Índice real dentro de objListAll (para set/update)
+                int realIndex = -1;
+                for (int i = 0; i < objListAll.size(); i++) {
+                    if (Objects.equals(objListAll.get(i).id, item.id)) {
+                        realIndex = i;
+                        break;
+                    }
+                }
+                if (realIndex < 0) return;
+
                 binding.calcProductName.setText(item.name);
-                currGrid = position;
+                currGrid = realIndex;   // guardas el índice REAL
                 currObj = item;
                 mInput2.setText("");
+
                 if (item.maxCount > 0) {
                     mInput2.setError(null);
                 } else {
@@ -765,69 +729,53 @@ public class HomeFragment extends Fragment {
                 }
 
                 if (mAdapter1 != null) {
-                    mAdapter1.setSelectedPos(position);
+                    mAdapter1.setSelectedPos(position); // posición visual del grid
                 }
 
-                //Termina aqui si la calculadora esta activa
                 if (isCalc) {
                     updateSaleList(item);
                     return;
                 }
 
-                //--------------------------------------------
-
                 // ==================== LONG CLICK (Reset) ====================
                 if (item.click == 1) {
                     if (view.getId() == R.id.buttDel1) {
-                        item.currCount = item.maxCount; // Restaurar stock completo
-                        //item.saleCount = 0;
-
-                        objListAll.set(position, item);
-
-                        // Limpiar de la lista de ventas
+                        item.currCount = item.maxCount;
+                        objListAll.set(realIndex, item);
                         objListSal.removeIf(obj -> Objects.equals(obj.id, item.id));
-
                         refreshSaleListUI();
-                        if (mAdapter1 != null) mAdapter1.notifyDataSetChanged();
+                        refreshAllUI();
                         return;
                     }
                     item.click = 0;
                     return;
                 }
 
-                // ==================== CLICK NORMAL (fuera del botón X) ====================
+                // ==================== CLICK NORMAL ====================
                 if (view.getId() != R.id.buttDel1 && view.getId() != R.id.inputCount) {
 
                     if (item.currCount > 0 && item.maxCount > 0 && item.saleCount < item.maxCount) {
                         if ((item.saleCount + 1) > item.maxCount) {
                             double minus = item.maxCount - item.saleCount;
-
                             item.saleCount += minus;
                             item.currCount -= minus;
-//                            Basic.msg("Remanente no alcanza "+minus);
-//                            return;
                         } else {
                             item.saleCount++;
                             item.currCount--;
                         }
 
-                        objListAll.set(position, item);
-
-
-                        if (mAdapter1 != null) {
-                            //Basic.msg("currCount "+item.currCount+" > 0 && maxCount "+ item.maxCount +" > 0 && saleCount "+ item.saleCount +" < maxCount "+ item.maxCount, true);
-
-                            mAdapter1.notifyDataSetChanged();
-                        }
+                        objListAll.set(realIndex, item);
+                        refreshAllUI();
                     } else {
                         Msg.m("Producto AGOTADO!");
                         return;
                     }
                 }
-                // ==================== ACTUALIZACIÓN SIEMPRE ====================
+
                 updateSaleList(item);
             }
         });
+
 
         mListV1.setAdapter(mAdapter2);
         mListV1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -842,7 +790,7 @@ public class HomeFragment extends Fragment {
                     boolean b = false;
                     for (int i = 0; i < objListAll.size(); i++) {
                         Obj obj = objListAll.get(i);
-                        if (obj.id == item.id) {
+                        if (Objects.equals(obj.id, item.id)){
                             objListAll.set(i, item);
                             b = true;
                             break;
@@ -854,10 +802,10 @@ public class HomeFragment extends Fragment {
 
                         if (mAdapter1 != null) {
 
-                            Double total = setTotal(objListSal);
+                            Double total = setTotal(objListSal).doubleValue();
                             viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
 
-                            mAdapter1.notifyDataSetChanged();
+                            refreshAllUI();
                         }
                     }
                 }
@@ -1004,6 +952,45 @@ public class HomeFragment extends Fragment {
             mInput3.clearFocus();
         });
     }
+    private final Handler filterHandler = new Handler(Looper.getMainLooper());
+    private Runnable filterRunnable;
+
+    /**
+     * Aplica el filtro. Si delayed = true, espera 250ms (debounce).
+     * Si delayed = false, filtra inmediatamente.
+     */
+    private void applyFilter(String query, boolean delayed) {
+        // Cancela cualquier filtrado pendiente
+        if (filterRunnable != null) {
+            filterHandler.removeCallbacks(filterRunnable);
+        }
+
+        Runnable filterTask = () -> {
+            String str = InputHelper.cleanText(query != null ? query.trim() : "");
+
+            for (Obj item : objListAll) {
+                if (item.status == 0) {
+                    item.visible = 0;
+                    continue;
+                }
+
+                if (str.isEmpty() || InputHelper.hasWordMatch(item.name + item.desc, str)) {
+                    item.visible = 1;
+                } else {
+                    item.visible = 0;
+                }
+            }
+
+            refreshAllUI();
+        };
+
+        if (delayed) {
+            filterRunnable = filterTask;
+            filterHandler.postDelayed(filterRunnable, 200); // Espera 250ms
+        } else {
+            filterTask.run(); // Ejecuta inmediatamente
+        }
+    }
 
     private void setCalcResult(){
         if (currObj != null && calcCount >= 0 && calcCount <= currObj.maxCount){
@@ -1012,6 +999,7 @@ public class HomeFragment extends Fragment {
             currObj.saleCount = calcCount;
             currObj.currCount =  currObj.maxCount - calcCount;
 
+            if (currGrid < 0 || currGrid >= objListAll.size()) return;
             objListAll.set(currGrid, currObj);
 
             calcCount = 0;
@@ -1019,11 +1007,10 @@ public class HomeFragment extends Fragment {
             mButt2.setEnabled(false);
 
             if (mAdapter1 != null) {
-                //Basic.msg("currCount "+item.currCount+" > 0 && maxCount "+ item.maxCount +" > 0 && saleCount "+ item.saleCount +" < maxCount "+ item.maxCount, true);
-
                 mAdapter1.setSelectedPos(-1);
-                mAdapter1.notifyDataSetChanged();
+                refreshAllUI();
             }
+
             updateSaleList(currObj);
 
             binding.bottomPanel.setVisibility(View.VISIBLE);
@@ -1057,7 +1044,7 @@ public class HomeFragment extends Fragment {
     private void refreshSaleListUI() {
         objListSal.removeIf(obj -> obj.saleCount <= 0);
         if (mAdapter2 != null) {
-            Double total = setTotal(objListSal);
+            Double total = setTotal(objListSal).doubleValue();
             viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
             mAdapter2.notifyDataSetChanged();
         }
@@ -1065,15 +1052,23 @@ public class HomeFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     private void refreshAllUI() {
-        if (mAdapter1 != null && mAdapter2 != null) {
-            Double total = setTotal(objListSal);
-            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
-            mAdapter1.notifyDataSetChanged();
-            mAdapter2.notifyDataSetChanged();
+        if (mAdapter1 == null || mAdapter2 == null) return;
+
+        // Solo ítems visibles para el Grid
+        List<Obj> visibleList = new ArrayList<>();
+        for (Obj item : objListAll) {
+            if (item.visible == 1) {
+                visibleList.add(item);
+            }
         }
+        mAdapter1.updateList(visibleList);
+
+        BigDecimal total = setTotal(objListSal);
+        viewTotal.setText("Total: " + Basic.getMaskConv(total.doubleValue(), 0) + " / " + Basic.getMaskConv(total.doubleValue(), 1));
+        mAdapter2.notifyDataSetChanged();
     }
 
-    private double setTotal(List<Obj> list){
+    private BigDecimal setTotal(List<Obj> list){
         if (list.isEmpty()){
             viewTotal.setVisibility(View.INVISIBLE);
             mInput3.setVisibility(View.GONE);
@@ -1093,12 +1088,12 @@ public class HomeFragment extends Fragment {
             mButt6.setEnabled(true);
             mSpinn1.setEnabled(true);
         }
-        double total = 0.0;
+        BigDecimal total = new BigDecimal("0.00");
         for (Obj obj : list) {
-            double price = MathUtls.addPercentage(obj.price, obj.margen);
-            total = total + ( price * obj.saleCount);
+            BigDecimal price = MathUtls.addPercentage(BigDecimal.valueOf(obj.price), BigDecimal.valueOf(obj.margen));
+            total = total.add(price.multiply(BigDecimal.valueOf(obj.saleCount)));
         }
-        mTotal = total;
+        mTotal = total.doubleValue();
         return total;
     }
 
@@ -1121,38 +1116,46 @@ public class HomeFragment extends Fragment {
         return mObj;
     }
 
-    private void processSale(){
-        if (saveSale()) {
-            //Si sale bien se limpian los valores
-            objListAll.clear();
-            objListSal.clear();
+    private void processSale() {
+        if (!saveSale()) return;
 
-            //Para la lista de todos los productos
+        // 1) Stock nuevo desde BD → los 3 slots
+        reloadStockForAllSlots();
 
-            mArtList = daoArt.getUsers();    //Se actualiza la lista de articulos
-
-            for (Article obj : mArtList) {
-                objListAll.add(setGalleryArray(obj));
-            }
-
-            if (mAdapter1 != null && mAdapter2 != null) {
-
-                Double total = setTotal(objListSal);
-                viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
-
-                mAdapter1.setSelectedPos(-1);
-
-                mAdapter1.notifyDataSetChanged();
-                mAdapter2.notifyDataSetChanged();
-            } else {
-                Msg.m("Aqui no hay aqui no hay !: " + mAdapter1 + " : " + mAdapter2);
-            }
-
-            currObj = null;
-
+        // 2) Vaciar SOLO el carrito del slot que se cobró
+        if (salSlots[currSlot] != null) {
+            salSlots[currSlot].clear();
         }
-    }
+        // En el slot cobrado, poner saleCount = 0 y currCount = maxCount
+        if (allSlots[currSlot] != null) {
+            for (Obj item : allSlots[currSlot]) {
+                item.saleCount = 0;
+                item.currCount = item.maxCount;
+                item.visible = (item.status == 0) ? 0 : 1;
+            }
+        }
 
+        bindWorkingLists();
+
+        currObj = null;
+        currGrid = -1;
+
+        // 3) Recrear adapters del slot visible
+        mAdapter1 = new SaleMainAdapter(requireContext(), new ArrayList<>());
+        mAdapter1.setOnQuantityChangedListener(item -> updateSaleList(item));
+        mAdapter1.setSelectedPos(-1);
+        gridView.setAdapter(mAdapter1);
+
+        mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
+        mListV1.setAdapter(mAdapter2);
+
+        if (searchBar != null) {
+            searchBar.setQuery("", false);
+        }
+
+        refreshAllUI();
+        requireActivity().invalidateOptionsMenu(); // títulos del menú con uds.
+    }
     private boolean saveSale(){
         // Tu lógica de crrSale...
         if (crrSale == null) {
@@ -1204,14 +1207,14 @@ public class HomeFragment extends Fragment {
             StringBuilder strPriceList = new StringBuilder();
             StringBuilder strMargList = new StringBuilder();
 
-            double total = 0.0;
+            BigDecimal total = new BigDecimal("0.00");;
 
             List<Article> artList = new ArrayList<>();
             List<Object> mList = new ArrayList<>();
 
             for (Obj o : objListSal){
-                double price = MathUtls.addPercentage(o.price, o.margen);
-                total = total + ( price * o.saleCount);
+                BigDecimal price = MathUtls.addPercentage(BigDecimal.valueOf(o.price), BigDecimal.valueOf(o.margen));
+                total = total.add(price.multiply(BigDecimal.valueOf(o.saleCount)));
                 strArtList.append("|").append(o.strId);
                 strCountList.append("|").append(o.saleCount);
                 strPriceList.append("|").append(o.price);
@@ -1234,13 +1237,13 @@ public class HomeFragment extends Fragment {
 
                 switch (currSel1) {
                     case 0: // PAGADO
-                        points = (float) (total * GlobalData.pointPay);
+                        points = (float) (total.doubleValue() * GlobalData.pointPay);
                         break;
                     case 1: // SIN PAGAR
-                        points = (float) (total * GlobalData.pointNoPay);
+                        points = (float) (total.doubleValue() * GlobalData.pointNoPay);
                         break;
                     case 2: // PÉRDIDA
-                        points = (float) (total * GlobalData.pointLost);
+                        points = (float) (total.doubleValue() * GlobalData.pointLost);
                         break;
                     default:
                         points = 0f;
@@ -1258,7 +1261,7 @@ public class HomeFragment extends Fragment {
 
             Sale mSal = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
-                    total, StartVar.mDollar, currSel1, "", currTime, strCltId, cltNr, "", currDate
+                    total.doubleValue(), StartVar.mDollar, currSel1, "", currTime, strCltId, cltNr, "", currDate
             );
 
             //Se restauran los elementos
@@ -1306,22 +1309,84 @@ public class HomeFragment extends Fragment {
 
     private void selectSlot(int slot) {
         if (slot < 0 || slot > 2) return;
-        if (slot == currSlot) return;
 
+        // Si es el mismo slot, forzamos un refresco preventivo y salimos
+        if (slot == currSlot) {
+            bindWorkingLists();
+            syncStockAcrossSlots(); // Muy importante si comparten inventario
+            refreshAllUI();
+            return;
+        }
+
+        // Actualizamos la fuente de verdad del índice del slot
         currSlot = slot;
-        bindWorkingLists(); // ahora lees/escribes otro par
 
-        // Re-sincronizar adapters con las listas nuevas
-        if (mAdapter1 != null) {
-            // Si el adapter guarda la lista internamente, recréalo o pásale la nueva:
-            mAdapter1 = new SaleMainAdapter(requireContext(), objListAll);
-            gridView.setAdapter(mAdapter1);
+        // Apuntamos objListAll / objListSal a los arrays correspondientes del nuevo slot
+        bindWorkingLists();
+
+        // --- LIMPIEZA DE ESTADOS DEL SLOT ANTERIOR ---
+        currObj = null;
+        currGrid = -1;
+        isCalc = false;
+
+        if (binding != null) {
+            binding.panelCalc.setVisibility(View.GONE);
+            binding.bottomPanel.setVisibility(View.VISIBLE);
         }
-        if (mAdapter2 != null) {
-            mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
-            mListV1.setAdapter(mAdapter2);
+        if (sharedViewModel != null) {
+            sharedViewModel.setCalcVisible(false);
         }
+
+        // --- RECREACIÓN TOTAL DE ADAPTERS (Evita contaminación de memoria) ---
+        // Pasamos una nueva instancia de lista o la lista asignada por bindWorkingLists
+        mAdapter1 = new SaleMainAdapter(requireContext(), objListAll);
+
+        // REASIGNACIÓN CLAVE: reconectamos el callback para la persistencia del input
+        mAdapter1.setOnQuantityChangedListener(item -> {
+            updateSaleList(item); // Sincroniza el carrito
+            syncStockAcrossSlots(); // Recalcula stock remanente en tiempo real
+        });
+        mAdapter1.setSelectedPos(-1);
+        gridView.setAdapter(mAdapter1);
+
+        // Reconfiguramos el adapter del carrito para el nuevo slot
+        mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
+        mListV1.setAdapter(mAdapter2);
+
+        // --- RESETEO DE FILTROS ---
+        if (searchBar != null) {
+            searchBar.setQuery("", false);
+            searchBar.clearFocus();
+        }
+
+        if (objListAll != null) {
+            for (Obj item : objListAll) {
+                item.visible = (item.status == 0) ? 0 : 1;
+            }
+        }
+
+        // --- RECALCULO Y RENDERIZADO ---
+        syncStockAcrossSlots();
         refreshAllUI();
+    }
+
+    private void syncStockAcrossSlots() {
+        // stock base desde el propio obj (maxCount) y resta saleCount de TODOS los slots
+        for (Obj item : objListAll) {
+            double reservedInOtherSlots = 0;
+            for (int s = 0; s < 3; s++) {
+                if (s == currSlot || salSlots[s] == null) continue;
+                for (Obj sold : salSlots[s]) {
+                    if (sold != null && Objects.equals(sold.id, item.id)) {
+                        reservedInOtherSlots += sold.saleCount;
+                    }
+                }
+            }
+            // disponible en ESTE slot = máximo - lo vendido aquí - lo reservado en otras
+            double soldHere = item.saleCount;
+            item.currCount = item.maxCount - soldHere - reservedInOtherSlots;
+            if (item.currCount < 0) item.currCount = 0;
+        }
     }
 
     private void loadCatalogIntoSlot(int slot) {
@@ -1337,6 +1402,64 @@ public class HomeFragment extends Fragment {
         for (Article obj : mArtList) {
             if (obj.staus > 0 ) {
                 allSlots[slot].add(setGalleryArray(obj));
+            }
+        }
+    }
+
+    /**
+     * Tras guardar una venta en BD, refresca el stock base de TODOS los slots
+     * y recalcula currCount = maxCount - saleCount (de ese slot).
+     */
+    private void reloadStockForAllSlots() {
+        mArtList = daoArt.getUsers();
+        if (mArtList == null) return;
+
+        // Mapa id → artículo actualizado en BD
+        java.util.HashMap<Object, Article> artById = new java.util.HashMap<>();
+        for (Article art : mArtList) {
+            if (art == null) continue;
+            artById.put(art.article, art); // usa el mismo id que Obj.id / strId
+            // Si Obj.id es uid, cambia a: artById.put(art.uid, art);
+        }
+
+        for (int s = 0; s < 3; s++) {
+            if (allSlots[s] == null) continue;
+
+            for (int i = 0; i < allSlots[s].size(); i++) {
+                Obj item = allSlots[s].get(i);
+                if (item == null) continue;
+
+                Article art = artById.get(item.strId);
+                if (art == null) continue;
+
+                // Nuevo stock real en BD
+                double newMax = art.totalcount;
+                double newCurrBase = art.currcount;
+
+                item.maxCount = newMax;
+
+                // Lo que este slot ya tiene reservado en el carrito se mantiene
+                double reservedHere = item.saleCount;
+                if (reservedHere < 0) reservedHere = 0;
+                if (reservedHere > newMax) reservedHere = newMax;
+
+                item.saleCount = reservedHere;
+                item.currCount = newMax - reservedHere;
+                if (item.currCount < 0) item.currCount = 0;
+
+            }
+
+            // Limpiar de la lista de venta ítems a 0
+            if (salSlots[s] != null) {
+                salSlots[s].removeIf(obj -> obj == null || obj.saleCount <= 0);
+
+                // Ajustar saleCount si superaba el nuevo max
+                for (Obj sold : salSlots[s]) {
+                    if (sold.saleCount > sold.maxCount) {
+                        sold.saleCount = sold.maxCount;
+                        sold.currCount = 0;
+                    }
+                }
             }
         }
     }
