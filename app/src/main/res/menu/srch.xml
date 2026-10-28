@@ -4,8 +4,7 @@
     <item
         android:id="@+id/srch"
         android:icon="@drawable/srch"
-        android:title="Resumen"
-        app:showAsAction="always"
-        />
-
+        android:title="Buscar"
+        app:showAsAction="always|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
 </menu>

@@ -29,7 +29,7 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.SearchView;
+import androidx.appcompat.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -94,6 +94,8 @@ public class HomeFragment extends Fragment {
 
     private CurrencyEditText mInput1;
 
+
+    private MenuItem searchMenuItem;
     private SearchView searchBar;
     private GridView gridView;
     private TextView viewTotal;
@@ -187,9 +189,69 @@ public class HomeFragment extends Fragment {
         menuHost.addMenuProvider(new MenuProvider() {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
-                // Vacío, lo infla MainActivity
-            }
+                // 1. Buscamos el ícono que infló la MainActivity
+                searchMenuItem = menu.findItem(R.id.srch); // ◄ Lo guardamos en la variable global
 
+                if (searchMenuItem != null) {
+                    searchBar = (androidx.appcompat.widget.SearchView) searchMenuItem.getActionView();
+
+                    if (searchBar != null) {
+                        searchBar.setQueryHint("Buscar artículos...");
+
+                        final boolean[] isCollapsing = {false};
+                        // Listener de escritura
+                        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                            @Override
+                            public boolean onQueryTextSubmit(String query) {
+                                isCollapsing[0] = true;
+
+                                applyFilter(query, false); // Aplica inmediatamente el filtro definitivo
+
+                                if (sharedViewModel.getSrchToggle().getValue() != null && sharedViewModel.getSrchToggle().getValue()) {
+                                    sharedViewModel.setSrchVisible(false);
+                                }
+                                return true;
+                            }
+
+                            @Override
+                            public boolean onQueryTextChange(String newText) {
+                                // ◄ SI SE ESTÁ CERRANDO, IGNORAMOS EL VACÍO AUTOMÁTICO DE LA TOOLBAR
+                                if (isCollapsing[0]) return true;
+
+                                applyFilter(newText, true);
+                                return true;
+                            }
+                        });
+
+                        // Listener de expansión (Detecta apertura y cierre físico de la barra)
+                        searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                            @Override
+                            public boolean onMenuItemActionExpand(@NonNull MenuItem item) {
+                                isCollapsing[0] = false; // Permitimos que el buscador escuche cambios de texto
+
+                                // 1. ELIMINAR EL FILTRO: Pasamos un string vacío de forma inmediata
+                                // Esto limpia la búsqueda previa y muestra todos los artículos otra vez
+                                applyFilter("", false);
+
+                                // 2. Notificar al ViewModel
+                                if (sharedViewModel.getSrchToggle().getValue() == null || !sharedViewModel.getSrchToggle().getValue()) {
+                                    sharedViewModel.setSrchVisible(true);
+                                }
+                                return true; // true para permitir que se expanda visualmente
+                            }
+
+                            @Override
+                            public boolean onMenuItemActionCollapse(@NonNull MenuItem item) {
+                                isCollapsing[0] = true; // Bloquea onQueryTextChange al cerrarse
+                                if (sharedViewModel.getSrchToggle().getValue() != null && sharedViewModel.getSrchToggle().getValue()) {
+                                    sharedViewModel.setSrchVisible(false);
+                                }
+                                return true; // true para permitir que se cierre visualmente
+                            }
+                        });
+                    }
+                }
+            }
             @Override
             public void onPrepareMenu(@NonNull Menu menu) {
                 // 1. Conseguimos el valor numérico activo desde tu ViewModel (0, 1 o 2)
@@ -399,77 +461,28 @@ public class HomeFragment extends Fragment {
             if (visible) {
                 isSrch = true;
                 binding.topPanel.setVisibility(View.GONE);
-                searchBar.setVisibility(View.VISIBLE);
 
-                // 1. Desplegar el SearchView (si estuviera colapsado por un icono)
-                searchBar.setIconified(false);
-
-                // 2. Esperar a que la interfaz se dibuje para solicitar el foco y el teclado
-                searchBar.post(() -> {
-                    searchBar.requestFocus();
-
-                    // 3. Forzar la apertura del teclado virtual
-                    InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) {
-                        // Buscamos el elemento interno del SearchView que recibe el texto
-                        int editTextId = searchBar.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
-                        View searchEditText = searchBar.findViewById(editTextId);
-
-                        if (searchEditText != null) {
-                            searchEditText.requestFocus();
-                            imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
-                        } else {
-                            // Respaldo por si no encuentra el ID interno en alguna capa de personalización
-                            imm.showSoftInput(searchBar, InputMethodManager.SHOW_IMPLICIT);
-                        }
-                    }
-                });
+                if (searchMenuItem != null && !searchMenuItem.isActionViewExpanded()) {
+                    searchMenuItem.expandActionView();
+                }
                 return;
             }
 
             // Quiere cerrar (visible == false)
             isSrch = false;
-            searchBar.clearFocus(); // Oculta el foco al cerrar
-            searchBar.setVisibility(View.GONE);
             binding.topPanel.setVisibility(View.VISIBLE);
 
-            for (Obj item : objListAll) {
-                if (item.status == 0) {
-                    item.visible = 0;
-                    continue;
-                }
-                item.visible = 1;
-
+            if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
+                searchMenuItem.collapseActionView();
             }
 
+            // ❌ ELIMINADO EL BUCLE FOR QUE RESTAURABA item.visible = 1
+            // Ahora mantendrá el estado que definió applyFilter al pulsar Enter.
+
+            // Solo refrescamos la UI para garantizar que los cambios se reflejen
             refreshAllUI();
-
-            // Opcional: Ocultar el teclado explícitamente al cerrar la barra
-            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(searchBar.getWindowToken(), 0);
-            }
         });
 
-
-        //==============================================================================================
-
-        // 1. Listener de texto estándar corregido
-        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                applyFilter(query, false);
-                searchBar.clearFocus();
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // Se ejecuta en cada tecla → filtro dinámico
-                applyFilter(newText, true);
-                return true;
-            }
-        });
 
         // 2. SOLUCIÓN AL PROBLEMA: Forzar la acción al pulsar el botón de la lupa (icono de envío)
         int searchButtonId = searchBar.getContext().getResources().getIdentifier("android:id/search_go_btn", null, null);

@@ -66,7 +66,7 @@
             android:visibility="visible"/>
     </LinearLayout>
 
-    <android.widget.SearchView
+    <androidx.appcompat.widget.SearchView
         android:id="@+id/searchBar"
         android:layout_width="0dp"
         android:layout_height="@dimen/input_hs"
