@@ -47,7 +47,6 @@ import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GetDollar;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.StartVar;
-import com.example.salesrecord.activitys.CltDetailsActivity;
 import com.example.salesrecord.activitys.QrActivity;
 import com.example.salesrecord.adapters.SaleMainAdapter;
 import com.example.salesrecord.adapters.SaleResultAdapter;
@@ -94,7 +93,6 @@ public class HomeFragment extends Fragment {
 
     private CurrencyEditText mInput1;
 
-
     private MenuItem searchMenuItem;
     private SearchView searchBar;
     private GridView gridView;
@@ -116,7 +114,6 @@ public class HomeFragment extends Fragment {
     private int currSel1 = 0;
     private int currSel2 = -1;
     final boolean[] isTouchingList = {false};
-
 
     private CurrencyEditText mInput2;
     private int currGrid = 0;
@@ -695,19 +692,15 @@ public class HomeFragment extends Fragment {
             bindWorkingLists();
         }
 
-
-        //Basic.msg(""+mArtList.get(0).totalcount);
-
-        //Para la lista de ventas ----------------------------
-        mAdapter2 = new SaleResultAdapter(contex, objListSal, true);
-        //-----------------------------------------------------
-
+        //Para la lista de ventas (Main) ----------------------------
         mAdapter1 = new SaleMainAdapter(contex, objListAll);
-
-        // item es la misma referencia que en objListAll
-        // updateSaleList ya llama refreshSaleListUI()
         mAdapter1.setOnQuantityChangedListener(this::updateSaleList);
         //------------------------------------------------------
+
+        //Para la lista de ventas (Resultados) ----------------------------
+        mAdapter2 = new SaleResultAdapter(contex, objListSal, true);
+        mAdapter2.setOnQuantityChangedListener(this::updateSaleList);
+        //-----------------------------------------------------
 
         gridView.setAdapter(mAdapter1);
 
@@ -716,11 +709,9 @@ public class HomeFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                // ✅ Objeto real desde el adapter (lista filtrada)
                 Obj item = (Obj) mAdapter1.getItem(position);
                 if (item == null) return;
 
-                // Índice real dentro de objListAll (para set/update)
                 int realIndex = -1;
                 for (int i = 0; i < objListAll.size(); i++) {
                     if (Objects.equals(objListAll.get(i).id, item.id)) {
@@ -731,7 +722,7 @@ public class HomeFragment extends Fragment {
                 if (realIndex < 0) return;
 
                 binding.calcProductName.setText(item.name);
-                currGrid = realIndex;   // guardas el índice REAL
+                currGrid = realIndex;
                 currObj = item;
                 mInput2.setText("");
 
@@ -742,7 +733,7 @@ public class HomeFragment extends Fragment {
                 }
 
                 if (mAdapter1 != null) {
-                    mAdapter1.setSelectedPos(position); // posición visual del grid
+                    mAdapter1.setSelectedPos(position);
                 }
 
                 if (isCalc) {
@@ -750,35 +741,39 @@ public class HomeFragment extends Fragment {
                     return;
                 }
 
-                // ==================== LONG CLICK (Reset) ====================
+                // ==================== FLAG de long-click del adapter (reset) ====================
                 if (item.click == 1) {
-                    if (view.getId() == R.id.buttDel1) {
-                        item.currCount = item.maxCount;
-                        objListAll.set(realIndex, item);
-                        objListSal.removeIf(obj -> Objects.equals(obj.id, item.id));
-                        refreshSaleListUI();
-                        refreshAllUI();
-                        return;
-                    }
+                    item.saleCount = 0;
                     item.click = 0;
+                    objListAll.set(realIndex, item);
+                    updateSaleList(item); // limpia carrito + sync currCount + UI
                     return;
                 }
 
-                // ==================== CLICK NORMAL ====================
+                // ==================== CLICK NORMAL: solo saleCount ====================
                 if (view.getId() != R.id.buttDel1 && view.getId() != R.id.inputCount) {
 
-                    if (item.currCount > 0 && item.maxCount > 0 && item.saleCount < item.maxCount) {
-                        if ((item.saleCount + 1) > item.maxCount) {
-                            double minus = item.maxCount - item.saleCount;
-                            item.saleCount += minus;
-                            item.currCount -= minus;
-                        } else {
-                            item.saleCount++;
-                            item.currCount--;
+                    // Disponible real = max - lo de este slot - lo de otros slots
+                    double reservedOther = 0;
+                    for (int s = 0; s < 3; s++) {
+                        if (s == currSlot || salSlots[s] == null) continue;
+                        for (Obj sold : salSlots[s]) {
+                            if (sold != null && Objects.equals(sold.strId, item.strId)) {
+                                reservedOther += sold.saleCount;
+                            }
                         }
+                    }
+                    double available = item.maxCount - item.saleCount - reservedOther;
 
+                    if (available > 0 && item.maxCount > 0) {
+                        double next = item.saleCount + 1;
+                        if (next > item.maxCount - reservedOther) {
+                            next = item.maxCount - reservedOther;
+                        }
+                        if (next < 0) next = 0;
+                        item.saleCount = next;
+                        // NO tocar item.currCount aquí
                         objListAll.set(realIndex, item);
-                        refreshAllUI();
                     } else {
                         Msg.m("Producto AGOTADO!");
                         return;
@@ -791,39 +786,39 @@ public class HomeFragment extends Fragment {
 
 
         mListV1.setAdapter(mAdapter2);
-        mListV1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (view.getId() == R.id.sale_button) {
-                    Obj item = (Obj) parent.getAdapter().getItem(position);
-
-                    item.click = 0;
-
-                    boolean b = false;
-                    for (int i = 0; i < objListAll.size(); i++) {
-                        Obj obj = objListAll.get(i);
-                        if (Objects.equals(obj.id, item.id)){
-                            objListAll.set(i, item);
-                            b = true;
-                            break;
-                        }
-                    }
-                    //Si es necesario se actualiza
-                    if (b) {
-                        objListSal.removeIf(obj -> obj.saleCount == 0);
-
-                        if (mAdapter1 != null) {
-
-                            Double total = setTotal(objListSal).doubleValue();
-                            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) + " / " + Basic.getMaskConv(total, 1));
-
-                            refreshAllUI();
-                        }
-                    }
-                }
-            }
-        });
+//        mListV1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @SuppressLint("SetTextI18n")
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                if (view.getId() == R.id.sale_button) {
+//                    // 1. Get the object directly from the cart adapter
+//                    Obj item = (Obj) parent.getAdapter().getItem(position);
+//                    if (item == null) return;
+//
+//                    item.click = 0;
+//
+//                    // 2. UNIFIED SEARCH: Locate the same product in the global list by its ID
+//                    boolean found = false;
+//                    for (int i = 0; i < objListAll.size(); i++) {
+//                        Obj globalObj = objListAll.get(i);
+//                        if (Objects.equals(globalObj.id, item.id)) {
+//                            // Synchronize the complete state of the object in the catalog
+//                            objListAll.set(i, item);
+//                            found = true;
+//                            break;
+//                        }
+//                    }
+//
+//                    if (found) {
+//                        // 3. Clear elements with zero quantity and force refresh on BOTH adapters
+//                        objListSal.removeIf(obj -> obj.saleCount == 0);
+//
+//                        // This recalculates the totals TextView and executes notifyDataSetChanged on both lists
+//                        refreshAllUI();
+//                    }
+//                }
+//            }
+//        });
 
         mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
         mSpinn1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1005,52 +1000,89 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setCalcResult(){
-        if (currObj != null && calcCount >= 0 && calcCount <= currObj.maxCount){
-           // Basic.msg("Aqui hay NARIZ ! \uD83D\uDC43\uD83D\uDC3D\uD83E\uDD25\uD83E\uDD78 ");
+    private void setCalcResult() {
+        if (currObj == null || calcCount < 0) return;
 
-            currObj.saleCount = calcCount;
-            currObj.currCount =  currObj.maxCount - calcCount;
-
-            if (currGrid < 0 || currGrid >= objListAll.size()) return;
-            objListAll.set(currGrid, currObj);
-
-            calcCount = 0;
-            viewResult.setText("Cantidad:"); ;
-            mButt2.setEnabled(false);
-
-            if (mAdapter1 != null) {
-                mAdapter1.setSelectedPos(-1);
-                refreshAllUI();
+        // Límite con otros slots
+        double reservedOther = 0;
+        for (int s = 0; s < 3; s++) {
+            if (s == currSlot || salSlots[s] == null) continue;
+            for (Obj sold : salSlots[s]) {
+                if (sold != null && Objects.equals(sold.strId, currObj.strId)) {
+                    reservedOther += sold.saleCount;
+                }
             }
-
-            updateSaleList(currObj);
-
-            binding.bottomPanel.setVisibility(View.VISIBLE);
-            binding.panelCalc.setVisibility(View.GONE);
-
-            sharedViewModel.setCalcVisible(false);
-            isCalc = false;
-            currObj = null;
-
         }
+        double maxAllowed = currObj.maxCount - reservedOther;
+        if (maxAllowed < 0) maxAllowed = 0;
+
+        if (calcCount > maxAllowed) {
+            Msg.m("Cantidad mayor a la disponible!");
+            return;
+        }
+
+        currObj.saleCount = calcCount;
+        // NO: currObj.currCount = ...
+
+        if (currGrid < 0 || currGrid >= objListAll.size()) return;
+        objListAll.set(currGrid, currObj);
+
+        calcCount = 0;
+        viewResult.setText("Cantidad:");
+        mButt2.setEnabled(false);
+
+        if (mAdapter1 != null) {
+            mAdapter1.setSelectedPos(-1);
+        }
+
+        updateSaleList(currObj);
+
+        binding.bottomPanel.setVisibility(View.VISIBLE);
+        binding.panelCalc.setVisibility(View.GONE);
+        sharedViewModel.setCalcVisible(false);
+        isCalc = false;
+        currObj = null;
     }
 
     // Actualiza la lista de ventas (objListSal)
     private void updateSaleList(Obj item) {
+        if (item == null) return;
 
+        // 1. Sincronizar saleCount en objListAll (lista principal)
+        for (int i = 0; i < objListAll.size(); i++) {
+            Obj global = objListAll.get(i);
+            if (Objects.equals(global.id, item.id) || Objects.equals(global.strId, item.strId)) {
+                global.saleCount = item.saleCount;
+                // currCount lo pone syncStockAcrossSlots()
+                break;
+            }
+        }
+
+        // 2. Actualizar / limpiar carrito
         if (item.saleCount <= 0) {
-            objListSal.removeIf(obj -> Objects.equals(obj.id, item.id));
+            objListSal.removeIf(obj ->
+                    Objects.equals(obj.id, item.id) || Objects.equals(obj.strId, item.strId));
         } else {
-            // Agregar si no existe
-            boolean exists = objListSal.stream().anyMatch(obj -> Objects.equals(obj.id, item.id));
+            boolean exists = false;
+            for (Obj sal : objListSal) {
+                if (Objects.equals(sal.id, item.id) || Objects.equals(sal.strId, item.strId)) {
+                    sal.saleCount = item.saleCount;
+                    exists = true;
+                    break;
+                }
+            }
             if (!exists) {
                 objListSal.add(item);
             }
         }
 
-        refreshSaleListUI();
+        // 3. Recalcular currCount en todos los slots
+        syncStockAcrossSlots();
+
+        // 4. Refrescar ambas listas
+        refreshAllUI();
     }
+
 
     // Refresca UI de la lista de ventas
     @SuppressLint("SetTextI18n")
@@ -1110,23 +1142,24 @@ public class HomeFragment extends Fragment {
         return total;
     }
 
-    private Obj setGalleryArray(Article art){
+    private Obj setSaleArray(Article art) {
         double mPrice;
         int type = art.artipo;
-        if(type == 0) {
+        if (type == 0) {
             mPrice = art.precund;
-        }
-        else if(type == 1){
+        } else if (type == 1) {
             mPrice = art.precpq;
-        }
-        else {
+        } else {
             mPrice = art.preccj;
         }
-        Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, 1, art.currcount, art.totalcount, 0, mPrice, art.margen+mConf.margen, art.uid
-        );
 
-        return mObj;
+        double stock = art.totalcount;
+        if (stock < 0) stock = 0;
+        // currCount inicial = maxCount = stock real (sin arrastrar currcount desfasado)
+        return new Obj(
+                art.article, art.nombre, art.descr, art.image, 0, art.metrica,
+                art.staus, 1, stock, stock, 0, mPrice, art.margen + mConf.margen, art.uid
+        );
     }
 
     private void processSale() {
@@ -1143,23 +1176,25 @@ public class HomeFragment extends Fragment {
         if (allSlots[currSlot] != null) {
             for (Obj item : allSlots[currSlot]) {
                 item.saleCount = 0;
-                item.currCount = item.maxCount;
                 item.visible = (item.status == 0) ? 0 : 1;
+                // currCount se recalcula abajo
             }
         }
 
         bindWorkingLists();
+        syncStockAcrossSlots(); // currCount = maxCount - 0 - reserved otros slots
 
         currObj = null;
         currGrid = -1;
 
         // 3) Recrear adapters del slot visible
         mAdapter1 = new SaleMainAdapter(requireContext(), new ArrayList<>());
-        mAdapter1.setOnQuantityChangedListener(item -> updateSaleList(item));
+        mAdapter1.setOnQuantityChangedListener(this::updateSaleList);
         mAdapter1.setSelectedPos(-1);
         gridView.setAdapter(mAdapter1);
 
         mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
+        mAdapter2.setOnQuantityChangedListener(this::updateSaleList);
         mListV1.setAdapter(mAdapter2);
 
         if (searchBar != null) {
@@ -1225,7 +1260,7 @@ public class HomeFragment extends Fragment {
             List<Article> artList = new ArrayList<>();
             List<Object> mList = new ArrayList<>();
 
-            for (Obj o : objListSal){
+            for (Obj o : objListSal) {
                 BigDecimal price = MathUtls.addPercentage(BigDecimal.valueOf(o.price), BigDecimal.valueOf(o.margen));
                 total = total.add(price.multiply(BigDecimal.valueOf(o.saleCount)));
                 strArtList.append("|").append(o.strId);
@@ -1234,14 +1269,16 @@ public class HomeFragment extends Fragment {
                 strMargList.append("|").append(o.margen);
 
                 Article art = daoArt.getUsers(o.id);
+                if (art == null) continue;
 
                 art.totalcount -= o.saleCount;
-                art.currcount -= o.saleCount;
+                if (art.totalcount < 0) art.totalcount = 0.0;
+                // Una sola verdad: currcount = totalcount (evita arrastrar +1 viejo)
+                art.currcount = art.totalcount;
 
                 artList.add(art);
                 mList.add(art);
             }
-
             String strCltId = "@null";
             if (mCl != null){
                 strClt = mCl.cliente;
@@ -1364,6 +1401,7 @@ public class HomeFragment extends Fragment {
 
         // Reconfiguramos el adapter del carrito para el nuevo slot
         mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
+        mAdapter2.setOnQuantityChangedListener(this::updateSaleList);
         mListV1.setAdapter(mAdapter2);
 
         // --- RESETEO DE FILTROS ---
@@ -1414,7 +1452,7 @@ public class HomeFragment extends Fragment {
 
         for (Article obj : mArtList) {
             if (obj.staus > 0 ) {
-                allSlots[slot].add(setGalleryArray(obj));
+                allSlots[slot].add(setSaleArray(obj));
             }
         }
     }
@@ -1427,12 +1465,10 @@ public class HomeFragment extends Fragment {
         mArtList = daoArt.getUsers();
         if (mArtList == null) return;
 
-        // Mapa id → artículo actualizado en BD
         java.util.HashMap<Object, Article> artById = new java.util.HashMap<>();
         for (Article art : mArtList) {
             if (art == null) continue;
-            artById.put(art.article, art); // usa el mismo id que Obj.id / strId
-            // Si Obj.id es uid, cambia a: artById.put(art.uid, art);
+            artById.put(art.article, art);
         }
 
         for (int s = 0; s < 3; s++) {
@@ -1442,39 +1478,41 @@ public class HomeFragment extends Fragment {
                 Obj item = allSlots[s].get(i);
                 if (item == null) continue;
 
+                // Misma clave que usas al guardar la venta (strArtList usa o.strId)
                 Article art = artById.get(item.strId);
                 if (art == null) continue;
 
-                // Nuevo stock real en BD
                 double newMax = art.totalcount;
-                double newCurrBase = art.currcount;
+                if (newMax < 0) newMax = 0;
 
                 item.maxCount = newMax;
 
-                // Lo que este slot ya tiene reservado en el carrito se mantiene
+                // Conservar lo reservado EN ESTE slot (no tocar otros slots)
                 double reservedHere = item.saleCount;
                 if (reservedHere < 0) reservedHere = 0;
                 if (reservedHere > newMax) reservedHere = newMax;
 
                 item.saleCount = reservedHere;
+                // Provisional: sin otros slots (igual que tu código original)
                 item.currCount = newMax - reservedHere;
                 if (item.currCount < 0) item.currCount = 0;
-
             }
 
-            // Limpiar de la lista de venta ítems a 0
             if (salSlots[s] != null) {
                 salSlots[s].removeIf(obj -> obj == null || obj.saleCount <= 0);
 
-                // Ajustar saleCount si superaba el nuevo max
                 for (Obj sold : salSlots[s]) {
+                    if (sold == null) continue;
+                    // Alinear max del ítem del carrito con el del catálogo del mismo slot
                     if (sold.saleCount > sold.maxCount) {
                         sold.saleCount = sold.maxCount;
-                        sold.currCount = 0;
                     }
+                    if (sold.saleCount < 0) sold.saleCount = 0;
                 }
             }
         }
-    }
 
+        // Solo el slot visible: disponible real con reservas de las otras 2 cajas
+        syncStockAcrossSlots();
+    }
 }

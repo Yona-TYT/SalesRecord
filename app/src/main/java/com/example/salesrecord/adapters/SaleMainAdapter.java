@@ -185,66 +185,98 @@ public class SaleMainAdapter extends BaseAdapter  {
                 button.setClickable(false);      // Evita que bloquee el click del item
                 button.setFocusable(false);
 
+
+//                button.setOnClickListener(v -> {
+//                    Object tag = v.getTag();
+//                    if (tag == null) return;
+//                    int idx = (int) tag;
+//
+//                    Obj mitem = objList.get(idx);
+//                    mitem.click = 0;
+//
+//                    if (mitem.currCount >= mitem.maxCount) {
+//                        return;
+//                    }
+//
+//                    if (mitem.saleCount > 0) {
+//                        if (mitem.saleCount < 1) {
+//                            mitem.saleCount = 0;
+//                        } else {
+//                            mitem.saleCount--;
+//                        }
+//                    }
+//                    mitem.currCount++;
+//                    if (mitem.currCount > mitem.maxCount) {
+//                        mitem.currCount = mitem.maxCount;
+//                    }
+//
+//                    notifyDataSetChanged();
+//
+//                    // ⚡ EN LUGAR DE performItemClick, NOTIFICA DIRECTAMENTE AL FRAGMENT:
+//                    if (quantityListener != null) {
+//                        quantityListener.onQuantityChanged(mitem);
+//                    }
+//                });
+
+
                 button.setOnClickListener(v -> {
-
-                    // 1. Obtener la posición real (el tag debe ser actualizado en onBind)
                     Object tag = v.getTag();
-                    if (tag == null) return;
+                    if (!(tag instanceof Integer)) return;
                     int idx = (int) tag;
+                    if (idx < 0 || idx >= objList.size()) return;
 
-                    // 2. Usar SIEMPRE idx para obtener el objeto
                     Obj mitem = objList.get(idx);
+                    if (mitem.saleCount <= 0) return;   // única condición válida
+
+                    mitem.saleCount = Math.max(0, mitem.saleCount - 1);
+                    // NO toques currCount aquí → lo recalcula syncStockAcrossSlots()
                     mitem.click = 0;
 
-                    // 3. Validar límites ANTES de modificar nada
-                    if (mitem.currCount >= mitem.maxCount) {
-                        return;
+                    if (quantityListener != null) {
+                        quantityListener.onQuantityChanged(mitem);
                     }
-
-                    // 4. Aplicar cambios lógicos
-                    if (mitem.saleCount > 0) {
-                        if (mitem.saleCount < 1) {
-                            mitem.saleCount = 0;
-                        } else {
-                            mitem.saleCount--;
-                        }
-                    }
-                    mitem.currCount++;
-                    if (mitem.currCount > mitem.maxCount) {
-                        mitem.currCount = mitem.maxCount;
-                    }
-
-                    // 5. Notificar  el cambio
-                    notifyDataSetChanged();
-
-                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                    if (parent instanceof GridView) {
-                        ((GridView) parent).performItemClick(v, idx, idx);
-                    }
-
                 });
+
+
+
+
+//                button.setOnLongClickListener(v -> {
+//                    Object tag = v.getTag();
+//
+//                    if (tag == null) return false;
+//                    int idx = (int) tag;
+//                    Obj mitem = objList.get(idx);
+//                    mitem.saleCount = 0;
+//                    mitem.currCount = mitem.maxCount;
+//                    mitem.click = 1;
+//                    objList.set(idx, mitem);
+//                    //------------------------------------
+//
+//                    notifyDataSetChanged();
+//
+//                    // ⚡ EN LUGAR DE performItemClick, NOTIFICA DIRECTAMENTE AL FRAGMENT:
+//                    if (quantityListener != null) {
+//                        quantityListener.onQuantityChanged(mitem);
+//                    }
+//
+//                    return true;
+//                });
+
 
                 button.setOnLongClickListener(v -> {
                     Object tag = v.getTag();
-
-                    if (tag == null) return false;
+                    if (!(tag instanceof Integer)) return false;
                     int idx = (int) tag;
+                    if (idx < 0 || idx >= objList.size()) return false;
+
                     Obj mitem = objList.get(idx);
                     mitem.saleCount = 0;
-                    mitem.currCount = mitem.maxCount;
                     mitem.click = 1;
-                    objList.set(idx, mitem);
-                    //------------------------------------
+                    // NO toques currCount
 
-                    notifyDataSetChanged();
-
-                    // 🔥 ESTO ACTIVA EL onItemClick DEL LISTVIEW
-                    // parent es el ViewGroup que recibe el Adapter en el constructor o getView
-                    if (parent instanceof GridView) {
-                        ((GridView) parent).performItemClick(v, idx, idx);
+                    if (quantityListener != null) {
+                        quantityListener.onQuantityChanged(mitem);
                     }
-
                     return true;
                 });
 
@@ -370,11 +402,11 @@ public class SaleMainAdapter extends BaseAdapter  {
         return objList.get(position);
     }
 
+    private OnQuantityChangedListener quantityListener;
+
     public interface OnQuantityChangedListener {
         void onQuantityChanged(Obj item);
     }
-
-    private OnQuantityChangedListener quantityListener;
 
     public void setOnQuantityChangedListener(OnQuantityChangedListener listener) {
         this.quantityListener = listener;
@@ -416,7 +448,4 @@ public class SaleMainAdapter extends BaseAdapter  {
 
         notifyDataSetChanged();
     }
-
-
-
 }
