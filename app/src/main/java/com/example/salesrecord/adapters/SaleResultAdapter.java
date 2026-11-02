@@ -97,33 +97,6 @@ public class SaleResultAdapter extends BaseAdapter  {
                 button.setClickable(false);      // Evita que bloquee el click del item
                 button.setFocusable(false);
 
-//                button.setOnClickListener(v -> {
-//                    Object tag = v.getTag();
-//                    if (tag == null) return;
-//                    int idx = (int) tag;
-//                    if (idx < 0 || idx >= objList.size()) return;
-//
-//                    Obj mitem = objList.get(idx);
-//
-//                    if (mitem.saleCount >= 1) {
-//                        mitem.saleCount -= 1;
-//                        mitem.currCount += 1;
-//                    } else {
-//                        mitem.saleCount = 0;
-//                        mitem.currCount = mitem.maxCount;
-//                    }
-//
-//                    if (mitem.currCount > mitem.maxCount) {
-//                        mitem.currCount = mitem.maxCount;
-//                    }
-//
-//                    mitem.click = 0;
-//
-//                    if (quantityListener != null) {
-//                        quantityListener.onQuantityChanged(mitem);
-//                    }
-//                });
-
                 button.setOnClickListener(v -> {
                     Object tag = v.getTag();
                     if (!(tag instanceof Integer)) return;
@@ -141,26 +114,6 @@ public class SaleResultAdapter extends BaseAdapter  {
                         quantityListener.onQuantityChanged(mitem);
                     }
                 });
-
-//                button.setOnLongClickListener(v -> {
-//                    Object tag = v.getTag();
-//
-//                    if (tag == null) return false;
-//                    int idx = (int) tag;
-//                    Obj mitem = objList.get(idx);
-//                    mitem.saleCount = 0;
-//                    mitem.currCount = mitem.maxCount;
-//                    mitem.click = 1;
-//                    objList.set(idx, mitem);
-//                    //------------------------------------
-//
-//                    // ⚡ NOTIFICA DIRECTAMENTE AL FRAGMENT EL CAMBIO
-//                    if (quantityListener != null) {
-//                        quantityListener.onQuantityChanged(mitem);
-//                    }
-//
-//                    return true;
-//                });
 
                 button.setOnLongClickListener(v -> {
                     Object tag = v.getTag();
@@ -192,7 +145,7 @@ public class SaleResultAdapter extends BaseAdapter  {
         holder.view1.setText(item.name+desc);
         BigDecimal clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen));
 
-        BigDecimal total = clcPrice.multiply(BigDecimal.valueOf(item.saleCount)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = clcPrice.multiply(BigDecimal.valueOf(item.saleCount));
         holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total.doubleValue(), 0) +" / "+Basic.getMaskConv(total.doubleValue(), 1)+")");
 
 

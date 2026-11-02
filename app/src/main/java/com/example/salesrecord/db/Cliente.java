@@ -18,10 +18,11 @@ public class Cliente {
     public Long ulfech;
     public Integer status;
     public Integer count;
+    public Double resto;
 
     public Cliente(@NonNull String cliente, String nombre, String iduser, String defaulacc,
                    Integer priority, Long fecha, Float level, Long ulfech,
-                   Integer status, Integer count
+                   Integer status, Integer count, Double resto
             )
     {
         this.cliente = cliente;
@@ -34,5 +35,6 @@ public class Cliente {
         this.ulfech = ulfech;
         this.status = status;
         this.count = count;
+        this.resto = resto;
     }
 }

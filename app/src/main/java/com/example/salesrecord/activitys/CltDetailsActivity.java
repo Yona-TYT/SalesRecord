@@ -28,12 +28,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.salesrecord.AppContextProvider;
+import com.example.salesrecord.CurrencyEditText;
 import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.R;
 import com.example.salesrecord.StartVar;
 import com.example.salesrecord.adapters.PayAdapter;
 import com.example.salesrecord.adapters.SelecAdapter;
 import com.example.salesrecord.db.Cliente;
+import com.example.salesrecord.db.DatabaseUtils;
+import com.example.salesrecord.db.Fecha;
 import com.example.salesrecord.db.GenericQueue;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoClt;
@@ -45,6 +48,7 @@ import com.example.salesrecord.utls.CalendUtls;
 import com.example.salesrecord.utls.LayoutShareHelper;
 import com.example.salesrecord.utls.MoneyUtls;
 import com.example.salesrecord.utls.Msg;
+import com.google.android.material.button.MaterialButton;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -70,15 +74,21 @@ public class CltDetailsActivity extends AppCompatActivity {
     private Spinner mSpinn1;
     private CheckBox check1;
     private ListView mListView;
+
+    private CurrencyEditText abonoInput;
     private TextView total1;
-    private TextView copyText;
-    private ImageButton mBtton0;
-    private ImageButton mBtton1;
+    private TextView parcial;
+    private TextView abonoText;
+    private TextView datosText;
+
+    private MaterialButton mBtton1;
     private ImageButton mBtton2;
+    private ImageButton mBtton3;
+    private ImageButton mBtton4;
 
     private Switch mSw1;
     private Switch mSw2;
-    private Button mBtton3;
+    private Button mBtton5;
 
     private Long currDate = null;
     private double mTotal = 0.0;
@@ -111,18 +121,22 @@ public class CltDetailsActivity extends AppCompatActivity {
         mSpinn1 = findViewById(R.id.cltdts_select1);
         check1 = findViewById(R.id.cltdts_check_1);
         total1 = findViewById(R.id.txview_cltdts1); //TOTAL
-        copyText = findViewById(R.id.txview_cltdts3); //TOTAL
+        parcial = findViewById(R.id.txview_cltdts2);
+        abonoText = findViewById(R.id.txview_cltdts3);
+        datosText = findViewById(R.id.txview_cltdts4);
 
-        mBtton0 = findViewById(R.id.butt_cltdts0);
+        abonoInput = findViewById(R.id.et_abono);
 
         mBtton1 = findViewById(R.id.butt_cltdts1);
         mBtton2 = findViewById(R.id.butt_cltdts2);
+        mBtton3 = findViewById(R.id.butt_cltdts3);
+        mBtton4 = findViewById(R.id.butt_cltdts4);
 
         mListView = findViewById(R.id.cltdts_viewList);
 
         mSw1 = findViewById(R.id.sw_cltdts1);
         mSw2 = findViewById(R.id.sw_cltdts2);
-        mBtton3 = findViewById(R.id.butt_cltdts3);
+        mBtton5 = findViewById(R.id.butt_cltdts5);
 
         setViwes();
     }
@@ -141,6 +155,7 @@ public class CltDetailsActivity extends AppCompatActivity {
 
     }
 
+    @SuppressLint("SetTextI18n")
     private void setViwes() {
 
         contex = AppContextProvider.getContext();
@@ -159,6 +174,80 @@ public class CltDetailsActivity extends AppCompatActivity {
             return;
         }
         mSalList = daoSal.getSalesByClient(strClt);
+
+        mBtton1.addOnCheckedChangeListener((button, isChecked) -> {
+            if (isChecked) {
+                abonoText.setVisibility(View.GONE);
+                abonoInput.setVisibility(View.VISIBLE);
+            } else {
+                abonoText.setVisibility(View.VISIBLE);
+                abonoInput.setVisibility(View.GONE);
+
+                double money = MoneyUtls.getInDollar(abonoInput.getNumericValue(), StartVar.mDollar, 1).doubleValue();
+
+                if(money != 0){
+
+                    long currDate = 0;
+                    long currTime = 0;
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        currDate = java.time.Instant.now().toEpochMilli();
+                        currTime = System.currentTimeMillis();
+                    }
+                    String strId = DatabaseUtils.generateId("salID", daoSal);
+
+                    int cltNr = 1;
+                    for (Sale sal : daoSal.getUsers()) {
+                        if (CalendUtls.isSameDay(sal.fecha, currDate)) {
+                            cltNr++;
+                        }
+                    }
+
+                    Sale mSal = new Sale(
+                            strId, strClt, "@null", "@null", "@null", "@null",
+                            money, StartVar.mDollar, 0, "", currTime, "strCltId", cltNr, 1, currDate
+                    );
+
+                    double mResto = mClt.resto;
+
+                    mResto = mResto + money;
+
+                    List<Object> mList = new ArrayList<>();
+
+                    for (Sale mS : mSalList){
+                        if (mS.status >0 && mS.status < 3){
+                            if(mResto >= mS.monto){
+                                mResto = mResto - mS.monto;
+                                mS.status = 0;
+                                daoSal.update(mS);
+                                mList.add(mS);
+
+                            }
+                        }
+                    }
+
+                    mClt.resto = mResto;
+
+                    daoClt.update(mClt);
+
+                    mList.add(mClt);
+
+
+                    daoSal.insertUser(mSal);
+                    mList.add(mSal);
+
+                    //Se actualiza la lista de fechas si esta no existe
+                    Fecha objB = CalendUtls.getAndCreateDate(contex, 0);
+                    mList.add(objB);
+
+                    mSalList = daoSal.getSalesByClient(strClt);
+
+                    syncWithDrive(mList);
+
+                }
+                abonoInput.setText("0.00");
+            }
+        });
 
         // 1. Usamos un Set para eliminar duplicados ignorando las horas
         Set<LocalDate> uniqueDatesSet = new LinkedHashSet<>();
@@ -233,7 +322,7 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         });
 
-        mBtton0.setOnClickListener(new View.OnClickListener() {
+        mBtton2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String shredText = GlobalData.glTelef + "\n" +
@@ -244,7 +333,7 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         });
 
-        mBtton1.setOnClickListener(new View.OnClickListener() {
+        mBtton3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) contex.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -256,7 +345,7 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         });
 
-        mBtton2.setOnClickListener(new View.OnClickListener() {
+        mBtton4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!GlobalData.glPhone.isEmpty() && !GlobalData.glCedula.isEmpty() && !GlobalData.glCodeBank.isEmpty()) {
@@ -287,14 +376,11 @@ public class CltDetailsActivity extends AppCompatActivity {
         mSw2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBtton3.setEnabled(mSw2.isChecked());
+                mBtton5.setEnabled(mSw2.isChecked());
             }
         });
 
-
-
-
-        mBtton3.setOnClickListener(new View.OnClickListener() {
+        mBtton5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(mSw2.isChecked()){
@@ -322,11 +408,15 @@ public class CltDetailsActivity extends AppCompatActivity {
     private void  setListAdapterNotReload(){
         setListAdapterInternal(false);
     }
+    @SuppressLint("SetTextI18n")
     private void setListAdapterInternal(boolean reload){
         List<Object[]> mPayList = new ArrayList<>();
 
         mTotal = 0.0;
         saveSaleList.clear();
+
+        parcial.setText("Sin Descontar: " + Basic.getMaskConv(mClt.resto, 0) + " / " + Basic.getMaskConv(mClt.resto, 1));
+
         for (int idx = 0; idx < mSalList.size(); idx ++) {
             Sale mS = mSalList.get(idx);
 
@@ -376,6 +466,8 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
         }
 
+        mTotal = mTotal - mClt.resto;
+
         mPayList.sort((o1, o2) -> {
             Long fecha1 = (Long) o1[8];
             Long fecha2 = (Long) o2[8];
@@ -384,19 +476,19 @@ public class CltDetailsActivity extends AppCompatActivity {
 
 
         if(mTotal > 0){
-            total1.setText("Total: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
-            copyText.setVisibility(View.VISIBLE);
-            mBtton0.setVisibility(View.VISIBLE);
-            mBtton1.setVisibility(View.VISIBLE);
+            total1.setText("Deuda Total: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
+            datosText.setVisibility(View.VISIBLE);
             mBtton2.setVisibility(View.VISIBLE);
+            mBtton3.setVisibility(View.VISIBLE);
+            mBtton4.setVisibility(View.VISIBLE);
         }
         else {
-            total1.setText( mSw1.isChecked()?"Total: SELECIONE ELEMENTOS" :"Total: SIN DEUDAS");
+            total1.setText( mSw1.isChecked()?"Deuda Total: SELECIONE ELEMENTOS" :"Deuda Total: SIN DEUDAS");
 
-            copyText.setVisibility(View.GONE);
-            mBtton0.setVisibility(View.GONE);
-            mBtton1.setVisibility(View.GONE);
+            datosText.setVisibility(View.GONE);
             mBtton2.setVisibility(View.GONE);
+            mBtton3.setVisibility(View.GONE);
+            mBtton4.setVisibility(View.GONE);
         }
 
         //Para configurar la lista de pagos

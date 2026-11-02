@@ -60,7 +60,7 @@ public class StartVar {
     // DB Config
     public static Conf mConfigDB;
     public static final String mConfID = "confID0";
-    public static final String mDateVersion = "5";
+    public static final String mDateVersion = "6";
 
     // Var redundants
     public static boolean mPermiss = false;     //Permisos de gestion multimedia

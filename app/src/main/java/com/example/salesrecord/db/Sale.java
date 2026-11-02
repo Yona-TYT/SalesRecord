@@ -28,13 +28,13 @@ public class Sale {
     public String cltid;
 
     public Integer cltnr;
-    public String more5;
+    public Integer type;        //Por ahora usaremos esto como marcador de abono
 
     public Long fecha;
 
     public Sale(@NonNull String sale, String cliente, String artclist, String countlist, String pricelist,
                     String marglist, Double monto, Double tasa, Integer status, String imagen, Long time,
-                    String cltid, Integer cltnr, String more5, Long fecha
+                    String cltid, Integer cltnr, Integer type, Long fecha
                 )
     {
         this.sale = sale;
@@ -50,7 +50,7 @@ public class Sale {
         this.time = time;
         this.cltid = cltid;
         this.cltnr = cltnr;
-        this.more5 = more5;
+        this.type = type;
         this.fecha = fecha;
 
     }
@@ -71,7 +71,7 @@ public class Sale {
             this.time = other.time;
             this.cltid = other.cltid;
             this.cltnr = other.cltnr;
-            this.more5 = other.more5;
+            this.type = other.type;
             this.fecha = other.fecha;
         }
     }
@@ -95,13 +95,13 @@ public class Sale {
                 Objects.equals(time, sale1.time) &&
                 Objects.equals(cltid, sale1.cltid) &&
                 Objects.equals(cltnr, sale1.cltnr) &&
-                Objects.equals(more5, sale1.more5) &&
+                Objects.equals(type, sale1.type) &&
                 Objects.equals(fecha, sale1.fecha);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(uid, sale, cliente, artclist, countlist, pricelist, marglist,
-                monto, tasa, status, imagen, time, cltid, cltnr, more5, fecha);
+                monto, tasa, status, imagen, time, cltid, cltnr, type, fecha);
     }
 }

@@ -114,15 +114,6 @@ public class SaleMainAdapter extends BaseAdapter  {
         }
         Obj item = objList.get(pos);
 
-//        // SOLUCIÓN AL RECICLAJE: Modificamos el Layout interno, NO el convertView entero
-//        if (item.visible == 0) {
-//            // Reducimos el alto y ancho a 0 para que no deje un hueco vacío en el Grid
-//            ViewGroup.LayoutParams params = holder.layout1.getLayoutParams();
-//            params.height = 0;
-//            params.width = 0;
-//            holder.layout1.setLayoutParams(params);
-//            holder.layout1.setVisibility(View.GONE);
-//        } else {
             // Restauramos sus dimensiones originales para que vuelva a ser visible al reciclarse
             ViewGroup.LayoutParams params = holder.layout1.getLayoutParams();
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT; // O pon el alto fijo en PX de tu diseño (ej: Basic.dpToPx(80))
@@ -185,40 +176,6 @@ public class SaleMainAdapter extends BaseAdapter  {
                 button.setClickable(false);      // Evita que bloquee el click del item
                 button.setFocusable(false);
 
-
-//                button.setOnClickListener(v -> {
-//                    Object tag = v.getTag();
-//                    if (tag == null) return;
-//                    int idx = (int) tag;
-//
-//                    Obj mitem = objList.get(idx);
-//                    mitem.click = 0;
-//
-//                    if (mitem.currCount >= mitem.maxCount) {
-//                        return;
-//                    }
-//
-//                    if (mitem.saleCount > 0) {
-//                        if (mitem.saleCount < 1) {
-//                            mitem.saleCount = 0;
-//                        } else {
-//                            mitem.saleCount--;
-//                        }
-//                    }
-//                    mitem.currCount++;
-//                    if (mitem.currCount > mitem.maxCount) {
-//                        mitem.currCount = mitem.maxCount;
-//                    }
-//
-//                    notifyDataSetChanged();
-//
-//                    // ⚡ EN LUGAR DE performItemClick, NOTIFICA DIRECTAMENTE AL FRAGMENT:
-//                    if (quantityListener != null) {
-//                        quantityListener.onQuantityChanged(mitem);
-//                    }
-//                });
-
-
                 button.setOnClickListener(v -> {
                     Object tag = v.getTag();
                     if (!(tag instanceof Integer)) return;
@@ -237,30 +194,6 @@ public class SaleMainAdapter extends BaseAdapter  {
                     }
                 });
 
-
-
-
-//                button.setOnLongClickListener(v -> {
-//                    Object tag = v.getTag();
-//
-//                    if (tag == null) return false;
-//                    int idx = (int) tag;
-//                    Obj mitem = objList.get(idx);
-//                    mitem.saleCount = 0;
-//                    mitem.currCount = mitem.maxCount;
-//                    mitem.click = 1;
-//                    objList.set(idx, mitem);
-//                    //------------------------------------
-//
-//                    notifyDataSetChanged();
-//
-//                    // ⚡ EN LUGAR DE performItemClick, NOTIFICA DIRECTAMENTE AL FRAGMENT:
-//                    if (quantityListener != null) {
-//                        quantityListener.onQuantityChanged(mitem);
-//                    }
-//
-//                    return true;
-//                });
 
 
                 button.setOnLongClickListener(v -> {

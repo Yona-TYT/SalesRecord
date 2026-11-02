@@ -1245,7 +1245,7 @@ public class HomeFragment extends Fragment {
                 }
                 if(b){
                     String cltId = DatabaseUtils.generateId("cltID", daoClt);
-                    mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 1, 0);
+                    mCl = new Cliente(cltId, strRawName, idUser, "", 0, currDate, (float) 0, currDate, 1, 0, 0.0);
                 }
             }
 
@@ -1279,7 +1279,6 @@ public class HomeFragment extends Fragment {
                 artList.add(art);
                 mList.add(art);
             }
-            String strCltId = "@null";
             if (mCl != null){
                 strClt = mCl.cliente;
 
@@ -1311,7 +1310,7 @@ public class HomeFragment extends Fragment {
 
             Sale mSal = new Sale(
                     strId, strClt, strArtList.toString(), strCountList.toString(), strPriceList.toString(), strMargList.toString(),
-                    total.doubleValue(), StartVar.mDollar, currSel1, "", currTime, strCltId, cltNr, "", currDate
+                    total.doubleValue(), StartVar.mDollar, currSel1, "", currTime, "strCltId", cltNr, 0, currDate
             );
 
             //Se restauran los elementos

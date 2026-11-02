@@ -348,7 +348,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             daoClt = StartVar.appDBall.daoClt();
 
             Cliente fakeClt = new Cliente("@null", "<Vacio>" ,"","",0,
-                    0L,0f, 0L,0,0);
+                    0L,0f, 0L,0,0, 0.0);
             allNamesList.add(fakeClt.nombre);
             for (Cliente mC : daoClt.getUsers()){
                 if(mC != null){

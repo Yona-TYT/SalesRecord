@@ -177,7 +177,7 @@ public class DBListCreator extends AppCompatActivity {
 
             //------------------------------------------------------
             // Se crea la lista para exportar a csv  ---------------
-            String[] txList = new String[10];
+            String[] txList = new String[11];
 
             txList[0] = myClt.cliente;
             txList[1] = myClt.nombre;
@@ -189,6 +189,8 @@ public class DBListCreator extends AppCompatActivity {
             txList[7] = String.valueOf(myClt.ulfech);
             txList[8] = String.valueOf(myClt.status);
             txList[9] = String.valueOf(myClt.count);
+            txList[10] = String.valueOf(myClt.resto);
+
 
             mList.add(txList);
 
@@ -381,7 +383,7 @@ public class DBListCreator extends AppCompatActivity {
             txList[10] = String.valueOf(mySal.time);
             txList[11] = mySal.cltid;
             txList[12] = String.valueOf(mySal.cltnr);
-            txList[13] = mySal.more5;
+            txList[13] = String.valueOf(mySal.type);
             txList[14] = String.valueOf(mySal.fecha);
 
             mList.add(txList);
@@ -401,7 +403,7 @@ public class DBListCreator extends AppCompatActivity {
             salLmJ.add(mySal.imagen);
             salLmK.add(String.valueOf(mySal.time));
             salLmM.add(String.valueOf(mySal.cltnr));
-            salLmN.add(mySal.more5);
+            salLmN.add(String.valueOf(mySal.type));
             salLmL.add(String.valueOf(mySal.fecha));
 
             //------------------------------------------
@@ -539,18 +541,18 @@ public class DBListCreator extends AppCompatActivity {
                     daoArt.insertUser(obj);
                 }
                 else if(opt==2) {
-                    if(version.equals("5")) {
+                    if(version.equals("6")) {
 
                         Cliente obj = new Cliente(
                                 spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
-                                Long.parseLong(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9])
+                                Long.parseLong(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), Double.parseDouble(spl[10])
                         );
                         daoCliente.insertUser(obj);
                     }
                     else{
                         Cliente obj = new Cliente(
                                 spl[0], spl[1], spl[2], spl[3], Integer.parseInt(spl[4]), Long.parseLong(spl[5]), Float.parseFloat(spl[6]),
-                                Long.parseLong(spl[7]), 1, 0
+                                Long.parseLong(spl[7]), Integer.parseInt(spl[8]), Integer.parseInt(spl[9]), 0.0
                         );
                         daoCliente.insertUser(obj);
                     }
@@ -570,10 +572,21 @@ public class DBListCreator extends AppCompatActivity {
                     daoFecha.insertUser(obj);
                 }
                 else {
-                    Sale obj = new Sale(
-                            spl[0], spl[1], spl[2], spl[3], spl[4], spl[5], Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
-                            Integer.parseInt(spl[8]), spl[9], Long.parseLong(spl[10]), spl[11], Integer.parseInt(spl[12]), spl[13], Long.parseLong(spl[14])
-                    );
+                    Sale obj;
+                    if(version.equals("5")) {
+                        obj = new Sale(
+                                spl[0], spl[1], spl[2], spl[3], spl[4], spl[5], Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
+                                Integer.parseInt(spl[8]), spl[9], Long.parseLong(spl[10]), spl[11], Integer.parseInt(spl[12]), 0, Long.parseLong(spl[14])
+                        );
+                    }
+
+                    else {
+                        obj = new Sale(
+                                spl[0], spl[1], spl[2], spl[3], spl[4], spl[5], Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
+                                Integer.parseInt(spl[8]), spl[9], Long.parseLong(spl[10]), spl[11], Integer.parseInt(spl[12]), Integer.parseInt(spl[13]), Long.parseLong(spl[14])
+                        );
+
+                    }
                     daoSales.insertUser(obj);
                 }
                 stringBuilder.append(line);

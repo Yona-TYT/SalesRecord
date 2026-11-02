@@ -159,17 +159,36 @@ public class QrActivity extends AppCompatActivity {
                             mSalList.add(mS);
                         }
                     }
+
                     List<Object> mList = new ArrayList<>();
 
-                    double mPrice = 0.0;
+                    double totalDeudas = 0.0;  // T = suma bruta de lo que se cierra
 
                     for (Sale mS : mSalList) {
                         if (mS != null && mS.status != 0 && mS.status != 3) {
-                            mPrice += mS.monto;
+                            totalDeudas += mS.monto;
 
-                            mList.addAll(updatePointsStatus( mS.status, 0,  mS, mPrice));
+                            // Importante: puntos con el monto DE ESTA venta, no el acumulado
+                            mList.addAll(updatePointsStatus(mS.status, 0, mS, mS.monto));
                         }
                     }
+
+                    // --- Consumir el resto (crédito del cliente) ---
+                    if (mClt != null && totalDeudas > 0) {
+                        double r = mClt.resto;
+                        if (r < 0) r = 0;
+
+                        // Se aplica min(R, T); lo que queda es max(0, R - T)
+                        double nuevoResto = r - totalDeudas;
+                        if (nuevoResto < 0) nuevoResto = 0;
+
+                        if (nuevoResto != mClt.resto) {
+                            mClt.resto = nuevoResto;
+                            daoClt.update(mClt);   // o insertUser, el que uses en el resto de la app
+                            mList.add(mClt);
+                        }
+                    }
+
                     glData.clearChecksState();
 
                     finishActivity(mList);
@@ -179,8 +198,6 @@ public class QrActivity extends AppCompatActivity {
                 }
             }
         });
-
-
     }
 
     @Override
@@ -189,7 +206,6 @@ public class QrActivity extends AppCompatActivity {
         finish();
         return true;
     }
-
 
     private void displayGeneratedQr(String amount) {
         QrPagoMovilCodec.QrData qrData = new QrPagoMovilCodec.QrData();
