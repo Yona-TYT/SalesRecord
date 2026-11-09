@@ -115,6 +115,8 @@ public class ClientsFragment extends Fragment {
                 continue;
             }
 
+            money = money - mC.resto;
+
             Object[] strList = new Object[8];
             strList[0] = mC.cliente;
             strList[1] = "Puntos: " + MoneyUtls.formatPlainDecimal((double) mC.level);

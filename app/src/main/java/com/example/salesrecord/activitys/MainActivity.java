@@ -251,11 +251,11 @@ public class MainActivity extends AppCompatActivity {
                 else if (currentDestinationId == R.id.navigation_edit) {
                     menuInflater.inflate(R.menu.margen, menu);
                 }
-                // 💡 CASO 4: Si estás en la pestaña de PAGOS (Pays)
-                else if (currentDestinationId == R.id.navigation_pays) {
-                    // Puedes inflar otros o dejarlo vacío si no lleva íconos
-                    menuInflater.inflate(R.menu.cltlist, menu);
-                }
+//                // 💡 CASO 4: Si estás en la pestaña de PAGOS (Pays)
+//                else if (currentDestinationId == R.id.navigation_pays) {
+//                    // Puedes inflar otros o dejarlo vacío si no lleva íconos
+//                    menuInflater.inflate(R.menu.cltlist, menu);
+//                }
 
                 menuInflater.inflate(R.menu.impor, menu);
                 menuInflater.inflate(R.menu.save, menu);
@@ -301,11 +301,11 @@ public class MainActivity extends AppCompatActivity {
 //                    return true;
 //                }
 
-                else if (id == R.id.cltlist) {
-                    Intent intent = new Intent(MainActivity.this, ClientListActivity.class);
-                    startActivity(intent);
-                    return true;
-                }
+//                else if (id == R.id.cltlist) {
+//                    Intent intent = new Intent(MainActivity.this, ClientListActivity.class);
+//                    startActivity(intent);
+//                    return true;
+//                }
                 //Para Exportar archivo CSV
                 else if (id == R.id.save) {
                     DBListCreator mListCreator = new DBListCreator(getApplicationContext());

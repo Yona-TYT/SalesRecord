@@ -229,14 +229,24 @@ public class PayListFragment extends Fragment {
         mTotal = 0.0;
         double oldTasa = 0;
         for (int i = 0; i < mSalList.size(); i++) {
-            Sale mPay = mSalList.get(i);
-            String status = glData.saleType.get(mPay.status);
-            long fecha = mPay.fecha;
+            Sale mS = mSalList.get(i);
+            String status =  glData.saleType.get(mS.status);
+            if(mS.type == 1){
+                status = "Pago Parcial";
+            }
+            else if(mS.type == 2){
+                status = "Total deudas Pagadas";
+            }
+            else if(mS.type == 3){
+                status = "Parcial deudas Pagadas";
+            }
+
+            long fecha = mS.fecha;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 String date = CalendUtls.getShortDate(fecha);
-                String time = CalendUtls.getTime(mPay.time);
+                String time = CalendUtls.getTime(mS.time);
 
-                String txAlias = mPay.cliente;
+                String txAlias = mS.cliente;
 
                 if (txAlias.startsWith("cltID")) {
                     DaoClt daoClt = StartVar.appDBall.daoClt();
@@ -249,35 +259,35 @@ public class PayListFragment extends Fragment {
                 if(currSel2 == 0) {
                     if (CalendUtls.isSameDay(fecha, selFecha.date)) {
                         Object[] strList = new Object[8];
-                        strList[0] = mPay.sale;
+                        strList[0] = mS.sale;
                         strList[1] = status;
-                        strList[2] = mPay.monto;
+                        strList[2] = mS.monto;
                         strList[3] = date;
-                        strList[4] = mPay.status;
+                        strList[4] = mS.status;
                         strList[5] = time;
-                        strList[6] = mPay.tasa;
+                        strList[6] = mS.tasa;
                         strList[7] = txAlias;
 
                         mPayList.add(strList);
 
-                        oldTasa = mPay.tasa;
-                        mTotal += mPay.monto;
+                        oldTasa = mS.tasa;
+                        mTotal += mS.monto;
                     }
                 }
-                else if(Objects.equals(mPay.cliente, cltList.get(currSel2 - 1).cliente) && mPay.status > 0){
+                else if(Objects.equals(mS.cliente, cltList.get(currSel2 - 1).cliente) && mS.status > 0){
                     Object[] stList = new Object[8];
-                    stList[0] = mPay.sale;
+                    stList[0] = mS.sale;
                     stList[1] = status;
-                    stList[2] = mPay.monto;
+                    stList[2] = mS.monto;
                     stList[3] = date;
-                    stList[4] = mPay.status;
+                    stList[4] = mS.status;
                     stList[5] = time;
-                    stList[6] = mPay.tasa;
+                    stList[6] = mS.tasa;
                     stList[7] = txAlias;
                     mPayList.add(stList);
 
-                    oldTasa = mPay.tasa;
-                    mTotal += mPay.monto;
+                    oldTasa = mS.tasa;
+                    mTotal += mS.monto;
                 }
 
             }

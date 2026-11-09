@@ -112,7 +112,7 @@
                     android:maxLines="1"
                     android:layout_weight="1"
                     android:layout_marginEnd="0dp"
-                    android:hint="0,00 $"
+                    android:hint="0 $"
                     android:inputType="numberDecimal"
                     android:tag="Este valor debe ser mayor a 0"
 
@@ -162,7 +162,7 @@
                     android:layout_height="@dimen/input_h1"
                     android:layout_weight="0.6"
                     android:inputType="numberDecimal"
-                    android:hint="0,00 %"
+                    android:hint="0 %"
                     android:focusable="true"
                     android:imeOptions="actionDone"
                     android:maxLines="1"
@@ -232,6 +232,7 @@
                 android:text="¿Paquete/Caja Abierto? (0 = No, 1 = Sí)"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:visibility="gone"
                 android:layout_marginBottom="4dp" />
 
             <EditText
@@ -241,9 +242,8 @@
                 android:inputType="number"
                 android:hint="0"
                 android:text="0"
+                android:visibility="gone"
                 android:layout_marginBottom="16dp" />
-
-
 
             <!-- metrica -->
             <TextView
@@ -266,6 +266,8 @@
                 android:text="Tiempo de Caducidad (días)"
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:visibility="gone"
+
                 android:layout_marginBottom="4dp" />
             <EditText
                 android:id="@+id/full_et_caduca"
@@ -274,6 +276,7 @@
                 android:inputType="number"
                 android:hint="0"
                 android:text="0"
+                android:visibility="gone"
                 android:layout_marginBottom="32dp" />
 
             <!-- Imagen del artículo (desplazable con el formulario) -->

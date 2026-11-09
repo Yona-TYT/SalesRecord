@@ -354,13 +354,18 @@ public class CltDetailsActivity extends AppCompatActivity {
                     Intent mIntent = new Intent(contex, QrActivity.class);
                     mIntent.putExtra("amount", MoneyUtls.getConv(mTotal, StartVar.mDollar, 1));
 
+                    //Deudas Selecionadas
                     if(mSw1.isChecked()) {
-                        mIntent.putExtra("islist", true);
+                        mIntent.putExtra("type", 3);
+
                     }
+                    //Todas las deudas
                     else {
                         glData.saveChecksState(saveSaleList);
-                        mIntent.putExtra("islist", true);
+                        mIntent.putExtra("type", 2);
                     }
+
+                    mIntent.putExtra("islist", true);
 
                     mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     application.startActivity(mIntent);
@@ -446,7 +451,17 @@ public class CltDetailsActivity extends AppCompatActivity {
             }
             if(reload) {
 
-                String status = glData.saleType.get(stus);
+                String status =  glData.saleType.get(stus);
+                if(mS.type == 1){
+                    status = "Pago Parcial";
+                }
+                else if(mS.type == 2){
+                    status = "Total deudas Pagadas";
+                }
+                else if(mS.type == 3){
+                    status = "Parcial deudas Pagadas";
+                }
+
                 Long longDate = mS.fecha;
                 String date = CalendUtls.getShortDate(fecha);
                 String time = CalendUtls.getTime(mS.time);

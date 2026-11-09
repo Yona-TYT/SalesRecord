@@ -101,6 +101,8 @@ public class QrActivity extends AppCompatActivity {
         check1 = binding.chkIsPaid;
 
         boolean isList = getIntent().getBooleanExtra("islist", false);
+        int saleType = getIntent().getIntExtra("type", 0);
+
         boolean process = getIntent().getBooleanExtra("process", false);
         String saleId = getIntent().getStringExtra("saleid");
 
@@ -190,6 +192,27 @@ public class QrActivity extends AppCompatActivity {
                     }
 
                     glData.clearChecksState();
+
+                    Msg.m(""+saleType);
+                    if(saleType > 1) {
+                        String strId = DatabaseUtils.generateId("salID", daoSal);
+                        long currDate = 0;
+                        long currTime = 0;
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            currDate = java.time.Instant.now().toEpochMilli();
+                            currTime = System.currentTimeMillis();
+                        }
+                        Sale mSal = new Sale(
+                                strId, mClt.cliente, "@null", "@null", "@null", "@null",
+                                0.0, StartVar.mDollar, 0, "", currTime, "strCltId", 0, saleType, currDate
+                        );
+
+                        //Se guarda la venta
+                        daoSal.insertUser(mSal);
+
+                        mList.add(mSal);
+                    }
 
                     finishActivity(mList);
                 }
