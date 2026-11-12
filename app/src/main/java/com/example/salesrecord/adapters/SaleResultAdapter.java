@@ -146,7 +146,7 @@ public class SaleResultAdapter extends BaseAdapter  {
         BigDecimal clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen));
 
         BigDecimal total = clcPrice.multiply(BigDecimal.valueOf(item.saleCount));
-        holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ Basic.getMaskConv(total.doubleValue(), 0) +" / "+Basic.getMaskConv(total.doubleValue(), 1)+")");
+        holder.view2.setText("Cantidad: " + MoneyUtls.formatDecimal(item.saleCount)+" "+glData.unitList.get(item.unit)+ " ("+ MoneyUtls.getMask(total.doubleValue(), 0, true) +" / "+MoneyUtls.getMaskConv(total.doubleValue(), 1)+")");
 
 
         holder.view1.setTextColor(

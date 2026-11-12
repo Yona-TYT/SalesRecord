@@ -120,7 +120,7 @@ public class DBListCreator extends AppCompatActivity {
 
             txList[9] = String.valueOf(myAtr.totalcount);
             txList[10] = String.valueOf(myAtr.currcount);
-            txList[11] = String.valueOf(myAtr.isopen);
+            txList[11] = String.valueOf(myAtr.points);
             txList[12] = String.valueOf(myAtr.artipo);
             txList[13] = String.valueOf(myAtr.metrica);
             txList[14] = String.valueOf(myAtr.caduca);
@@ -534,7 +534,7 @@ public class DBListCreator extends AppCompatActivity {
                     Article obj = new Article(
                             spl[0], spl[1], spl[2], spl[3], spl[4],
                             Double.parseDouble(spl[5]), Double.parseDouble(spl[6]), Double.parseDouble(spl[7]),
-                            Double.parseDouble(spl[8]), Double.parseDouble(spl[9]), Double.parseDouble(spl[10]), Integer.parseInt(spl[11]),
+                            Double.parseDouble(spl[8]), Double.parseDouble(spl[9]), Double.parseDouble(spl[10]), Float.parseFloat(spl[11]),
                             Integer.parseInt(spl[12]),  Integer.parseInt(spl[13]), Integer.parseInt(spl[14]), Integer.parseInt(spl[15]),
                             Long.parseLong(spl[16]), Long.parseLong(spl[17])
                     );

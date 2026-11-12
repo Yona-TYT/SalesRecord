@@ -52,6 +52,7 @@ public class SaleMainAdapter extends BaseAdapter  {
         TextView view1;
         TextView view2;
         TextView view3;
+        TextView view4;
         Button mButt;
         TextWatcher activeTextWatcher;
 
@@ -107,6 +108,8 @@ public class SaleMainAdapter extends BaseAdapter  {
             holder.view1 = convertView.findViewById(R.id.tex1);
             holder.view2 = convertView.findViewById(R.id.tex2);
             holder.view3 = convertView.findViewById(R.id.tex3);
+            holder.view4 = convertView.findViewById(R.id.tex4);
+
             holder.mButt = convertView.findViewById(R.id.buttDel1);   // Asegúrate que el ID sea correcto
             convertView.setTag(holder);
         } else {
@@ -168,13 +171,20 @@ public class SaleMainAdapter extends BaseAdapter  {
             //  Boton X
             TextView button = holder.mButt;
 
+            if(button.getVisibility() == View.INVISIBLE){
+                holder.view4.setVisibility(View.VISIBLE);
+            }
+
             if (count > 0) {
                 if (inputCount.getVisibility() == View.INVISIBLE) {
                     viewCount.setVisibility(View.VISIBLE);
                 }
                 button.setVisibility(View.VISIBLE);
+                holder.view4.setVisibility(View.GONE);
+
                 button.setClickable(false);      // Evita que bloquee el click del item
                 button.setFocusable(false);
+
 
                 button.setOnClickListener(v -> {
                     Object tag = v.getTag();
@@ -287,6 +297,9 @@ public class SaleMainAdapter extends BaseAdapter  {
 
                 button.setVisibility(View.INVISIBLE);
                 button.setVisibility(View.INVISIBLE);
+
+                holder.view4.setVisibility(View.VISIBLE);
+
             }
 
             // Textos
@@ -300,7 +313,7 @@ public class SaleMainAdapter extends BaseAdapter  {
 
             double clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen)).doubleValue();
 
-            holder.view3.setText("Precio: " + Basic.getMaskConv(clcPrice, 0) + "/" + Basic.getMaskConv(clcPrice, 1));
+            holder.view3.setText("Precio: " + MoneyUtls.getMask(clcPrice, 0, true) + "/" + MoneyUtls.getMaskConv(clcPrice, 1));
 
             holder.view1.setTextColor(
                     ContextCompat.getColor(holder.view1.getContext(), R.color.alert_text)
@@ -310,6 +323,11 @@ public class SaleMainAdapter extends BaseAdapter  {
             );
             holder.view3.setTextColor(
                     ContextCompat.getColor(holder.view3.getContext(), R.color.alert_text)
+            );
+
+            holder.view4.setText("Rank: "+MathUtls.setRankingText(item.rank, item.startDate));
+            holder.view4.setTextColor(
+                    ContextCompat.getColor(holder.view4.getContext(), R.color.alert_text)
             );
 
             // Tags (para identificar posición)

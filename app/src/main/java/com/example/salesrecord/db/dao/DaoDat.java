@@ -19,6 +19,9 @@ public interface DaoDat extends GenericDao<Fecha>{
     @Query("SELECT * FROM fecha WHERE fecha= :user")
     Fecha getUsers(String user);
 
+    @Query("SELECT * FROM fecha WHERE date < :twoMonthsAgoMillis")
+    List<Fecha> getFechasOlderThanTwoMonths(long twoMonthsAgoMillis);
+
     @Insert
     void insertUser(Fecha...fechas);
 

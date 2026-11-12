@@ -21,6 +21,9 @@ public interface DaoSal extends GenericDao<Sale>{
     @Query("SELECT * FROM Sale WHERE cliente = :cliente")
     List<Sale> getSalesByClient(String cliente);
 
+    @Query("SELECT * FROM Sale WHERE fecha BETWEEN :startOfDay AND :endOfDay")
+    List<Sale> getSalesByDayRange(long startOfDay, long endOfDay);
+
     // Insertar una lista completa (grupoId ya está en cada objeto Pgos)
     @Insert
     void insertAll(List<Sale> sales);

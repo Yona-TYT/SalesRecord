@@ -14,7 +14,7 @@ public class Obj implements Serializable, Parcelable {
     public String desc;
     public String img;
 
-    public int startDate = 0;
+    public long startDate = 0;
     public int endDate = 0;
     public int currDate = 0;
     public int click = 0;
@@ -30,9 +30,11 @@ public class Obj implements Serializable, Parcelable {
     public double price = 0.0;
     public double margen = 0.0;
 
+    public float rank = 0.0f;
+
     public long id;
 
-    public Obj(String strId, String name, String desc, String img, int click, int unit, int status, int visible, double currCount, double maxCount, double saleCount, double price, double margen, Long id) {
+    public Obj(String strId, String name, String desc, String img, int click, int unit, int status, int visible, double currCount, double maxCount, double saleCount, double price, double margen, float rank, long startDate, long id) {
         this.strId = strId;
         this.name = name;
         this.desc = desc;
@@ -50,6 +52,9 @@ public class Obj implements Serializable, Parcelable {
         this.price = price;
         this.margen = margen;
 
+        this.rank = rank;
+
+        this.startDate = startDate;
         this.id = id;
     }
 
@@ -62,7 +67,7 @@ public class Obj implements Serializable, Parcelable {
         unit = in.readInt();
         status = in.readInt();
         visible = in.readInt();
-        startDate = in.readInt();
+        startDate = in.readLong();
         endDate = in.readInt();
         currDate = in.readInt();
         currCount = in.readDouble();
@@ -71,6 +76,7 @@ public class Obj implements Serializable, Parcelable {
         saleCount = in.readDouble();
         price = in.readDouble();
         margen = in.readDouble();
+        rank = in.readFloat();
         id = in.readLong();
     }
 
@@ -101,7 +107,7 @@ public class Obj implements Serializable, Parcelable {
         dest.writeInt(unit);
         dest.writeInt(status);
         dest.writeInt(visible);
-        dest.writeInt(startDate);
+        dest.writeLong(startDate);
         dest.writeInt(endDate);
         dest.writeInt(currDate);
         dest.writeDouble(currCount);
@@ -110,6 +116,7 @@ public class Obj implements Serializable, Parcelable {
         dest.writeDouble(saleCount);
         dest.writeDouble(price);
         dest.writeDouble(margen);
+        dest.writeFloat(rank);
         dest.writeLong(id);
     }
 }

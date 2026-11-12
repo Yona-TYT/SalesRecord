@@ -28,7 +28,7 @@ public class Article {
     // Cantidades y Estados (Integer)
     public Double totalcount;
     public Double currcount;
-    public Integer isopen;    // 0 = cerrado, 1 = abierto
+    public Float points;    // 0 = cerrado, 1 = abierto
     public Integer artipo;    // unidad, paquete o caja
     public Integer metrica;   // Kg, L, etc.
     public Integer caduca;    // Días para caducar
@@ -42,7 +42,7 @@ public class Article {
     public Article(@NonNull String article, String nombre, String descr, String iddesde, String image,
                    Double precund, Double precpq, Double preccj, Double margen,
 
-                   Double totalcount, Double currcount, Integer isopen, Integer artipo,
+                   Double totalcount, Double currcount, Float points, Integer artipo,
                    Integer metrica, Integer caduca, Integer staus,
 
                    Long ultfec, Long fecha) {
@@ -60,7 +60,7 @@ public class Article {
 
         this.totalcount = totalcount;
         this.currcount = currcount;
-        this.isopen = isopen;
+        this.points = points;
         this.artipo = artipo;
         this.metrica = metrica;
         this.caduca = caduca;
@@ -87,7 +87,7 @@ public class Article {
 
             this.totalcount = other.totalcount;
             this.currcount = other.currcount;
-            this.isopen = other.isopen;
+            this.points = other.points;
             this.artipo = other.artipo;
             this.metrica = other.metrica;
             this.caduca = other.caduca;
@@ -115,7 +115,7 @@ public class Article {
                 Objects.equals(margen, artA.margen) &&
                 Objects.equals(totalcount, artA.totalcount) &&
                 Objects.equals(currcount, artA.currcount) &&
-                Objects.equals(isopen, artA.isopen) &&
+                Objects.equals(points, artA.points) &&
                 Objects.equals(artipo, artA.artipo) &&
                 Objects.equals(metrica, artA.metrica) &&
                 Objects.equals(caduca, artA.caduca) &&
@@ -128,7 +128,7 @@ public class Article {
     public int hashCode() {
         return Objects.hash(uid, article, nombre, descr, iddesde, image,
                 precund, precpq, preccj, margen,
-                totalcount, currcount, isopen, artipo,
+                totalcount, currcount, points, artipo,
                 metrica, caduca, staus, ultfec, fecha);
     }
 }

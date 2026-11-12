@@ -2,6 +2,8 @@ package com.example.salesrecord.utls;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utility class for general mathematical and financial calculations.
@@ -73,4 +75,25 @@ public final class MathUtls {
         }
         return value.setScale(decimalPlaces, RoundingMode.HALF_UP);
     }
+
+    // Factor de gravedad: controla qué tan rápido decae el ranking con el tiempo.
+    // Valores recomendados: entre 1.2 (suave) y 1.8 (estricto).
+    private static final double GRAVITY = 0.8;
+
+    public static String setRankingText(float totalSales, long createdAtLong) {
+        long currentTime = System.currentTimeMillis();
+        long elapsedMillis = currentTime - createdAtLong;
+
+        if (elapsedMillis < 0) {
+            elapsedMillis = 0;
+        }
+
+        double daysAlive = (double) elapsedMillis / 86400000.0;
+        double timePenalty = daysAlive + 2.0;          // GRAVITY = 1.0 → no hace falta Math.pow
+
+        double rankingScore =  (totalSales / timePenalty) * 1000;
+
+        return  String.format(Locale.US, "%.3f", rankingScore);
+    }
+
 }

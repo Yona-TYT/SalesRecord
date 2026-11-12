@@ -420,7 +420,7 @@ public class HomeFragment extends Fragment {
         daoSal = StartVar.appDBall.daoSal();
         daoArt = StartVar.appDBall.daoAtr();
         daoClt = StartVar.appDBall.daoClt();
-        mArtList = daoArt.getUsers();
+        mArtList = daoArt.getArticlesOrderedByRanking();
         mConf = StartVar.appDBall.daoCfg().getUsers(StartVar.mConfID);
 
 
@@ -628,7 +628,7 @@ public class HomeFragment extends Fragment {
                 objListAll.clear();
                 objListSal.clear();
 
-                mArtList = daoArt.getUsers();
+                mArtList = daoArt.getArticlesOrderedByRanking();
                 loadCatalogIntoSlot(currSlot);
                 bindWorkingLists();
 
@@ -786,39 +786,6 @@ public class HomeFragment extends Fragment {
 
 
         mListV1.setAdapter(mAdapter2);
-//        mListV1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @SuppressLint("SetTextI18n")
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                if (view.getId() == R.id.sale_button) {
-//                    // 1. Get the object directly from the cart adapter
-//                    Obj item = (Obj) parent.getAdapter().getItem(position);
-//                    if (item == null) return;
-//
-//                    item.click = 0;
-//
-//                    // 2. UNIFIED SEARCH: Locate the same product in the global list by its ID
-//                    boolean found = false;
-//                    for (int i = 0; i < objListAll.size(); i++) {
-//                        Obj globalObj = objListAll.get(i);
-//                        if (Objects.equals(globalObj.id, item.id)) {
-//                            // Synchronize the complete state of the object in the catalog
-//                            objListAll.set(i, item);
-//                            found = true;
-//                            break;
-//                        }
-//                    }
-//
-//                    if (found) {
-//                        // 3. Clear elements with zero quantity and force refresh on BOTH adapters
-//                        objListSal.removeIf(obj -> obj.saleCount == 0);
-//
-//                        // This recalculates the totals TextView and executes notifyDataSetChanged on both lists
-//                        refreshAllUI();
-//                    }
-//                }
-//            }
-//        });
 
         mSpinn1.setAdapter(new SelecAdapter(contex, glData.saleType));
         mSpinn1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1090,7 +1057,7 @@ public class HomeFragment extends Fragment {
         objListSal.removeIf(obj -> obj.saleCount <= 0);
         if (mAdapter2 != null) {
             Double total = setTotal(objListSal).doubleValue();
-            viewTotal.setText("Total: " + Basic.getMaskConv(total, 0) +" / "+Basic.getMaskConv(total, 1));
+            viewTotal.setText("Total: " + MoneyUtls.getMask(total, 0, true) +" / "+MoneyUtls.getMaskConv(total, 1));
             mAdapter2.notifyDataSetChanged();
         }
     }
@@ -1109,7 +1076,7 @@ public class HomeFragment extends Fragment {
         mAdapter1.updateList(visibleList);
 
         BigDecimal total = setTotal(objListSal);
-        viewTotal.setText("Total: " + Basic.getMaskConv(total.doubleValue(), 0) + " / " + Basic.getMaskConv(total.doubleValue(), 1));
+        viewTotal.setText("Total: " + MoneyUtls.getMask(total.doubleValue(), 0, true) + " / " + MoneyUtls.getMaskConv(total.doubleValue(), 1));
         mAdapter2.notifyDataSetChanged();
     }
 
@@ -1158,7 +1125,8 @@ public class HomeFragment extends Fragment {
         // currCount inicial = maxCount = stock real (sin arrastrar currcount desfasado)
         return new Obj(
                 art.article, art.nombre, art.descr, art.image, 0, art.metrica,
-                art.staus, 1, stock, stock, 0, mPrice, art.margen + mConf.margen, art.uid
+                art.staus, 1, stock, stock, 0, mPrice,
+                art.margen + mConf.margen, art.points, art.fecha, art.uid
         );
     }
 
@@ -1196,6 +1164,9 @@ public class HomeFragment extends Fragment {
         mAdapter2 = new SaleResultAdapter(requireContext(), objListSal, true);
         mAdapter2.setOnQuantityChangedListener(this::updateSaleList);
         mListV1.setAdapter(mAdapter2);
+
+        mArtList = daoArt.getArticlesOrderedByRanking();
+        loadCatalogIntoSlot(currSlot);
 
         if (searchBar != null) {
             searchBar.setQuery("", false);
@@ -1275,6 +1246,8 @@ public class HomeFragment extends Fragment {
                 if (art.totalcount < 0) art.totalcount = 0.0;
                 // Una sola verdad: currcount = totalcount (evita arrastrar +1 viejo)
                 art.currcount = art.totalcount;
+
+                art.points = art.points + (GlobalData.pointArt * (float)o.saleCount);
 
                 artList.add(art);
                 mList.add(art);
@@ -1461,7 +1434,7 @@ public class HomeFragment extends Fragment {
      * y recalcula currCount = maxCount - saleCount (de ese slot).
      */
     private void reloadStockForAllSlots() {
-        mArtList = daoArt.getUsers();
+        mArtList = daoArt.getArticlesOrderedByRanking();
         if (mArtList == null) return;
 
         java.util.HashMap<Object, Article> artById = new java.util.HashMap<>();

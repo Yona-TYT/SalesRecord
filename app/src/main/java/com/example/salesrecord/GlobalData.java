@@ -16,6 +16,11 @@ public class GlobalData {
     private GenericQueue genericQueue;
 
     // Variables globales
+
+    // Factor de gravedad: controla qué tan rápido decae el ranking con el tiempo.
+    // Valores recomendados: entre 1.2 (suave) y 1.8 (estricto).
+    public static final double GRAVITY = 0.8;
+
     public static HashMap<String, Boolean> chacksState = new HashMap<>();
     public static String glName = "";
     public static String glTelef = "";
@@ -29,13 +34,13 @@ public class GlobalData {
 
     public static  boolean shouldProcess = false;
 
-
     public static final double glUdsAlert = 3.0;
     public static final double glMtrAlert = 0.5;
 
     public static final float pointPay = 0.05f;
     public static final float pointNoPay = 0.01f;
     public static final float pointLost = 0.0001f;
+    public static final float pointArt = 0.0001f;
 
     public Article currArt = null;
     public String currSalId = "";

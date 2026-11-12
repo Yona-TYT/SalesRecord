@@ -135,10 +135,10 @@ public class Basic {
         return getMask(getConv(value, tasa, symb), symb);
     }
 
-    public static String getMaskConv(Double value, int symb) {
-
-        return getMask(getConv(value, null, symb), symb);
-    }
+//    public static String getMaskConv(Double value, int symb) {
+//
+//        return getMask(getConv(value, null, symb), symb);
+//    }
 
     @SuppressLint("DefaultLocale")
     public static String getConv(String value) {

@@ -131,25 +131,46 @@
             android:textSize="@dimen/inner_text_1" />
 
     </LinearLayout>
-    <!-- Contenido de texto -->
+
+    <!-- Contenido de texto y Botón/Rank -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="end|center_vertical"
         android:padding="5dp">
 
-        <Button
-            android:id="@+id/buttDel1"
+        <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="70dp"
-            android:minHeight="45dp"
-            android:textSize="@dimen/inner_text_2"
-            android:padding="0dp"
-            android:textColor="@color/inner_button"
-            android:backgroundTint="@color/button"
-            android:text="X" />
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/buttDel1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="70dp"
+                android:minHeight="45dp"
+                android:textSize="@dimen/inner_text_2"
+                android:padding="0dp"
+                android:textColor="@color/inner_button"
+                android:backgroundTint="@color/button"
+                android:text="X"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tex4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:text="Rank: 0.00"
+                android:padding="2dp"
+
+                android:textSize="@dimen/inner_text_1"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+        </FrameLayout>
 
     </LinearLayout>
+
 
 </LinearLayout>

@@ -321,7 +321,7 @@ public class PayListFragment extends Fragment {
                 loss = loss / StartVar.mDollar;
 
                 if (loss > 0) {
-                    infla = "Inflación: -" + Basic.getMaskConv(loss, 0) + " / " + Basic.getMaskConv(loss, 1);
+                    infla = "Inflación: -" + MoneyUtls.getMask(loss, 0, true) + " / " + MoneyUtls.getMaskConv(loss, 1);
                 } else {
                     infla = "Inflación: ninguna";
                 }
@@ -330,7 +330,7 @@ public class PayListFragment extends Fragment {
             if (currSel2 == 0) {
                 mView2.setText(infla);
             } else {
-                mView2.setText("Precio Actual: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
+                mView2.setText("Precio Actual: " + MoneyUtls.getMask(mTotal, 0, true) + " / " + MoneyUtls.getMaskConv(mTotal, 1));
             }
         }
 

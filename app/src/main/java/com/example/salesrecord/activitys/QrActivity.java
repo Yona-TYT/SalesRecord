@@ -193,7 +193,6 @@ public class QrActivity extends AppCompatActivity {
 
                     glData.clearChecksState();
 
-                    Msg.m(""+saleType);
                     if(saleType > 1) {
                         String strId = DatabaseUtils.generateId("salID", daoSal);
                         long currDate = 0;
@@ -205,7 +204,7 @@ public class QrActivity extends AppCompatActivity {
                         }
                         Sale mSal = new Sale(
                                 strId, mClt.cliente, "@null", "@null", "@null", "@null",
-                                0.0, StartVar.mDollar, 0, "", currTime, "strCltId", 0, saleType, currDate
+                                totalDeudas, StartVar.mDollar, 0, "", currTime, "strCltId", 0, saleType, currDate
                         );
 
                         //Se guarda la venta

@@ -90,6 +90,16 @@ public class MoneyUtls {
         return value;
     }
 
+    public static String getMaskConv(Double value, Double tasa, int type) {
+
+        return getMask(getConv(value, tasa, type), type, true);
+    }
+
+    public static String getMaskConv(Double value, int type) {
+
+        return getMask(getConv(value, null, type), type, true);
+    }
+
     public static String getMaskConv(Double value, Double tasa, int type, boolean symb) {
         return getMask(getConv(value, tasa, type), type, symb);
     }
@@ -154,6 +164,9 @@ public class MoneyUtls {
      * Sin cambio de contrato; solo precisión interna.
      */
     public static Double getConv(Double value, Double tasa, int type) {
+
+        tasa = (tasa == null ? StartVar.mDollar : tasa);
+
         if (value == null) return 0.0;
         BigDecimal result = convertByType(bd(value), rateOrDefault(tasa), type);
         return result.doubleValue();

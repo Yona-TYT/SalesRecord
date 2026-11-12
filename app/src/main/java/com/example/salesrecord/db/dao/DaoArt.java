@@ -25,6 +25,17 @@ public interface DaoArt extends GenericDao<Article>{
     @Query("SELECT * FROM Article")
     List<Article> getUsers();
 
+    // NUEVO MÉTODO: Obtiene los artículos ordenados por 'points' de mayor a menor
+//    @Query("SELECT * FROM Article ORDER BY points DESC")
+//    List<Article> getUsersOrderedByPointsDesc();
+
+
+    @Query("SELECT * FROM Article " +
+            "ORDER BY (points * 1.0 / " +
+            "  (((strftime('%s','now') * 1000.0 - fecha) / 86400000.0) + 2.0)" +
+            ") * 100 DESC")
+    List<Article> getArticlesOrderedByRanking();
+
     @Query("SELECT * FROM Article WHERE article= :user")
     Article getUsers(String user);
 

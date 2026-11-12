@@ -19,6 +19,8 @@ import net.openid.appauth.AuthState;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +34,7 @@ import com.example.salesrecord.GlobalData;
 import com.example.salesrecord.db.Cliente;
 import com.example.salesrecord.db.Sale;
 import com.example.salesrecord.db.dao.DaoClt;
+import com.example.salesrecord.db.dao.DaoDat;
 import com.example.salesrecord.db.dao.DaoSal;
 import com.example.salesrecord.utls.Basic;
 import com.example.salesrecord.utls.CalendUtls;
@@ -88,8 +91,67 @@ public class Preloader extends AppCompatActivity {
                 mList.add(mC);
             }
         }
+
+
+        long monthRange = 0;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            // Obtenemos el instante actual del dispositivo, restamos 2 meses y extraemos los milisegundos
+            monthRange = ZonedDateTime.now()
+                    .minusMonths(2)
+                    .toInstant()
+                    .toEpochMilli();
+        }
+
+        DaoDat daoDat = StartVar.appDBall.daoDat();
+
+        List<Fecha> dateList = daoDat.getFechasOlderThanTwoMonths(monthRange);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+            for (Fecha mD : dateList) {
+                if (mD != null) {
+                    // 1. Obtienes la fecha pura (Año-Mes-Día) tal como lo hacías
+                    LocalDate fechaPura = java.time.Instant.ofEpochMilli(mD.date)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    // 2. Calculas el milisegundo exacto de inicio del día (00:00:00.000)
+                    long startOfDay = fechaPura.atStartOfDay(java.time.ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+
+                    // 3. Calculas el milisegundo exacto del final del día (23:59:59.999)
+                    long endOfDay = fechaPura.atTime(23, 59, 59, 999999999)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+
+                    // 4. Consultas a la base de datos usando el rango de 24 horas
+
+                    boolean deuda = false;
+                    for(Sale mS : daoSal.getSalesByDayRange(startOfDay, endOfDay)){
+                        if(mS.status == 1){
+                            deuda = true;
+                        }
+                        else {
+                            mS.sale = "@null";
+                            mList.add(mS);
+                            daoSal.update(mS);
+                        }
+                    }
+                    if (!deuda) {
+                        mD.fecha = "@null";
+                        mList.add(mD);
+                        daoDat.update(mD);
+                    }
+                }
+            }
+
+        }
+
+
         if(!mList.isEmpty()){
-            Msg.m("Borrando Clientes Sin Ventas...");
+            Msg.m("Limpieza general de Datos...");
             GlobalData.getInstance(this).getGenericQueue().enqueueList(mList, 3);
         }
 

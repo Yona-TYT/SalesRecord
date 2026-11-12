@@ -314,7 +314,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             SaleResultAdapter mAdapter = new SaleResultAdapter(contex, objListSal, false);
             mListView1.setAdapter(mAdapter);
 
-            total1.setText("Actual: " + Basic.getMaskConv(mTotal.doubleValue(), 0) + " / " + Basic.getMaskConv(mTotal.doubleValue(), 1));
+            total1.setText("Actual: " + MoneyUtls.getMask(mTotal.doubleValue(), 0, true) + " / " + MoneyUtls.getMaskConv(mTotal.doubleValue(), 1));
 
             double oldTasa = mSale.tasa;
             String infla = "";
@@ -327,7 +327,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                 double loss = rateDiff * mTotal.doubleValue();
 
                 if (loss > 0) {
-                    infla = "Fijo: " + Basic.getMaskConv(mTotal.doubleValue(), oldTasa, 0) + " / " + Basic.getMaskConv(mTotal.doubleValue(), oldTasa, 1);
+                    infla = "Fijo: " + MoneyUtls.getMask(mTotal.doubleValue(), 0, true) + " / " + Basic.getMaskConv(mTotal.doubleValue(), oldTasa, 1);
                 }
             }
 
@@ -492,7 +492,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
             i++;
             mTextList.get(i).setText("Tipo de Operación: " + glData.saleType.get(mSale.status));
             i++;
-            mTextList.get(i).setText("Monto Fijo: " + txOpt + Basic.getMaskConv(mSale.monto, 0) + " / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
+            mTextList.get(i).setText("Monto Fijo: " + txOpt + MoneyUtls.getMask(mSale.monto, 0, true) + " / " + Basic.getMaskConv(mSale.monto, mSale.tasa, 1));
             i++;
             mTextList.get(i).setText("Tasa: " + Basic.getMask(mSale.tasa, 1));
             i++;
@@ -506,7 +506,7 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
 
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
                 art.staus, 1, art.currcount, count, count, mPrice, margen
-                , art.uid);
+                , art.points, art.fecha, art.uid);
 
         return mObj;
     }
@@ -574,6 +574,9 @@ public class PayDetailsActivity extends AppCompatActivity implements View.OnClic
                         double count = Double.parseDouble(countList[i]);
                         crrArt.totalcount += count;
                         crrArt.currcount += count;
+                        crrArt.points = crrArt.points - GlobalData.pointArt;
+                        crrArt.points = crrArt.points - (GlobalData.pointArt * (float)count);
+                        
                         daoArt.update(crrArt);
                         mList.add(crrArt);
                     }

@@ -376,7 +376,7 @@ public class EditAtrFragment extends Fragment {
                 if(crrArt != null) {
                     BigDecimal price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                     double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue()+mConf.margen)).doubleValue();
-                    mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                    mTil2.setHint("(" + MoneyUtls.getMask(clcPrice, 0, true) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
                 }
             }
 
@@ -417,7 +417,7 @@ public class EditAtrFragment extends Fragment {
                     BigDecimal price = MoneyUtls.getInDollar(mInput2.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                     double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue()+mConf.margen)).doubleValue();
 
-                    mTil2.setHint("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                    mTil2.setHint("(" + MoneyUtls.getMask(clcPrice, 0, true) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
                 }
             }
 
@@ -495,7 +495,20 @@ public class EditAtrFragment extends Fragment {
 
                 crrArt.margen = mInput4.getNumericValue();
 
-                crrArt.staus = (mSw3.isChecked() ? 1 : 0);
+                if(!mSw3.isChecked()){
+                    crrArt.staus = 0;
+                }
+                else {
+                    if(crrArt.staus == 0) {
+                        long currDate = 0;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            currDate = java.time.Instant.now().toEpochMilli();
+                        }
+                        crrArt.fecha = currDate;
+                        crrArt.points = 0f;
+                    }
+                    crrArt.staus = 1;
+                }
 
                 glData.setIsEdit(true);
                 // Evitar encolar si no hubo cambio
@@ -611,7 +624,7 @@ public class EditAtrFragment extends Fragment {
 
         Obj mObj = new Obj(art.article, art.nombre, art.descr, art.image, 0, art.metrica,
                 art.staus, 1, art.currcount, art.totalcount, 0, mPrice,
-                (art.margen + mConf.margen), art.uid);
+                (art.margen + mConf.margen), art.points, art.fecha, art.uid);
 
         return mObj;
 

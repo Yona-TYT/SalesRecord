@@ -212,7 +212,7 @@ public class FullEditActivity extends AppCompatActivity {
             mInput3.setText(Basic.setFormatterEs(precio));
             mInput4.setText(Basic.setFormatterEs(crrArt.margen));
             mInput5.setText(Basic.setFormatterEs(crrArt.totalcount));
-            mInput6.setText(String.valueOf(crrArt.isopen));
+            mInput6.setText(String.valueOf(crrArt.points));
             mInput7.setText(String.valueOf(crrArt.caduca));
 
             mSw1.setOnClickListener(new View.OnClickListener() {
@@ -241,7 +241,7 @@ public class FullEditActivity extends AppCompatActivity {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     BigDecimal price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                     double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue())).doubleValue();
-                    viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                    viewTotal.setText("(" + MoneyUtls.getMaskConv(clcPrice, 0) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
                 }
 
                 @Override
@@ -261,7 +261,7 @@ public class FullEditActivity extends AppCompatActivity {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     BigDecimal price = MoneyUtls.getInDollar(mInput3.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                     double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput4.getNumericValue())).doubleValue();
-                    viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                    viewTotal.setText("(" + MoneyUtls.getMaskConv(clcPrice, 0) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
                 }
 
                 @Override
@@ -340,7 +340,6 @@ public class FullEditActivity extends AppCompatActivity {
                     crrArt.totalcount = mInput5.getNumericValue();
                     crrArt.currcount = mInput5.getNumericValue();
 
-                    crrArt.isopen = 0;
                     crrArt.metrica = currSel2;
                     crrArt.caduca = 0;
 

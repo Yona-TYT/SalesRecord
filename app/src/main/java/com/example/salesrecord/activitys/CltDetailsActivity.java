@@ -420,7 +420,7 @@ public class CltDetailsActivity extends AppCompatActivity {
         mTotal = 0.0;
         saveSaleList.clear();
 
-        parcial.setText("Sin Descontar: " + Basic.getMaskConv(mClt.resto, 0) + " / " + Basic.getMaskConv(mClt.resto, 1));
+        parcial.setText("Sin Descontar: " + MoneyUtls.getMask(mClt.resto, 0, true) + " / " + MoneyUtls.getMaskConv(mClt.resto, 1));
 
         for (int idx = 0; idx < mSalList.size(); idx ++) {
             Sale mS = mSalList.get(idx);
@@ -491,7 +491,7 @@ public class CltDetailsActivity extends AppCompatActivity {
 
 
         if(mTotal > 0){
-            total1.setText("Deuda Total: " + Basic.getMaskConv(mTotal, 0) + " / " + Basic.getMaskConv(mTotal, 1));
+            total1.setText("Deuda Total: " + MoneyUtls.getMask(mTotal, 0, true) + " / " + MoneyUtls.getMaskConv(mTotal, 1));
             datosText.setVisibility(View.VISIBLE);
             mBtton2.setVisibility(View.VISIBLE);
             mBtton3.setVisibility(View.VISIBLE);

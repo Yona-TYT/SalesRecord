@@ -148,8 +148,8 @@ public class SummaryAdapter extends BaseAdapter  {
         double clcPrice = MathUtls.addPercentage(BigDecimal.valueOf(item.price), BigDecimal.valueOf(item.margen)).doubleValue();
 
         holder.view2.setText("uds. " + MoneyUtls.formatDecimal(item.maxCount) +
-                "  -  precio: " + Basic.getMaskConv(item.price, 0) +
-                " / "+  Basic.getMaskConv(clcPrice, 1) +
+                "  -  precio: " + MoneyUtls.getMaskConv(item.price, 0) +
+                " / "+  MoneyUtls.getMaskConv(clcPrice, 1) +
                 "  -  (" + MoneyUtls.formatDecimal(item.margen)+" %)");
 
         holder.view1.setTextColor(

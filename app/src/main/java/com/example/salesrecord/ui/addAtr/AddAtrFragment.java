@@ -197,11 +197,12 @@ public class AddAtrFragment extends Fragment {
 
             }
 
+            @SuppressLint("SetTextI18n")
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 BigDecimal price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                 double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput2.getNumericValue())).doubleValue();
-                viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                viewTotal.setText("(" + MoneyUtls.getMask(clcPrice, 0, true) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
             }
 
             @Override
@@ -221,7 +222,7 @@ public class AddAtrFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 BigDecimal price = MoneyUtls.getInDollar(mInput1.getNumericValue(), StartVar.mDollar, swCurrency?1:0);
                 double clcPrice = MathUtls.addPercentage(price, BigDecimal.valueOf(mInput2.getNumericValue())).doubleValue();
-                viewTotal.setText("(" + Basic.getMaskConv(clcPrice, 0) +"/" + Basic.getMaskConv(clcPrice, 1)+")");
+                viewTotal.setText("(" + MoneyUtls.getMask(clcPrice, 0, true) +"/" + MoneyUtls.getMaskConv(clcPrice, 1)+")");
             }
 
             @Override
@@ -322,7 +323,7 @@ public class AddAtrFragment extends Fragment {
 
                         mInput2.getNumericValue(),
                         mInput3.getNumericValue(), mInput3.getNumericValue(),
-                        Integer.parseInt(mTxList.get(4)), currSel1,
+                        0f, currSel1,
                         currSel2, Integer.parseInt(mTxList.get(5)),
 
                         1, currDate, currDate
